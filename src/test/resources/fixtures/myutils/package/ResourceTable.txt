@@ -1,0 +1,4 @@
+string agcit_pura_harmony_utils 0x02000002
+string lib_name 0x02000003
+string page_show 0x02000000
+float page_text_font_size 0x02000001

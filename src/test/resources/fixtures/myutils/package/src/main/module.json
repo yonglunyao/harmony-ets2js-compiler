@@ -1,0 +1,30 @@
+{
+	"app": {
+		"bundleName": "com.demo.abc_har",
+		"debug": true,
+		"versionCode": 1000000,
+		"versionName": "1.0.0",
+		"minAPIVersion": 60001021,
+		"targetAPIVersion": 60001021,
+		"apiReleaseType": "Release",
+		"targetMinorAPIVersion": 0,
+		"targetPatchAPIVersion": 0,
+		"compileSdkVersion": "6.0.1.116",
+		"compileSdkType": "HarmonyOS",
+		"appEnvironments": [],
+		"bundleType": "app",
+		"buildMode": "debug"
+	},
+	"module": {
+		"name": "myutils",
+		"type": "har",
+		"deviceTypes": [
+			"default"
+		],
+		"packageName": "myutils",
+		"installationFree": false,
+		"virtualMachine": "ark13.0.1.0",
+		"compileMode": "esmodule",
+		"dependencies": []
+	}
+}
