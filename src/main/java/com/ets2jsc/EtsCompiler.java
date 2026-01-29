@@ -55,6 +55,10 @@ public class EtsCompiler {
      */
     public void compile(Path sourcePath, Path outputPath) throws CompilationException {
         try {
+            // Normalize paths
+            sourcePath = sourcePath.normalize();
+            outputPath = outputPath.normalize();
+
             // Step 1: Read source file
             String sourceCode = Files.readString(sourcePath);
 
@@ -102,9 +106,30 @@ public class EtsCompiler {
 
     /**
      * Transforms the AST using the registered transformers.
+     * Recursively transforms nested nodes.
      */
     private AstNode transformAst(AstNode ast) {
         AstNode current = ast;
+
+        // If this is a SourceFile, transform its statements
+        if (current instanceof SourceFile) {
+            SourceFile sourceFile = (SourceFile) current;
+            for (int i = 0; i < sourceFile.getStatements().size(); i++) {
+                AstNode stmt = sourceFile.getStatements().get(i);
+                AstNode transformedStmt = transformNode(stmt);
+                sourceFile.getStatements().set(i, transformedStmt);
+            }
+            return sourceFile;
+        }
+
+        return transformNode(current);
+    }
+
+    /**
+     * Transforms a single AST node through all transformers.
+     */
+    private AstNode transformNode(AstNode node) {
+        AstNode current = node;
 
         for (AstTransformer transformer : transformers) {
             if (transformer.canTransform(current)) {

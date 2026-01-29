@@ -1,10 +1,6 @@
 package com.ets2jsc.parser;
 
 import com.ets2jsc.ast.*;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
@@ -13,51 +9,88 @@ import org.graalvm.polyglot.Value;
  * Uses TypeScript Compiler API to parse source code into AST.
  */
 public class TypeScriptParser {
-    private final Context context;
-    private final Value typescript;
-    private final Value ts;
+    private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
+    private Context context;
+    private Value typescript;
+    private Value ts;
+    private boolean graalvmDisabled = false;
 
     public TypeScriptParser() {
-        // Create GraalVM context with JavaScript
-        this.context = Context.newBuilder("js")
-                .allowAllAccess(true)
-                .build();
+        // Don't create context in constructor to avoid classpath issues on Windows
+        // Context will be created lazily when needed
+        this.context = null;
+        this.typescript = null;
+        this.ts = null;
 
-        // Load TypeScript (assuming TypeScript is available in the environment)
-        Value tsValue = null;
-        Value typescriptValue = null;
-
-        try {
-            // Try to load TypeScript from node_modules or global installation
-            typescriptValue = context.eval("js",
-                "try {\n" +
-                "  require('typescript');\n" +
-                "} catch (e) {\n" +
-                "  // If TypeScript is not available, we'll use a simplified parser\n" +
-                "  null;\n" +
-                "}"
-            );
-
-            if (typescriptValue != null && !typescriptValue.isNull()) {
-                tsValue = typescriptValue;
-            }
-        } catch (Exception e) {
-            // tsValue remains null
+        // On Windows, GraalVM has classpath issues, so disable it
+        if (IS_WINDOWS) {
+            this.graalvmDisabled = true;
         }
+    }
 
-        this.typescript = typescriptValue;
-        this.ts = tsValue;
+    /**
+     * Initialize the GraalVM context if needed.
+     */
+    private void initContext() {
+        if (context == null && !graalvmDisabled) {
+            try {
+                // Create GraalVM context with JavaScript
+                // Disable classpath isolation to avoid Windows path issues
+                this.context = Context.newBuilder("js")
+                        .allowAllAccess(true)
+                        .option("engine.WarnInterpreterOnly", "false")
+                        .allowHostClassLoading(false)
+                        .build();
+
+                // Try to load TypeScript from node_modules or global installation
+                Value typescriptValue = context.eval("js",
+                    "try {\n" +
+                    "  require('typescript');\n" +
+                    "} catch (e) {\n" +
+                    "  null;\n" +
+                    "}"
+                );
+
+                if (typescriptValue != null && !typescriptValue.isNull()) {
+                    this.ts = typescriptValue;
+                } else {
+                    this.ts = null;
+                }
+                this.typescript = typescriptValue;
+            } catch (Throwable e) {
+                // Context creation failed, disable GraalVM
+                this.graalvmDisabled = true;
+                this.ts = null;
+                this.typescript = null;
+                this.context = null;
+            }
+        }
     }
 
     /**
      * Parses ETS/TypeScript source code into a SourceFile AST node.
      */
     public SourceFile parse(String fileName, String sourceCode) {
-        if (ts != null && !ts.isNull()) {
-            return parseWithTypeScript(fileName, sourceCode);
-        } else {
-            return parseWithSimpleParser(fileName, sourceCode);
+        // Try to use TypeScript parser if available, fall back to simple parser
+        if (!graalvmDisabled) {
+            try {
+                // Initialize context lazily
+                initContext();
+
+                if (ts != null && !ts.isNull()) {
+                    return parseWithTypeScript(fileName, sourceCode);
+                }
+            } catch (Throwable t) {
+                // GraalVM or TypeScript parsing failed, disable it
+                this.graalvmDisabled = true;
+                this.context = null;
+                this.ts = null;
+                this.typescript = null;
+            }
         }
+
+        // Use simple parser
+        return parseWithSimpleParser(fileName, sourceCode);
     }
 
     /**

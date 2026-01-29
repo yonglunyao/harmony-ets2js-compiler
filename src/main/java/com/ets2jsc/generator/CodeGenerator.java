@@ -2,7 +2,6 @@ package com.ets2jsc.generator;
 
 import com.ets2jsc.ast.*;
 import com.ets2jsc.constant.RuntimeFunctions;
-import com.ets2jsc.transformer.ExpressionStatement;
 
 import java.util.List;
 
@@ -111,11 +110,13 @@ public class CodeGenerator implements AstVisitor<String> {
         sb.append(getIndent());
 
         if ("constructor".equals(node.getName())) {
-            sb.append("constructor(");
+            sb.append("constructor() {\n");
+            currentIndent++;
         } else if (node.getName().startsWith("get ")) {
             sb.append("get ")
               .append(node.getName().substring(4))
-              .append("() {");
+              .append("() {\n");
+            currentIndent++;
         } else if (node.getName().startsWith("set ")) {
             sb.append("set ")
               .append(node.getName().substring(4))
@@ -127,8 +128,18 @@ public class CodeGenerator implements AstVisitor<String> {
             } else {
                 sb.append("newValue");
             }
-            sb.append(") {");
+            sb.append(") {\n");
+            currentIndent++;
         } else {
+            // Add static keyword if present
+            if (node.isStatic()) {
+                sb.append("static ");
+            }
+            // Add async keyword if present
+            if (node.isAsync()) {
+                sb.append("async ");
+            }
+
             sb.append(node.getName()).append("(");
 
             // Parameters
@@ -145,16 +156,25 @@ public class CodeGenerator implements AstVisitor<String> {
                 }
             }
 
-            sb.append(") {");
+            sb.append(") {\n");
+            currentIndent++;
         }
-
-        sb.append("\n");
-        currentIndent++;
 
         // Method body
         if (node.getBody() != null) {
             String bodyCode = node.getBody().accept(this);
-            sb.append(bodyCode);
+            // If body is ExpressionStatement, it may contain multiple lines (e.g., constructor with \n)
+            if (node.getBody() instanceof com.ets2jsc.ast.ExpressionStatement) {
+                // Split by newlines and indent each line
+                String[] lines = bodyCode.split("\n");
+                for (String line : lines) {
+                    if (!line.isEmpty()) {
+                        sb.append(getIndent()).append(line).append("\n");
+                    }
+                }
+            } else {
+                sb.append(bodyCode);
+            }
         }
 
         currentIndent--;
@@ -218,6 +238,42 @@ public class CodeGenerator implements AstVisitor<String> {
 
         sb.append(")");
 
+        return sb.toString();
+    }
+
+    @Override
+    public String visit(ExpressionStatement node) {
+        // Return the expression string with semicolon
+        String expr = node.getExpression();
+        if (expr == null || expr.isEmpty()) {
+            return "";
+        }
+
+        // Don't add semicolon if expression already ends with one or is a block
+        String trimmed = expr.trim();
+        if (trimmed.endsWith(";") || trimmed.endsWith("}") || trimmed.startsWith("{")) {
+            return expr;
+        }
+
+        // Add semicolon
+        return expr + ";";
+    }
+
+    @Override
+    public String visit(Block node) {
+        StringBuilder sb = new StringBuilder();
+        for (AstNode stmt : node.getStatements()) {
+            String stmtCode = stmt.accept(this);
+            if (stmtCode != null && !stmtCode.isEmpty()) {
+                // Don't add indentation for nested blocks in component methods
+                // (they represent component closures, not code blocks)
+                if (stmt instanceof Block) {
+                    sb.append(stmtCode);
+                } else {
+                    sb.append(getIndent()).append(stmtCode).append("\n");
+                }
+            }
+        }
         return sb.toString();
     }
 

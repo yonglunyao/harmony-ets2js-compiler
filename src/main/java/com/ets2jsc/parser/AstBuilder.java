@@ -13,12 +13,8 @@ public class AstBuilder {
      * Creates an AST from source code.
      */
     public SourceFile build(String fileName, String sourceCode) {
-        TypeScriptParser parser = new TypeScriptParser();
-        try {
-            return parser.parse(fileName, sourceCode);
-        } finally {
-            parser.close();
-        }
+        TypeScriptScriptParser parser = new TypeScriptScriptParser();
+        return parser.parse(fileName, sourceCode);
     }
 
     /**

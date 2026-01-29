@@ -39,4 +39,14 @@ public interface AstVisitor<T> {
      * Visit a call expression node.
      */
     T visit(CallExpression node);
+
+    /**
+     * Visit an expression statement node.
+     */
+    T visit(ExpressionStatement node);
+
+    /**
+     * Visit a block node.
+     */
+    T visit(Block node);
 }

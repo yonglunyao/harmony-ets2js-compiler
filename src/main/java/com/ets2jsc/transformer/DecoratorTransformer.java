@@ -121,6 +121,7 @@ public class DecoratorTransformer implements AstTransformer {
         PropertyDeclaration privateProp = new PropertyDeclaration(privateName);
         privateProp.setTypeAnnotation(RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE + "<" + propType + ">");
         privateProp.setVisibility(PropertyDeclaration.Visibility.PRIVATE);
+        privateProp.setInitializer(stateProp.getInitializer());
 
         // Create getter
         MethodDeclaration getter = new MethodDeclaration("get " + propName);
@@ -131,10 +132,16 @@ public class DecoratorTransformer implements AstTransformer {
         MethodDeclaration setter = new MethodDeclaration("set " + propName);
         MethodDeclaration.Parameter valueParam = new MethodDeclaration.Parameter("newValue", propType);
         setter.addParameter(valueParam);
+        setter.setReturnType("void");
         setter.setBody(new ExpressionStatement("this." + privateName + ".set(newValue)"));
 
-        // Add to class (replace original property)
-        // Note: In real implementation, we'd need to properly replace the property
+        // Find and remove original property from class
+        classDecl.getMembers().remove(stateProp);
+
+        // Add new members: private property, getter, setter
+        classDecl.addMember(privateProp);
+        classDecl.addMember(getter);
+        classDecl.addMember(setter);
     }
 
     /**
@@ -148,7 +155,7 @@ public class DecoratorTransformer implements AstTransformer {
 
         for (PropertyDeclaration stateProp : stateProps) {
             String propName = stateProp.getName();
-            String privateName = stateProp.getPrivateVarName();
+            String privateName = propName + "__";
 
             // Initialize state property
             initCode.append("this.").append(privateName).append(" = ")
@@ -159,7 +166,9 @@ public class DecoratorTransformer implements AstTransformer {
         }
 
         constructor.setBody(new ExpressionStatement(initCode.toString()));
-        // Add to class
+
+        // Add constructor at the beginning of the class
+        classDecl.getMembers().add(0, constructor);
     }
 
     /**
