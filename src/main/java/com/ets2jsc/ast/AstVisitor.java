@@ -64,4 +64,14 @@ public interface AstVisitor<T> {
      * Visit a component statement node.
      */
     T visit(ComponentStatement node);
+
+    /**
+     * Visit a foreach statement node.
+     */
+    T visit(ForeachStatement node);
+
+    /**
+     * Visit an if statement node.
+     */
+    T visit(IfStatement node);
 }

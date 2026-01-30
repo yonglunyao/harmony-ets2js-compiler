@@ -298,14 +298,21 @@ public class CodeGenerator implements AstVisitor<String> {
     public String visit(Block node) {
         StringBuilder sb = new StringBuilder();
         for (AstNode stmt : node.getStatements()) {
-            String stmtCode = stmt.accept(this);
-            if (stmtCode != null && !stmtCode.isEmpty()) {
-                // Don't add indentation for nested blocks in component methods
-                // (they represent component closures, not code blocks)
-                if (stmt instanceof Block) {
-                    sb.append(stmtCode);
-                } else {
-                    sb.append(getIndent()).append(stmtCode).append("\n");
+            // Check for special statement types
+            if (stmt instanceof ForeachStatement) {
+                sb.append(((ForeachStatement) stmt).accept(this));
+            } else if (stmt instanceof IfStatement) {
+                sb.append(((IfStatement) stmt).accept(this));
+            } else {
+                String stmtCode = stmt.accept(this);
+                if (stmtCode != null && !stmtCode.isEmpty()) {
+                    // Don't add indentation for nested blocks in component methods
+                    // (they represent component closures, not code blocks)
+                    if (stmt instanceof Block) {
+                        sb.append(stmtCode);
+                    } else {
+                        sb.append(getIndent()).append(stmtCode).append("\n");
+                    }
                 }
             }
         }
@@ -344,6 +351,70 @@ public class CodeGenerator implements AstVisitor<String> {
                     break;
             }
         }
+
+        return sb.toString();
+    }
+
+    @Override
+    public String visit(ForeachStatement node) {
+        StringBuilder sb = new StringBuilder();
+
+        // 1. ForEach.create()
+        sb.append(getIndent()).append("ForEach.create();\n");
+
+        // 2. Item generator function
+        sb.append(getIndent()).append("const __itemGenFunction__ = ").append(node.getItemGenerator()).append(";\n");
+
+        // 3. Key generator function (if provided)
+        String keyGen = node.getKeyGenerator();
+        if (keyGen != null && !keyGen.isEmpty()) {
+            sb.append(getIndent()).append("const __keyGenFunction__ = ").append(keyGen).append(";\n");
+            sb.append(getIndent()).append("ForEach.keyGenerator(__keyGenFunction__);\n");
+        }
+
+        // 4. Set item generator
+        sb.append(getIndent()).append("ForEach.itemGenerator(__itemGenFunction__);\n");
+
+        // 5. ForEach.pop()
+        sb.append(getIndent()).append("ForEach.pop();\n");
+
+        return sb.toString();
+    }
+
+    @Override
+    public String visit(IfStatement node) {
+        StringBuilder sb = new StringBuilder();
+
+        // 1. If.create()
+        sb.append(getIndent()).append("If.create();\n");
+
+        // 2. Build the if-else statement with branchId
+        sb.append(getIndent()).append("if (").append(node.getCondition()).append(") {\n");
+        currentIndent++;
+
+        // Then branch
+        sb.append(getIndent()).append("If.branchId(0);\n");
+        String thenCode = node.getThenBlock().accept(this);
+        sb.append(thenCode);
+
+        currentIndent--;
+        sb.append(getIndent()).append("}\n");
+
+        // Else branch (if exists)
+        if (node.hasElse()) {
+            sb.append(getIndent()).append("else {\n");
+            currentIndent++;
+
+            sb.append(getIndent()).append("If.branchId(1);\n");
+            String elseCode = node.getElseBlock().accept(this);
+            sb.append(elseCode);
+
+            currentIndent--;
+            sb.append(getIndent()).append("}\n");
+        }
+
+        // 3. If.pop()
+        sb.append(getIndent()).append("If.pop();\n");
 
         return sb.toString();
     }

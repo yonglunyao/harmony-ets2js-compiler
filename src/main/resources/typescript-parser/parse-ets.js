@@ -250,15 +250,25 @@ function convertAstToJson(node, extractedDecorators = []) {
         case ts.SyntaxKind.CallExpression:
             result.expression = convertAstToJson(node.expression);
             result.arguments = [];
+
+            // Check if this is a special component (ForEach) that needs JSON objects as arguments
+            const isForEach = result.expression && result.expression.kindName === 'Identifier' &&
+                            result.expression.name === 'ForEach';
+
             for (const arg of (node.arguments || [])) {
-                // Try to get the text representation
-                try {
-                    result.arguments.push(arg.getText());
-                } catch (e) {
-                    // If getText fails, try recursive conversion
-                    const argJson = convertAstToJson(arg);
-                    if (argJson && argJson.text) {
-                        result.arguments.push(argJson.text);
+                if (isForEach) {
+                    // ForEach needs JSON objects for proper argument processing
+                    result.arguments.push(convertAstToJson(arg));
+                } else {
+                    // Regular calls use text representation
+                    try {
+                        result.arguments.push(arg.getText());
+                    } catch (e) {
+                        // If getText fails, try recursive conversion
+                        const argJson = convertAstToJson(arg);
+                        if (argJson && argJson.text) {
+                            result.arguments.push(argJson.text);
+                        }
                     }
                 }
             }
@@ -276,6 +286,14 @@ function convertAstToJson(node, extractedDecorators = []) {
                     }
                     // Store the method name (current PropertyAccessExpression)
                     result.methodName = propExpr.name;
+                }
+            }
+            // Check for special components like ForEach and If
+            if (result.expression && result.expression.kindName === 'Identifier') {
+                const componentName = result.expression.name;
+                if (componentName === 'ForEach' || componentName === 'If') {
+                    result.isSpecialComponent = true;
+                    result.componentName = componentName;
                 }
             }
             break;
@@ -347,6 +365,8 @@ function convertAstToJson(node, extractedDecorators = []) {
                 });
             }
             result.body = convertAstToJson(node.body);
+            // Add text representation for arrow functions
+            result.text = node.getText();
             break;
 
         case ts.SyntaxKind.StringLiteral:
@@ -369,6 +389,46 @@ function convertAstToJson(node, extractedDecorators = []) {
             result.expression = convertAstToJson(node.expression);
             result.thenStatement = convertAstToJson(node.thenStatement);
             result.elseStatement = convertAstToJson(node.elseStatement);
+            break;
+
+        case ts.SyntaxKind.BinaryExpression:
+            result.left = convertAstToJson(node.left);
+            result.operator = node.operatorToken.getText();
+            result.right = convertAstToJson(node.right);
+            break;
+
+        case ts.SyntaxKind.ConditionalExpression:
+            result.condition = convertAstToJson(node.condition);
+            result.whenTrue = convertAstToJson(node.whenTrue);
+            result.whenFalse = convertAstToJson(node.whenFalse);
+            break;
+
+        case ts.SyntaxKind.ArrayLiteralExpression:
+            result.elements = [];
+            if (node.elements) {
+                for (const elem of node.elements) {
+                    result.elements.push(convertAstToJson(elem));
+                }
+            }
+            break;
+
+        case ts.SyntaxKind.ObjectLiteralExpression:
+            result.properties = [];
+            if (node.properties) {
+                for (const prop of node.properties) {
+                    result.properties.push(convertAstToJson(prop));
+                }
+            }
+            break;
+
+        case ts.SyntaxKind.PropertyAssignment:
+            result.name = node.name.getText();
+            result.value = convertAstToJson(node.initializer);
+            break;
+
+        case ts.SyntaxKind.ShorthandPropertyAssignment:
+            result.name = node.name.getText();
+            result.value = { kindName: 'Identifier', name: node.name.getText(), text: node.name.getText() };
             break;
 
         // Add more cases as needed
@@ -405,6 +465,16 @@ function getSyntaxKindName(kind) {
         [ts.SyntaxKind.IfStatement]: 'IfStatement',
         [ts.SyntaxKind.ImportDeclaration]: 'ImportDeclaration',
         [ts.SyntaxKind.ExportDeclaration]: 'ExportDeclaration',
+        [ts.SyntaxKind.BinaryExpression]: 'BinaryExpression',
+        [ts.SyntaxKind.ConditionalExpression]: 'ConditionalExpression',
+        [ts.SyntaxKind.ArrayLiteralExpression]: 'ArrayLiteralExpression',
+        [ts.SyntaxKind.ObjectLiteralExpression]: 'ObjectLiteralExpression',
+        [ts.SyntaxKind.PropertyAssignment]: 'PropertyAssignment',
+        [ts.SyntaxKind.ShorthandPropertyAssignment]: 'ShorthandPropertyAssignment',
+        [ts.SyntaxKind.TrueKeyword]: 'TrueLiteral',
+        [ts.SyntaxKind.FalseKeyword]: 'FalseLiteral',
+        [ts.SyntaxKind.NullKeyword]: 'NullLiteral',
+        [ts.SyntaxKind.UndefinedKeyword]: 'UndefinedLiteral',
     };
 
     return kindMap[kind] || `Unknown_${kind}`;

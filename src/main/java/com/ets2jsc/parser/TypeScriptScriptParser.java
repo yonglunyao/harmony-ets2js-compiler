@@ -8,6 +8,8 @@ import com.ets2jsc.ast.ClassDeclaration;
 import com.ets2jsc.ast.ComponentExpression;
 import com.ets2jsc.ast.Decorator;
 import com.ets2jsc.ast.ExpressionStatement;
+import com.ets2jsc.ast.ForeachStatement;
+import com.ets2jsc.ast.IfStatement;
 import com.ets2jsc.ast.ImportStatement;
 import com.ets2jsc.ast.ExportStatement;
 import com.ets2jsc.ast.MethodDeclaration;
@@ -169,6 +171,23 @@ public class TypeScriptScriptParser {
                 return convertImportDeclaration(json);
             case "ExportDeclaration":
                 return convertExportDeclaration(json);
+            case "BinaryExpression":
+                return convertBinaryExpression(json);
+            case "ConditionalExpression":
+                return convertConditionalExpression(json);
+            case "ArrayLiteralExpression":
+                return convertArrayLiteralExpression(json);
+            case "ObjectLiteralExpression":
+                return convertObjectLiteralExpression(json);
+            case "PropertyAssignment":
+                return convertPropertyAssignment(json);
+            case "ShorthandPropertyAssignment":
+                return convertShorthandPropertyAssignment(json);
+            case "TrueLiteral":
+            case "FalseLiteral":
+            case "NullLiteral":
+            case "UndefinedLiteral":
+                return convertLiteralExpression(json);
             default:
                 return null;
         }
@@ -314,10 +333,40 @@ public class TypeScriptScriptParser {
         return block;
     }
 
-    private ExpressionStatement convertExpressionStatement(JsonObject json) {
+    private AstNode convertExpressionStatement(JsonObject json) {
         JsonObject exprObj = json.getAsJsonObject("expression");
+        String kindName = exprObj.has("kindName") ? exprObj.get("kindName").getAsString() : "";
+
+        // Check for special components: ForEach
+        if ("CallExpression".equals(kindName)) {
+            String componentName = exprObj.has("componentName") ? exprObj.get("componentName").getAsString() : "";
+            if ("ForEach".equals(componentName)) {
+                return convertForEachExpression(exprObj);
+            }
+        }
+
         String expression = convertExpressionToString(exprObj);
         return new ExpressionStatement(expression);
+    }
+
+    private ForeachStatement convertForEachExpression(JsonObject json) {
+        // ForEach has 3 arguments: array, itemGenerator, keyGenerator
+        JsonArray argsArray = json.getAsJsonArray("arguments");
+
+        String arrayExpr = "";
+        String itemGenExpr = "";
+        String keyGenExpr = "";
+
+        if (argsArray != null && argsArray.size() >= 2) {
+            arrayExpr = convertExpressionToString(argsArray.get(0).getAsJsonObject());
+            itemGenExpr = convertExpressionToString(argsArray.get(1).getAsJsonObject());
+
+            if (argsArray.size() >= 3) {
+                keyGenExpr = convertExpressionToString(argsArray.get(2).getAsJsonObject());
+            }
+        }
+
+        return new ForeachStatement(arrayExpr, itemGenExpr, keyGenExpr);
     }
 
     private CallExpression convertCallExpression(JsonObject json) {
@@ -353,11 +402,108 @@ public class TypeScriptScriptParser {
             case "NumericLiteral":
                 String litText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
                 return litText.trim();
+            case "BinaryExpression":
+                return convertBinaryExpressionToString(exprJson);
+            case "ConditionalExpression":
+                return convertConditionalExpressionToString(exprJson);
+            case "ArrayLiteralExpression":
+                return convertArrayLiteralToString(exprJson);
+            case "ObjectLiteralExpression":
+                return convertObjectLiteralToString(exprJson);
+            case "TrueLiteral":
+                return "true";
+            case "FalseLiteral":
+                return "false";
+            case "NullLiteral":
+                return "null";
+            case "UndefinedLiteral":
+                return "undefined";
+            case "ArrowFunction":
+                // Arrow functions are already handled in parse-ets.js
+                String arrowText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
+                return arrowText.trim();
+            case "PropertyAssignment": {
+                String propName = exprJson.has("name") ? exprJson.get("name").getAsString() : "";
+                JsonObject propValue = exprJson.getAsJsonObject("value");
+                String valueStr = propValue != null ? convertExpressionToString(propValue) : "";
+                return propName + ": " + valueStr;
+            }
+            case "ShorthandPropertyAssignment": {
+                String shortName = exprJson.has("name") ? exprJson.get("name").getAsString() : "";
+                return shortName;
+            }
             default:
                 // Fallback: return the text if available
                 String fallbackText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
                 return fallbackText.isEmpty() ? exprJson.toString() : fallbackText.trim();
         }
+    }
+
+    /**
+     * Converts a BinaryExpression to JavaScript string.
+     */
+    private String convertBinaryExpressionToString(JsonObject json) {
+        JsonObject left = json.getAsJsonObject("left");
+        String operator = json.has("operator") ? json.get("operator").getAsString() : "";
+        JsonObject right = json.getAsJsonObject("right");
+
+        String leftStr = convertExpressionToString(left);
+        String rightStr = convertExpressionToString(right);
+
+        return leftStr + " " + operator + " " + rightStr;
+    }
+
+    /**
+     * Converts a ConditionalExpression to JavaScript string.
+     */
+    private String convertConditionalExpressionToString(JsonObject json) {
+        JsonObject condition = json.getAsJsonObject("condition");
+        JsonObject whenTrue = json.getAsJsonObject("whenTrue");
+        JsonObject whenFalse = json.getAsJsonObject("whenFalse");
+
+        String condStr = convertExpressionToString(condition);
+        String trueStr = convertExpressionToString(whenTrue);
+        String falseStr = convertExpressionToString(whenFalse);
+
+        return condStr + " ? " + trueStr + " : " + falseStr;
+    }
+
+    /**
+     * Converts an ArrayLiteralExpression to JavaScript string.
+     */
+    private String convertArrayLiteralToString(JsonObject json) {
+        JsonArray elements = json.getAsJsonArray("elements");
+        if (elements == null || elements.size() == 0) {
+            return "[]";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for (int i = 0; i < elements.size(); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(convertExpressionToString(elements.get(i).getAsJsonObject()));
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    /**
+     * Converts an ObjectLiteralExpression to JavaScript string.
+     */
+    private String convertObjectLiteralToString(JsonObject json) {
+        JsonArray properties = json.getAsJsonArray("properties");
+        if (properties == null || properties.size() == 0) {
+            return "{}";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        for (int i = 0; i < properties.size(); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(convertExpressionToString(properties.get(i).getAsJsonObject()));
+        }
+        sb.append("}");
+        return sb.toString();
     }
 
     /**
@@ -557,6 +703,41 @@ public class TypeScriptScriptParser {
         // Create ExportStatement with the generated string
         String declaration = exportStr.length() > 0 ? exportStr.toString() : null;
         return new ExportStatement(null, isTypeOnly, declaration);
+    }
+
+    private AstNode convertBinaryExpression(JsonObject json) {
+        // Binary expressions are handled via convertExpressionToString
+        return new ExpressionStatement(convertExpressionToString(json));
+    }
+
+    private AstNode convertConditionalExpression(JsonObject json) {
+        // Conditional expressions are handled via convertExpressionToString
+        return new ExpressionStatement(convertExpressionToString(json));
+    }
+
+    private AstNode convertArrayLiteralExpression(JsonObject json) {
+        // Array literal expressions are handled via convertExpressionToString
+        return new ExpressionStatement(convertExpressionToString(json));
+    }
+
+    private AstNode convertObjectLiteralExpression(JsonObject json) {
+        // Object literal expressions are handled via convertExpressionToString
+        return new ExpressionStatement(convertExpressionToString(json));
+    }
+
+    private AstNode convertPropertyAssignment(JsonObject json) {
+        // Property assignments are handled via convertExpressionToString
+        return new ExpressionStatement(convertExpressionToString(json));
+    }
+
+    private AstNode convertShorthandPropertyAssignment(JsonObject json) {
+        // Shorthand properties are handled via convertExpressionToString
+        return new ExpressionStatement(convertExpressionToString(json));
+    }
+
+    private AstNode convertLiteralExpression(JsonObject json) {
+        // Literal expressions (true, false, null, undefined) are handled via convertExpressionToString
+        return new ExpressionStatement(convertExpressionToString(json));
     }
 }
 
