@@ -1,151 +1,151 @@
-# ETS to JS Compiler
+# ETS to JS 编译器
 
-ArkTS/ETS to JavaScript compiler for HarmonyOS. This compiler converts ArkTS (Extended TypeScript) code into standard JavaScript that can be executed by HarmonyOS runtime.
+HarmonyOS ArkTS/ETS 转 JavaScript 编译器。该编译器将 ArkTS（扩展 TypeScript）代码转换为标准 JavaScript，可由 HarmonyOS 运行时执行。
 
-## Project Overview
+## 项目概述
 
-This is a compiler that translates ArkTS/ETS source code into JavaScript, enabling developers to use modern declarative UI syntax and decorators while maintaining compatibility with HarmonyOS runtime environments.
+这是一个将 ArkTS/ETS 源代码翻译为 JavaScript 的编译器，使开发者能够使用现代化的声明式 UI 语法和装饰器，同时保持与 HarmonyOS 运行时环境的兼容性。
 
-### Key Features
+### 核心功能
 
-- **Decorator Support**
-  - `@Component` - Converts struct to class View
-  - `@State` - State management with ObservedPropertySimple
-  - `@Prop` - Property decorator for component props
-  - `@Link` - Two-way data binding
-  - `@Provide/@Consume` - State dependency injection
-  - `@Builder` - Builder function transformation
+- **装饰器支持**
+  - `@Component` - 将 struct 转换为 class View
+  - `@State` - 使用 ObservedPropertySimple 进行状态管理
+  - `@Prop` - 组件属性装饰器
+  - `@Link` - 双向数据绑定
+  - `@Provide/@Consume` - 状态依赖注入
+  - `@Builder` - Builder 函数转换
 
-- **UI Components**
-  - ForEach - List rendering
-  - If - Conditional rendering
-  - Declarative UI to create/pop pattern transformation
+- **UI 组件**
+  - ForEach - 列表渲染
+  - If - 条件渲染
+  - 声明式 UI 到 create/pop 模式转换
 
-- **Expression Support**
-  - Object literals
-  - Array literals
-  - Arrow functions
-  - Template literals
-  - Resource references (`$r()`, `$rawfile()`)
+- **表达式支持**
+  - 对象字面量
+  - 数组字面量
+  - 箭头函数
+  - 模板字符串
+  - 资源引用（`$r()`、`$rawfile()`）
 
-## Requirements
+## 环境要求
 
 - Java 17
 - Maven 3.8.3+
-- GraalVM JavaScript Engine (included as dependency)
+- GraalVM JavaScript 引擎（作为依赖包含）
 
-## Installation
+## 安装
 
 ```bash
-# Clone the repository
+# 克隆仓库
 git clone https://github.com/yonglunyao/harmony-ets2js-compiler.git
 cd harmony-ets2js-compiler
 
-# Build the project
+# 构建项目
 mvn clean package
 ```
 
-## Usage
+## 使用方法
 
-### Command Line
+### 命令行编译
 
 ```bash
-# Compile a single ETS file
+# 编译单个 ETS 文件
 java -jar target/ets2jsc-1.0-SNAPSHOT.jar <input.ets> <output.js>
 
-# Or using Maven exec
+# 或使用 Maven exec
 mvn exec:java -Dexec.mainClass="com.ets2jsc.EtsCompiler" -Dexec.args="<input.ets> <output.js>"
 ```
 
-### Maven Usage
+### Maven 命令
 
 ```bash
-# Compile
+# 编译
 mvn compile
 
-# Run tests
+# 运行测试
 mvn test
 
-# Run specific test
+# 运行指定测试
 mvn test -Dtest=SimpleComponentTest
 
-# Build JAR
+# 构建 JAR
 mvn clean package
 ```
 
-## Project Structure
+## 项目结构
 
 ```
 src/main/java/com/ets2jsc/
-├── EtsCompiler.java          # Main compiler entry point
-├── ast/                       # AST node definitions
+├── EtsCompiler.java          # 编译器主入口
+├── ast/                       # AST 节点定义
 │   ├── AstNode.java
 │   ├── SourceFile.java
 │   ├── ClassDeclaration.java
 │   └── ...
-├── parser/                    # Parser implementation
+├── parser/                    # 解析器实现
 │   └── TypeScriptScriptParser.java
-├── transformer/               # AST transformers
+├── transformer/               # AST 转换器
 │   ├── DecoratorTransformer.java
 │   ├── ComponentTransformer.java
 │   └── BuildMethodTransformer.java
-├── generator/                 # Code generator
+├── generator/                 # 代码生成器
 │   └── CodeGenerator.java
-├── config/                    # Configuration
+├── config/                    # 配置
 │   └── CompilerConfig.java
-└── constant/                  # Constants
+└── constant/                  # 常量定义
     ├── Decorators.java
     └── Components.java
 ```
 
-## Documentation
+## 文档
 
-Detailed documentation is available in the [docs](docs) directory:
+详细文档位于 [docs](docs) 目录：
 
-- [01-技术文档.md](docs/01-技术文档.md) - Technical documentation
-- [迭代2-技术实现方案-part1.md](docs/迭代2-技术实现方案-part1.md) - Iteration 2 technical design (Part 1)
-- [迭代2-技术实现方案-part2.md](docs/迭代2-技术实现方案-part2.md) - Iteration 2 technical design (Part 2)
-- [迭代3-需求说明书.md](docs/迭代3-需求说明书.md) - Iteration 3 requirements
-- [迭代3-技术实现方案.md](docs/迭代3-技术实现方案.md) - Iteration 3 technical design
-- [迭代4-技术实现方案.md](docs/迭代4-技术实现方案.md) - Iteration 4 technical design
+- [01-技术文档.md](docs/01-技术文档.md) - 技术文档
+- [迭代2-技术实现方案-part1.md](docs/迭代2-技术实现方案-part1.md) - 迭代 2 技术设计（第 1 部分）
+- [迭代2-技术实现方案-part2.md](docs/迭代2-技术实现方案-part2.md) - 迭代 2 技术设计（第 2 部分）
+- [迭代3-需求说明书.md](docs/迭代3-需求说明书.md) - 迭代 3 需求说明
+- [迭代3-技术实现方案.md](docs/迭代3-技术实现方案.md) - 迭代 3 技术设计
+- [迭代4-技术实现方案.md](docs/迭代4-技术实现方案.md) - 迭代 4 技术设计
 
-## Development
+## 开发指南
 
-### Adding New Features
+### 添加新功能
 
-1. Define AST nodes in `ast/` package
-2. Implement parsing logic in `parser/`
-3. Create transformer in `transformer/`
-4. Generate code in `generator/`
-5. Add tests in `src/test/java/`
+1. 在 `ast/` 包中定义 AST 节点
+2. 在 `parser/` 中实现解析逻辑
+3. 在 `transformer/` 中创建转换器
+4. 在 `generator/` 中生成代码
+5. 在 `src/test/java/` 中添加测试
 
-### Testing
+### 运行测试
 
 ```bash
-# Run all tests
+# 运行所有测试
 mvn test
 
-# Run specific test class
+# 运行指定测试类
 mvn test -Dtest=SimpleComponentTest
 
-# Run with verbose output
+# 详细输出模式
 mvn test -X
 ```
 
-## License
+## 许可证
 
-This project is licensed under the MIT License.
+本项目采用 MIT 许可证。
 
-## Contributing
+## 贡献
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+欢迎贡献！请随时提交 Pull Request。
 
-## Authors
+## 作者
 
-- yonglunyao - Initial work
+- yonglunyao - 初始工作
 
-## Acknowledgments
+## 致谢
 
-- GraalVM for the JavaScript engine
-- TypeScript for the parser foundation
-- HarmonyOS team for the platform
+- GraalVM - JavaScript 引擎
+- TypeScript - 解析器基础
+- HarmonyOS 团队 - 平台支持
