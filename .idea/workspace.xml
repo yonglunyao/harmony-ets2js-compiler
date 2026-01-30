@@ -5,14 +5,81 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6e735bca-92c0-4283-a266-7d0526704678" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/ETS编译器迭代3技术实现方案说明书.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/entryability/EntryAbility.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/entrybackupability/EntryBackupAbility.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/pages/CryptographyPage.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/pages/FileSystemPage.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/pages/ImagePage.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/pages/Index.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/pages/VideoPage.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/services/CryptographyUtil.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/services/FileManager.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/services/ImageProcessor.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/services/NfcManager.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/services/VideoProcessor.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/ets/utils/Logger.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/module.json5" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/resources/base/element/color.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/resources/base/element/float.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/resources/base/element/string.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/resources/base/media/background.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/resources/base/media/foreground.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/resources/base/media/layered_image.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/resources/base/media/startIcon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/resources/base/profile/backup_config.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/resources/base/profile/main_pages.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/main/resources/dark/element/color.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/mock/mock-config.json5" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/ohosTest/ets/test/Ability.test.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/ohosTest/ets/test/CryptographyPageUITest.test.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/ohosTest/ets/test/FileSystemPageUITest.test.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/ohosTest/ets/test/ImagePageUITest.test.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/ohosTest/ets/test/List.test.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/ohosTest/ets/test/MainPageUITest.test.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/ohosTest/ets/test/NfcPageUITest.test.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/ohosTest/ets/test/TestHelper.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/ohosTest/ets/test/UtilsTest.test.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/ohosTest/ets/test/VideoPageUITest.test.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/ohosTest/module.json5" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/test/List.test.ets" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/resources/fixtures/harmony-utils/src/test/LocalUnit.test.ets" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ets2jsc/EtsCompiler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ets2jsc/EtsCompiler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ets2jsc/config/CompilerConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ets2jsc/config/CompilerConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ets2jsc/generator/CodeGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ets2jsc/generator/CodeGenerator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/ets2jsc/parser/TypeScriptScriptParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/ets2jsc/parser/TypeScriptScriptParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/typescript-parser/parse-ets.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/typescript-parser/parse-ets.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/ets2jsc/DebugTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/ets2jsc/DebugTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-arrayutils-final.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-arrayutils-final.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-as-test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-as-test.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-builder.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-builder.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-chained.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-chained.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-comprehensive.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-comprehensive.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-date-test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-date-test.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-exception-test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-exception-test.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-if.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-if.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-link.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-link.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-loop-test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-loop-test.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-loop-test2.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-loop-test2.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-loop-test3.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-loop-test3.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-loop-test4.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-loop-test4.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-prop.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-prop.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-provide-consume.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-provide-consume.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-simple.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-simple.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-spread-test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-spread-test.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-switch-test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/output-switch-test.js.map" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,7 +113,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/code/ets-har-builder/ets2jsc&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/code/ets-har-builder/ets2jsc/src/test/resources/fixtures/harmony-utils&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -61,6 +128,7 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\code\ets-har-builder\ets2jsc\src\test\resources\fixtures\harmony-utils" />
       <recent name="D:\code\ets-har-builder\ets2jsc" />
       <recent name="D:\code\ets-har-builder\ets2jsc\src\test\resources\fixtures" />
     </key>
@@ -121,7 +189,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1769699364496</updated>
-      <workItem from="1769699365606" duration="47908000" />
+      <workItem from="1769699365606" duration="49037000" />
     </task>
     <servers />
   </component>

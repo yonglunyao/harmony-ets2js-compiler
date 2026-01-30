@@ -1,0 +1,48 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "HarmonyOS 工具集 - 图像处理、密码学、文件管理、视频处理、NFC等功能"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "HarmonyOS 工具集应用"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "HarmonyOS 工具集"
+    },
+    {
+      "name": "permission_read_imagevideo_reason",
+      "value": "需要读取图片和视频文件以进行图像处理和视频处理"
+    },
+    {
+      "name": "permission_write_imagevideo_reason",
+      "value": "需要写入图片和视频文件以保存处理结果"
+    },
+    {
+      "name": "permission_read_media_reason",
+      "value": "需要读取媒体文件以进行文件管理"
+    },
+    {
+      "name": "permission_write_media_reason",
+      "value": "需要写入媒体文件以保存文件"
+    },
+    {
+      "name": "permission_file_access_reason",
+      "value": "需要访问文件系统以进行文件管理操作"
+    },
+    {
+      "name": "permission_get_network_info_reason",
+      "value": "需要获取网络信息"
+    },
+    {
+      "name": "permission_internet_reason",
+      "value": "需要网络连接"
+    },
+    {
+      "name": "permission_nfc_reason",
+      "value": "需要使用NFC功能读取和写入标签"
+    }
+  ]
+}

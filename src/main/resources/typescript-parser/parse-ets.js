@@ -377,8 +377,8 @@ function convertAstToJson(node, extractedDecorators = []) {
         case ts.SyntaxKind.PropertyAccessExpression:
             result.expression = convertAstToJson(node.expression);
             result.name = node.name.escapedText;
-            // Note: Don't extract arguments here - they're handled by the parent CallExpression
-            // to avoid duplication
+            // Add text representation for code generation
+            result.text = generatePropertyAccessExpressionText(node);
             break;
 
         case ts.SyntaxKind.NewExpression:
@@ -416,6 +416,8 @@ function convertAstToJson(node, extractedDecorators = []) {
 
         case ts.SyntaxKind.NonNullExpression:
             result.expression = convertAstToJson(node.expression);
+            // Add text representation without the ! operator
+            result.text = generateNonNullExpressionText(node);
             break;
 
         case ts.SyntaxKind.AsExpression:
@@ -511,6 +513,11 @@ function convertAstToJson(node, extractedDecorators = []) {
 
         case ts.SyntaxKind.AwaitExpression:
             result.expression = convertAstToJson(node.expression);
+            break;
+
+        case ts.SyntaxKind.ThrowStatement:
+            result.expression = convertAstToJson(node.expression);
+            result.text = generateThrowStatementText(node);
             break;
 
         case ts.SyntaxKind.ReturnStatement:
@@ -967,6 +974,31 @@ function generateArrowFunctionText(node) {
 }
 
 /**
+ * Generate text representation for throw statement
+ */
+function generateThrowStatementText(node) {
+    const expr = node.expression ? convertAstToJson(node.expression) : null;
+    return expr ? 'throw ' + jsonToCodeString(expr) : 'throw';
+}
+
+/**
+ * Generate text representation for property access expression (handles non-null assertion)
+ */
+function generatePropertyAccessExpressionText(node) {
+    const expr = node.expression ? convertAstToJson(node.expression) : null;
+    const name = node.name ? node.name.escapedText : '';
+    return expr ? jsonToCodeString(expr) + '.' + name : name;
+}
+
+/**
+ * Generate text representation for non-null assertion (removes the ! operator)
+ */
+function generateNonNullExpressionText(node) {
+    const expr = node.expression ? convertAstToJson(node.expression) : null;
+    return expr ? jsonToCodeString(expr) : '';
+}
+
+/**
  * Generate text representation for as-expression (without the type assertion)
  */
 function generateAsExpressionText(node) {
@@ -1071,6 +1103,9 @@ function jsonToCodeString(json) {
         case 'Identifier':
             return json.text || json.name || '';
 
+        case 'ThisKeyword':
+            return 'this';
+
         case 'FirstLiteralToken':
             return json.text || '';
 
@@ -1167,11 +1202,17 @@ function jsonToCodeString(json) {
         }
 
         case 'NonNullExpression': {
+            // Non-null assertion (!) - just return the expression without the !
             return jsonToCodeString(json.expression);
         }
 
         case 'AwaitExpression': {
             return 'await ' + jsonToCodeString(json.expression);
+        }
+
+        case 'ThrowStatement': {
+            const expr = json.expression ? jsonToCodeString(json.expression) : '';
+            return 'throw ' + expr;
         }
 
         case 'ObjectLiteralExpression': {
