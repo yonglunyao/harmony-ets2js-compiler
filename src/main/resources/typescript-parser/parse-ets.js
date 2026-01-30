@@ -243,6 +243,26 @@ function convertAstToJson(node, extractedDecorators = []) {
             }
             break;
 
+        case ts.SyntaxKind.VariableStatement:
+            result.declarationList = convertAstToJson(node.declarationList);
+            break;
+
+        case ts.SyntaxKind.VariableDeclarationList:
+            result.declarations = [];
+            for (const decl of (node.declarations || [])) {
+                const declJson = convertAstToJson(decl);
+                if (declJson) {
+                    result.declarations.push(declJson);
+                }
+            }
+            break;
+
+        case ts.SyntaxKind.VariableDeclaration:
+            result.name = node.name?.getText() || '';
+            result.type = node.type?.getText() || '';
+            result.initializer = node.initializer ? convertAstToJson(node.initializer) : null;
+            break;
+
         case ts.SyntaxKind.ExpressionStatement:
             result.expression = convertAstToJson(node.expression);
             break;
@@ -301,6 +321,24 @@ function convertAstToJson(node, extractedDecorators = []) {
         case ts.SyntaxKind.Identifier:
             result.name = node.escapedText;
             result.text = node.getText();
+
+            // Check for resource references: $r() and $rawfile()
+            if (result.name.startsWith('$r(') || result.name.startsWith('$rawfile(')) {
+                // Convert to resource function call
+                const match = result.name.match(/^\$(r|rawfile)\(([^)]+)\)$/);
+                if (match) {
+                    const resourceType = match[1]; // 'r' or 'rawfile'
+                    const resourceId = match[2];
+                    if (resourceType === 'r') {
+                        result.name = RuntimeFunctions.GET_RESOURCE_ID;
+                        result.text = `this.${RuntimeFunctions.GET_RESOURCE_ID}('${resourceId}')`;
+                    } else if (resourceType === 'rawfile') {
+                        result.name = RuntimeFunctions.GET_RAW_FILE_ID;
+                        result.text = `this.${RuntimeFunctions.GET_RAW_FILE_ID}('${resourceId}')`;
+                    }
+                }
+            }
+
             break;
 
         case ts.SyntaxKind.PropertyAccessExpression:
@@ -308,6 +346,39 @@ function convertAstToJson(node, extractedDecorators = []) {
             result.name = node.name.escapedText;
             // Note: Don't extract arguments here - they're handled by the parent CallExpression
             // to avoid duplication
+            break;
+
+        case ts.SyntaxKind.NewExpression:
+            result.expression = convertAstToJson(node.expression);
+            result.arguments = [];
+            if (node.arguments) {
+                for (const arg of node.arguments) {
+                    result.arguments.push(convertAstToJson(arg));
+                }
+            }
+            break;
+
+        case ts.SyntaxKind.ElementAccessExpression:
+            result.expression = convertAstToJson(node.expression);
+            result.argumentExpression = convertAstToJson(node.argumentExpression);
+            break;
+
+        case ts.SyntaxKind.ParenthesizedExpression:
+            result.expression = convertAstToJson(node.expression);
+            break;
+
+        case ts.SyntaxKind.TypeOfExpression:
+            result.expression = convertAstToJson(node.expression);
+            break;
+
+        case ts.SyntaxKind.PrefixUnaryExpression:
+            result.operator = ts.tokenToString(node.operator);
+            result.operand = convertAstToJson(node.operand);
+            break;
+
+        case ts.SyntaxKind.PostfixUnaryExpression:
+            result.operator = ts.tokenToString(node.operator);
+            result.operand = convertAstToJson(node.operand);
             break;
 
         case ts.SyntaxKind.ImportDeclaration:
@@ -475,6 +546,17 @@ function getSyntaxKindName(kind) {
         [ts.SyntaxKind.FalseKeyword]: 'FalseLiteral',
         [ts.SyntaxKind.NullKeyword]: 'NullLiteral',
         [ts.SyntaxKind.UndefinedKeyword]: 'UndefinedLiteral',
+        [ts.SyntaxKind.VariableStatement]: 'VariableStatement',
+        [ts.SyntaxKind.VariableDeclarationList]: 'VariableDeclarationList',
+        [ts.SyntaxKind.VariableDeclaration]: 'VariableDeclaration',
+        [ts.SyntaxKind.FirstStatement]: 'FirstStatement',
+        [ts.SyntaxKind.NewExpression]: 'NewExpression',
+        [ts.SyntaxKind.ElementAccessExpression]: 'ElementAccessExpression',
+        [ts.SyntaxKind.ParenthesizedExpression]: 'ParenthesizedExpression',
+        [ts.SyntaxKind.AsExpression]: 'AsExpression',
+        [ts.SyntaxKind.TypeOfExpression]: 'TypeOfExpression',
+        [ts.SyntaxKind.PrefixUnaryExpression]: 'PrefixUnaryExpression',
+        [ts.SyntaxKind.PostfixUnaryExpression]: 'PostfixUnaryExpression',
     };
 
     return kindMap[kind] || `Unknown_${kind}`;

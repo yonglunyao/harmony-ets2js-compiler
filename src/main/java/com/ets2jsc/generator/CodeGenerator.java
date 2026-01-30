@@ -337,17 +337,24 @@ public class CodeGenerator implements AstVisitor<String> {
         StringBuilder sb = new StringBuilder();
         String componentName = node.getComponentName();
 
+        // Process each part
         for (ComponentPart part : node.getParts()) {
-            sb.append(getIndent());
             switch (part.getKind()) {
                 case CREATE:
-                    sb.append(componentName).append(".create(").append(part.getCode()).append(");\n");
+                    sb.append(getIndent()).append(componentName).append(".create(").append(part.getCode()).append(");\n");
                     break;
                 case METHOD:
-                    sb.append(componentName).append(".").append(part.getCode()).append("\n");
+                    sb.append(getIndent()).append(componentName).append(".").append(part.getCode()).append("\n");
                     break;
                 case POP:
-                    sb.append(componentName).append(".pop();\n");
+                    // Output children before pop() if this component has children
+                    if (node.hasChildren()) {
+                        // Increase indent for children
+                        currentIndent++;
+                        sb.append(node.getChildren().accept(this));
+                        currentIndent--;
+                    }
+                    sb.append(getIndent()).append(componentName).append(".pop();\n");
                     break;
             }
         }

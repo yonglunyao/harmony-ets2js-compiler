@@ -6,6 +6,8 @@ import com.ets2jsc.ast.Block;
 import com.ets2jsc.ast.CallExpression;
 import com.ets2jsc.ast.ClassDeclaration;
 import com.ets2jsc.ast.ComponentExpression;
+import com.ets2jsc.ast.ComponentRegistry;
+import com.ets2jsc.ast.ComponentStatement;
 import com.ets2jsc.ast.Decorator;
 import com.ets2jsc.ast.ExpressionStatement;
 import com.ets2jsc.ast.ForeachStatement;
@@ -15,6 +17,7 @@ import com.ets2jsc.ast.ExportStatement;
 import com.ets2jsc.ast.MethodDeclaration;
 import com.ets2jsc.ast.PropertyDeclaration;
 import com.ets2jsc.ast.SourceFile;
+import com.ets2jsc.transformer.ComponentExpressionTransformer;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -22,11 +25,17 @@ import com.google.gson.JsonObject;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * TypeScript/ETS parser using Node.js and TypeScript Compiler API.
@@ -38,15 +47,62 @@ public class TypeScriptScriptParser {
     private final Gson gson = new Gson();
 
     public TypeScriptScriptParser() {
-        // Locate the parse-ets.js script
-        String resourcePath = "src/main/resources/typescript-parser/parse-ets.js";
-        Path scriptFile = Path.of(resourcePath).toAbsolutePath();
+        // Try to use the classpath location directly (where node_modules is also available)
+        URL scriptUrl = getClass().getClassLoader().getResource("typescript-parser/parse-ets.js");
 
-        if (!Files.exists(scriptFile)) {
-            throw new RuntimeException("TypeScript parser script not found: " + scriptFile);
+        if (scriptUrl != null && "file".equals(scriptUrl.getProtocol())) {
+            // Running from classpath on filesystem (e.g., target/classes)
+            this.scriptPath = new File(scriptUrl.getFile()).getAbsolutePath();
+        } else {
+            // Running from JAR - extract entire typescript-parser directory to temp
+            try {
+                Path tempDir = Files.createTempDirectory("typescript-parser-");
+                tempDir.toFile().deleteOnExit();
+
+                // Extract all resources from typescript-parser directory
+                extractResourceDirectory("typescript-parser/", tempDir);
+
+                this.scriptPath = tempDir.resolve("parse-ets.js").toAbsolutePath().toString();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to initialize TypeScript parser script", e);
+            }
+        }
+    }
+
+    /**
+     * Extract all files from a resource directory in the JAR to a temp directory.
+     */
+    private void extractResourceDirectory(String resourcePath, Path targetDir) throws Exception {
+        // Get the path to the JAR file
+        String jarPath = getClass().getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+
+        // Handle Windows paths with spaces
+        if (jarPath.startsWith("/") && jarPath.contains(":")) {
+            jarPath = jarPath.substring(1);
         }
 
-        this.scriptPath = scriptFile.toString();
+        try (JarFile jarFile = new JarFile(jarPath)) {
+            Enumeration<JarEntry> entries = jarFile.entries();
+
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                String entryName = entry.getName();
+
+                if (entryName.startsWith(resourcePath)) {
+                    String relativePath = entryName.substring(resourcePath.length());
+                    Path targetPath = targetDir.resolve(relativePath.replace('/', File.separatorChar));
+
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(targetPath);
+                    } else {
+                        Files.createDirectories(targetPath.getParent());
+                        try (InputStream is = jarFile.getInputStream(entry)) {
+                            Files.copy(is, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -183,6 +239,8 @@ public class TypeScriptScriptParser {
                 return convertPropertyAssignment(json);
             case "ShorthandPropertyAssignment":
                 return convertShorthandPropertyAssignment(json);
+            case "IfStatement":
+                return convertIfStatement(json);
             case "TrueLiteral":
             case "FalseLiteral":
             case "NullLiteral":
@@ -277,9 +335,9 @@ public class TypeScriptScriptParser {
         }
 
         // Convert body
-        JsonObject bodyObj = json.getAsJsonObject("body");
-        if (bodyObj != null) {
-            AstNode body = convertJsonNode(bodyObj);
+        JsonElement bodyElem = json.get("body");
+        if (bodyElem != null && !bodyElem.isJsonNull()) {
+            AstNode body = convertJsonNode(bodyElem.getAsJsonObject());
             methodDecl.setBody(body);
         }
 
@@ -290,14 +348,20 @@ public class TypeScriptScriptParser {
         String name = json.get("name").getAsString();
         PropertyDeclaration propDecl = new PropertyDeclaration(name);
 
-        String type = json.get("type").getAsString();
-        if (type != null && !type.isEmpty()) {
-            propDecl.setTypeAnnotation(type);
+        JsonElement typeElem = json.get("type");
+        if (typeElem != null && !typeElem.isJsonNull()) {
+            String type = typeElem.getAsString();
+            if (type != null && !type.isEmpty()) {
+                propDecl.setTypeAnnotation(type);
+            }
         }
 
-        String initializer = json.get("initializer").getAsString();
-        if (initializer != null && !initializer.isEmpty()) {
-            propDecl.setInitializer(initializer);
+        JsonElement initElem = json.get("initializer");
+        if (initElem != null && !initElem.isJsonNull()) {
+            String initializer = initElem.getAsString();
+            if (initializer != null && !initializer.isEmpty()) {
+                propDecl.setInitializer(initializer);
+            }
         }
 
         // Convert decorators
@@ -322,12 +386,64 @@ public class TypeScriptScriptParser {
         Block block = new Block();
         JsonArray statementsArray = json.getAsJsonArray("statements");
         if (statementsArray != null) {
-            for (JsonElement stmtElement : statementsArray) {
-                JsonObject stmtObj = stmtElement.getAsJsonObject();
+            int i = 0;
+            while (i < statementsArray.size()) {
+                JsonObject stmtObj = statementsArray.get(i).getAsJsonObject();
+                String stmtKindName = stmtObj.has("kindName") ? stmtObj.get("kindName").getAsString() : "";
+
+                // Check if this is an ExpressionStatement with a component CallExpression followed by a Block
+                if ("ExpressionStatement".equals(stmtKindName) && i + 1 < statementsArray.size()) {
+                    JsonObject exprObj = stmtObj.getAsJsonObject("expression");
+                    String exprKindName = exprObj.has("kindName") ? exprObj.get("kindName").getAsString() : "";
+
+                    if ("CallExpression".equals(exprKindName)) {
+                        JsonObject idObj = exprObj.getAsJsonObject("expression");
+                        if (idObj != null && "Identifier".equals(idObj.get("kindName").getAsString())) {
+                            String componentName = idObj.get("name").getAsString();
+                            // Check if this is a built-in container component (Column, Row, Stack, etc.)
+                            if (ComponentRegistry.isContainerComponent(componentName)) {
+                                JsonObject nextStmtObj = statementsArray.get(i + 1).getAsJsonObject();
+                                String nextKindName = nextStmtObj.has("kindName") ? nextStmtObj.get("kindName").getAsString() : "";
+
+                                if ("Block".equals(nextKindName)) {
+                                    // This is a component with children block like Column() { ... }
+                                    // Convert the component call
+                                    AstNode componentStmt = convertJsonNode(stmtObj);
+                                    // Convert the children block
+                                    Block childrenBlock = (Block) convertJsonNode(nextStmtObj);
+
+                                    // Associate the children with the component
+                                    if (componentStmt instanceof ComponentStatement) {
+                                        ((ComponentStatement) componentStmt).setChildren(childrenBlock);
+                                    } else if (componentStmt instanceof ExpressionStatement) {
+                                        // Transform ExpressionStatement to ComponentStatement with children
+                                        ExpressionStatement exprStmt = (ExpressionStatement) componentStmt;
+                                        String expr = exprStmt.getExpression();
+                                        // Extract component name from expression like "Column()"
+                                        ComponentStatement compStmt = (ComponentStatement) ComponentExpressionTransformer.transform(expr);
+                                        if (compStmt != null) {
+                                            compStmt.setChildren(childrenBlock);
+                                            block.addStatement(compStmt);
+                                        } else {
+                                            block.addStatement(componentStmt);
+                                        }
+                                    } else {
+                                        block.addStatement(componentStmt);
+                                    }
+                                    // Skip the next statement (the children block) as we've already processed it
+                                    i += 2;
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 AstNode stmt = convertJsonNode(stmtObj);
                 if (stmt != null) {
                     block.addStatement(stmt);
                 }
+                i++;
             }
         }
         return block;
@@ -369,6 +485,42 @@ public class TypeScriptScriptParser {
         return new ForeachStatement(arrayExpr, itemGenExpr, keyGenExpr);
     }
 
+    private IfStatement convertIfStatement(JsonObject json) {
+        // IfStatement has: expression (condition), thenStatement, elseStatement
+        JsonObject exprObj = json.getAsJsonObject("expression");
+        String condition = convertExpressionToString(exprObj);
+
+        // Convert then block
+        JsonElement thenElem = json.get("thenStatement");
+        Block thenBlock = new Block();
+        if (thenElem != null && !thenElem.isJsonNull()) {
+            AstNode thenNode = convertJsonNode(thenElem.getAsJsonObject());
+            if (thenNode instanceof Block) {
+                thenBlock = (Block) thenNode;
+            } else if (thenNode != null) {
+                // Single statement, wrap it in a block
+                thenBlock = new Block();
+                thenBlock.addStatement(thenNode);
+            }
+        }
+
+        // Convert else block (if exists)
+        JsonElement elseElem = json.get("elseStatement");
+        Block elseBlock = null;
+        if (elseElem != null && !elseElem.isJsonNull()) {
+            AstNode elseNode = convertJsonNode(elseElem.getAsJsonObject());
+            if (elseNode instanceof Block) {
+                elseBlock = (Block) elseNode;
+            } else if (elseNode != null) {
+                // Single statement, wrap it in a block
+                elseBlock = new Block();
+                elseBlock.addStatement(elseNode);
+            }
+        }
+
+        return new IfStatement(condition, thenBlock, elseBlock);
+    }
+
     private CallExpression convertCallExpression(JsonObject json) {
         JsonObject exprObj = json.getAsJsonObject("expression");
         String expression = convertExpressionToString(exprObj);
@@ -399,9 +551,12 @@ public class TypeScriptScriptParser {
                 String propResult = convertPropertyAccessToString(exprJson);
                 return propResult.trim();  // Remove leading/trailing whitespace
             case "StringLiteral":
+                // Add quotes around string literals (parse-ets.js returns text without quotes)
+                String strText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
+                return "\"" + strText + "\"";
             case "NumericLiteral":
-                String litText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
-                return litText.trim();
+                String numText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
+                return numText.trim();
             case "BinaryExpression":
                 return convertBinaryExpressionToString(exprJson);
             case "ConditionalExpression":
@@ -418,6 +573,8 @@ public class TypeScriptScriptParser {
                 return "null";
             case "UndefinedLiteral":
                 return "undefined";
+            case "ThisKeyword":
+                return "this";
             case "ArrowFunction":
                 // Arrow functions are already handled in parse-ets.js
                 String arrowText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
@@ -431,6 +588,58 @@ public class TypeScriptScriptParser {
             case "ShorthandPropertyAssignment": {
                 String shortName = exprJson.has("name") ? exprJson.get("name").getAsString() : "";
                 return shortName;
+            }
+            case "NewExpression": {
+                // Handle new Constructor() expressions
+                JsonObject newExpr = exprJson.getAsJsonObject("expression");
+                String exprStr = newExpr != null ? convertExpressionToString(newExpr) : "";
+                StringBuilder sb = new StringBuilder();
+                sb.append("new ").append(exprStr).append("(");
+                JsonArray arguments = exprJson.getAsJsonArray("arguments");
+                if (arguments != null && arguments.size() > 0) {
+                    List<String> argStrings = new ArrayList<>();
+                    for (JsonElement arg : arguments) {
+                        String argStr = convertExpressionToString(arg.getAsJsonObject());
+                        argStrings.add(argStr);
+                    }
+                    sb.append(String.join(", ", argStrings));
+                }
+                sb.append(")");
+                return sb.toString();
+            }
+            case "ElementAccessExpression": {
+                // Handle array[index] or object[property] expressions
+                JsonObject elementObj = exprJson.getAsJsonObject("expression");
+                String elementStr = elementObj != null ? convertExpressionToString(elementObj) : "";
+                JsonObject argumentExpr = exprJson.getAsJsonObject("argumentExpression");
+                String argStr = argumentExpr != null ? convertExpressionToString(argumentExpr) : "";
+                return elementStr + "[" + argStr + "]";
+            }
+            case "ParenthesizedExpression": {
+                // Handle (expression)
+                JsonObject parenExpr = exprJson.getAsJsonObject("expression");
+                String exprStr = parenExpr != null ? convertExpressionToString(parenExpr) : "";
+                return "(" + exprStr + ")";
+            }
+            case "TypeOfExpression": {
+                // Handle typeof expression
+                JsonObject typeOfExpr = exprJson.getAsJsonObject("expression");
+                String exprStr = typeOfExpr != null ? convertExpressionToString(typeOfExpr) : "";
+                return "typeof " + exprStr;
+            }
+            case "PrefixUnaryExpression": {
+                // Handle prefix unary expressions like -1, !true, etc.
+                String operator = exprJson.has("operator") ? exprJson.get("operator").getAsString() : "";
+                JsonObject operand = exprJson.getAsJsonObject("operand");
+                String operandStr = operand != null ? convertExpressionToString(operand) : "";
+                return operator + operandStr;
+            }
+            case "PostfixUnaryExpression": {
+                // Handle postfix unary expressions like i++, i--
+                String operator = exprJson.has("operator") ? exprJson.get("operator").getAsString() : "";
+                JsonObject operand = exprJson.getAsJsonObject("operand");
+                String operandStr = operand != null ? convertExpressionToString(operand) : "";
+                return operandStr + operator;
             }
             default:
                 // Fallback: return the text if available
