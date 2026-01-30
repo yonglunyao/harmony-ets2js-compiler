@@ -529,6 +529,21 @@ public class CodeGenerator implements AstVisitor<String> {
     }
 
     /**
+     * Sets whether we are inside a component class.
+     * Used to determine If statement rendering mode.
+     */
+    public void setInsideComponentClass(boolean insideComponentClass) {
+        this.insideComponentClass = insideComponentClass;
+    }
+
+    /**
+     * Checks if we are currently inside a component class.
+     */
+    public boolean isInsideComponentClass() {
+        return insideComponentClass;
+    }
+
+    /**
      * Gets the generated code as a string.
      */
     public String getOutput() {
