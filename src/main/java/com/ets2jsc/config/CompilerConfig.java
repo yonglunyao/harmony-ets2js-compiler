@@ -27,6 +27,7 @@ public class CompilerConfig {
     private boolean processTs;
     private boolean enableLazyImport;
     private boolean validateApi;
+    private boolean pureJavaScript;  // Generate pure JS without ArkUI runtime dependencies
 
     // Entry points
     private Map<String, String> entryObj;
@@ -158,6 +159,14 @@ public class CompilerConfig {
 
     public void addEntry(String key, String value) {
         this.entryObj.put(key, value);
+    }
+
+    public boolean isPureJavaScript() {
+        return pureJavaScript;
+    }
+
+    public void setPureJavaScript(boolean pureJavaScript) {
+        this.pureJavaScript = pureJavaScript;
     }
 
     /**

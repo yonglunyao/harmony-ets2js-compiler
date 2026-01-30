@@ -1,0 +1,133 @@
+{
+  "kind": 308,
+  "kindName": "SourceFile",
+  "fileName": "../../../test/resources/fixtures/test-if.ets",
+  "statements": [
+    {
+      "kind": 264,
+      "kindName": "ClassDeclaration",
+      "name": "IfTest",
+      "isExport": false,
+      "decorators": [
+        {
+          "name": "Component"
+        }
+      ],
+      "members": [
+        {
+          "kind": 173,
+          "kindName": "PropertyDeclaration",
+          "name": "isActive",
+          "type": "boolean",
+          "initializer": "true",
+          "decorators": [
+            {
+              "name": "State"
+            }
+          ],
+          "modifiers": [
+            {
+              "kind": 171,
+              "kindName": "Decorator"
+            }
+          ]
+        },
+        {
+          "kind": 175,
+          "kindName": "MethodDeclaration",
+          "name": "build",
+          "decorators": [],
+          "modifiers": [],
+          "parameters": [],
+          "body": {
+            "kind": 242,
+            "kindName": "Block",
+            "statements": [
+              {
+                "kind": 245,
+                "kindName": "ExpressionStatement",
+                "expression": {
+                  "kind": 214,
+                  "kindName": "CallExpression",
+                  "expression": {
+                    "kind": 80,
+                    "kindName": "Identifier",
+                    "name": "Column",
+                    "text": "Column"
+                  },
+                  "arguments": []
+                }
+              },
+              {
+                "kind": 242,
+                "kindName": "Block",
+                "statements": [
+                  {
+                    "kind": 246,
+                    "kindName": "IfStatement",
+                    "expression": {
+                      "kind": 212,
+                      "kindName": "PropertyAccessExpression",
+                      "expression": {
+                        "kind": 110,
+                        "kindName": "ThisKeyword"
+                      },
+                      "name": "isActive"
+                    },
+                    "thenStatement": {
+                      "kind": 242,
+                      "kindName": "Block",
+                      "statements": [
+                        {
+                          "kind": 245,
+                          "kindName": "ExpressionStatement",
+                          "expression": {
+                            "kind": 214,
+                            "kindName": "CallExpression",
+                            "expression": {
+                              "kind": 80,
+                              "kindName": "Identifier",
+                              "name": "Text",
+                              "text": "Text"
+                            },
+                            "arguments": [
+                              "'Active'"
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    "elseStatement": {
+                      "kind": 242,
+                      "kindName": "Block",
+                      "statements": [
+                        {
+                          "kind": 245,
+                          "kindName": "ExpressionStatement",
+                          "expression": {
+                            "kind": 214,
+                            "kindName": "CallExpression",
+                            "expression": {
+                              "kind": 80,
+                              "kindName": "Identifier",
+                              "name": "Text",
+                              "text": "Text"
+                            },
+                            "arguments": [
+                              "'Inactive'"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "asteriskToken": false
+        }
+      ]
+    }
+  ]
+}

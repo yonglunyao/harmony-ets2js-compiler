@@ -1,6 +1,7 @@
 package com.ets2jsc;
 
 import com.ets2jsc.ast.AstNode;
+import com.ets2jsc.ast.ClassDeclaration;
 import com.ets2jsc.ast.SourceFile;
 import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.generator.CodeGenerator;
@@ -29,7 +30,7 @@ public class EtsCompiler {
     public EtsCompiler(CompilerConfig config) {
         this.config = config;
         this.transformers = new ArrayList<>();
-        this.codeGenerator = new CodeGenerator();
+        this.codeGenerator = new CodeGenerator(config);
         this.jsWriter = new JsWriter();
 
         // Initialize transformers
@@ -114,6 +115,7 @@ public class EtsCompiler {
         // If this is a SourceFile, transform its statements
         if (current instanceof SourceFile) {
             SourceFile sourceFile = (SourceFile) current;
+
             for (int i = 0; i < sourceFile.getStatements().size(); i++) {
                 AstNode stmt = sourceFile.getStatements().get(i);
                 AstNode transformedStmt = transformNode(stmt);

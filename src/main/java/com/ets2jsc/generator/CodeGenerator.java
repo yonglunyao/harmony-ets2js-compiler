@@ -3,6 +3,7 @@ package com.ets2jsc.generator;
 import com.ets2jsc.ast.*;
 import com.ets2jsc.ast.ComponentStatement.ComponentPart;
 import com.ets2jsc.ast.ComponentStatement.PartKind;
+import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.constant.RuntimeFunctions;
 import com.ets2jsc.transformer.ComponentExpressionTransformer;
 
@@ -17,11 +18,19 @@ public class CodeGenerator implements AstVisitor<String> {
     private final StringBuilder output;
     private final String indent;
     private int currentIndent;
+    private final CompilerConfig config;
+    private boolean insideComponentClass = false;
 
-    public CodeGenerator() {
+    public CodeGenerator(CompilerConfig config) {
         this.output = new StringBuilder();
         this.indent = "  ";
         this.currentIndent = 0;
+        this.config = config != null ? config : new CompilerConfig();
+        this.insideComponentClass = false;
+    }
+
+    public CodeGenerator() {
+        this(null);
     }
 
     /**
@@ -92,6 +101,10 @@ public class CodeGenerator implements AstVisitor<String> {
 
     @Override
     public String visit(ClassDeclaration node) {
+        // Set insideComponentClass flag for this class
+        boolean previousInsideComponentClass = insideComponentClass;
+        insideComponentClass = node.hasDecorator("Component");
+
         StringBuilder sb = new StringBuilder();
 
         // Generate decorators (comments for now)
@@ -127,6 +140,9 @@ public class CodeGenerator implements AstVisitor<String> {
 
         currentIndent--;
         sb.append("}\n");
+
+        // Restore previous insideComponentClass flag
+        insideComponentClass = previousInsideComponentClass;
 
         return sb.toString();
     }
@@ -225,9 +241,10 @@ public class CodeGenerator implements AstVisitor<String> {
         // Name and type
         sb.append(node.getName());
 
-        if (node.getTypeAnnotation() != null) {
-            sb.append(": ").append(node.getTypeAnnotation());
-        }
+        // Type annotations are not supported in JavaScript class properties
+        // if (node.getTypeAnnotation() != null) {
+        //     sb.append(": ").append(node.getTypeAnnotation());
+        // }
 
         // Initializer
         if (node.getInitializer() != null) {
@@ -366,24 +383,26 @@ public class CodeGenerator implements AstVisitor<String> {
     public String visit(ForeachStatement node) {
         StringBuilder sb = new StringBuilder();
 
-        // 1. ForEach.create()
-        sb.append(getIndent()).append("ForEach.create();\n");
+        if (config.isPureJavaScript()) {
+            // Pure JavaScript mode: use standard Array.forEach instead of ForEach runtime
+            String itemGen = node.getItemGenerator();
+            sb.append(getIndent()).append("array.forEach(").append(itemGen).append(");\n");
+        } else {
+            // ArkUI runtime mode: include ForEach.create(), pop()
+            sb.append(getIndent()).append("ForEach.create();\n");
 
-        // 2. Item generator function
-        sb.append(getIndent()).append("const __itemGenFunction__ = ").append(node.getItemGenerator()).append(";\n");
+            sb.append(getIndent()).append("const __itemGenFunction__ = ").append(node.getItemGenerator()).append(";\n");
 
-        // 3. Key generator function (if provided)
-        String keyGen = node.getKeyGenerator();
-        if (keyGen != null && !keyGen.isEmpty()) {
-            sb.append(getIndent()).append("const __keyGenFunction__ = ").append(keyGen).append(";\n");
-            sb.append(getIndent()).append("ForEach.keyGenerator(__keyGenFunction__);\n");
+            String keyGen = node.getKeyGenerator();
+            if (keyGen != null && !keyGen.isEmpty()) {
+                sb.append(getIndent()).append("const __keyGenFunction__ = ").append(keyGen).append(";\n");
+                sb.append(getIndent()).append("ForEach.keyGenerator(__keyGenFunction__);\n");
+            }
+
+            sb.append(getIndent()).append("ForEach.itemGenerator(__itemGenFunction__);\n");
+
+            sb.append(getIndent()).append("ForEach.pop();\n");
         }
-
-        // 4. Set item generator
-        sb.append(getIndent()).append("ForEach.itemGenerator(__itemGenFunction__);\n");
-
-        // 5. ForEach.pop()
-        sb.append(getIndent()).append("ForEach.pop();\n");
 
         return sb.toString();
     }
@@ -392,36 +411,54 @@ public class CodeGenerator implements AstVisitor<String> {
     public String visit(IfStatement node) {
         StringBuilder sb = new StringBuilder();
 
-        // 1. If.create()
-        sb.append(getIndent()).append("If.create();\n");
+        // Generate standard if-else if pure JavaScript mode OR not inside a component class
+        boolean useStandardIfElse = config.isPureJavaScript() || !insideComponentClass;
 
-        // 2. Build the if-else statement with branchId
-        sb.append(getIndent()).append("if (").append(node.getCondition()).append(") {\n");
-        currentIndent++;
+        if (useStandardIfElse) {
+            // Standard if-else without ArkUI runtime
+            sb.append(getIndent()).append("if (").append(node.getCondition()).append(") {\n");
+            currentIndent++;
+            String thenCode = node.getThenBlock().accept(this);
+            sb.append(thenCode);
+            currentIndent--;
+            sb.append(getIndent()).append("}\n");
 
-        // Then branch
-        sb.append(getIndent()).append("If.branchId(0);\n");
-        String thenCode = node.getThenBlock().accept(this);
-        sb.append(thenCode);
+            if (node.hasElse()) {
+                sb.append(getIndent()).append("else {\n");
+                currentIndent++;
+                String elseCode = node.getElseBlock().accept(this);
+                sb.append(elseCode);
+                currentIndent--;
+                sb.append(getIndent()).append("}\n");
+            }
+        } else {
+            // ArkUI runtime mode: include If.create(), branchId(), pop()
+            sb.append(getIndent()).append("If.create();\n");
 
-        currentIndent--;
-        sb.append(getIndent()).append("}\n");
-
-        // Else branch (if exists)
-        if (node.hasElse()) {
-            sb.append(getIndent()).append("else {\n");
+            sb.append(getIndent()).append("if (").append(node.getCondition()).append(") {\n");
             currentIndent++;
 
-            sb.append(getIndent()).append("If.branchId(1);\n");
-            String elseCode = node.getElseBlock().accept(this);
-            sb.append(elseCode);
+            sb.append(getIndent()).append("If.branchId(0);\n");
+            String thenCode = node.getThenBlock().accept(this);
+            sb.append(thenCode);
 
             currentIndent--;
             sb.append(getIndent()).append("}\n");
-        }
 
-        // 3. If.pop()
-        sb.append(getIndent()).append("If.pop();\n");
+            if (node.hasElse()) {
+                sb.append(getIndent()).append("else {\n");
+                currentIndent++;
+
+                sb.append(getIndent()).append("If.branchId(1);\n");
+                String elseCode = node.getElseBlock().accept(this);
+                sb.append(elseCode);
+
+                currentIndent--;
+                sb.append(getIndent()).append("}\n");
+            }
+
+            sb.append(getIndent()).append("If.pop();\n");
+        }
 
         return sb.toString();
     }

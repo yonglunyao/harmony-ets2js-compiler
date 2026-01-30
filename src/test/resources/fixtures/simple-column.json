@@ -1,0 +1,73 @@
+{
+  "kind": 308,
+  "kindName": "SourceFile",
+  "fileName": "../../../test/resources/fixtures/simple-column.ets",
+  "statements": [
+    {
+      "kind": 264,
+      "kindName": "ClassDeclaration",
+      "name": "SimpleColumn",
+      "isExport": false,
+      "decorators": [
+        {
+          "name": "Component"
+        }
+      ],
+      "members": [
+        {
+          "kind": 175,
+          "kindName": "MethodDeclaration",
+          "name": "build",
+          "decorators": [],
+          "modifiers": [],
+          "parameters": [],
+          "body": {
+            "kind": 242,
+            "kindName": "Block",
+            "statements": [
+              {
+                "kind": 245,
+                "kindName": "ExpressionStatement",
+                "expression": {
+                  "kind": 214,
+                  "kindName": "CallExpression",
+                  "expression": {
+                    "kind": 80,
+                    "kindName": "Identifier",
+                    "name": "Column",
+                    "text": "Column"
+                  },
+                  "arguments": []
+                }
+              },
+              {
+                "kind": 242,
+                "kindName": "Block",
+                "statements": [
+                  {
+                    "kind": 245,
+                    "kindName": "ExpressionStatement",
+                    "expression": {
+                      "kind": 214,
+                      "kindName": "CallExpression",
+                      "expression": {
+                        "kind": 80,
+                        "kindName": "Identifier",
+                        "name": "Text",
+                        "text": "Text"
+                      },
+                      "arguments": [
+                        "'Hello'"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "asteriskToken": false
+        }
+      ]
+    }
+  ]
+}

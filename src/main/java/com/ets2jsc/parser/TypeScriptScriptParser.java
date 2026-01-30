@@ -18,6 +18,7 @@ import com.ets2jsc.ast.MethodDeclaration;
 import com.ets2jsc.ast.PropertyDeclaration;
 import com.ets2jsc.ast.SourceFile;
 import com.ets2jsc.transformer.ComponentExpressionTransformer;
+import com.ets2jsc.generator.CodeGenerator;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -220,6 +221,22 @@ public class TypeScriptScriptParser {
                 return convertAwaitExpression(json);
             case "ForOfStatement":
                 return convertForOfStatement(json);
+            case "ForInStatement":
+                return convertForInStatement(json);
+            case "WhileStatement":
+                return convertWhileStatement(json);
+            case "DoStatement":
+                return convertDoStatement(json);
+            case "ForStatement":
+                return convertForStatement(json);
+            case "SwitchStatement":
+                return convertSwitchStatement(json);
+            case "TryStatement":
+                return convertTryStatement(json);
+            case "BreakStatement":
+                return new ExpressionStatement("break;");
+            case "ContinueStatement":
+                return new ExpressionStatement("continue;");
             case "VariableStatement":
             case "FirstStatement":
                 return convertVariableStatement(json);
@@ -358,7 +375,24 @@ public class TypeScriptScriptParser {
 
         JsonElement initElem = json.get("initializer");
         if (initElem != null && !initElem.isJsonNull()) {
-            String initializer = initElem.getAsString();
+            String initializer = null;
+            // First check if there's a pre-processed initializerText (priority)
+            if (json.has("initializerText")) {
+                initializer = json.get("initializerText").getAsString();
+            } else if (initElem.isJsonObject()) {
+                // Complex expression - convert it to strip TypeScript syntax
+                // Also check if the JSON object has a 'text' property (generated in parse-ets.js)
+                JsonObject initObj = initElem.getAsJsonObject();
+                if (initObj.has("text")) {
+                    initializer = initObj.get("text").getAsString();
+                } else {
+                    initializer = convertExpressionToString(initObj);
+                }
+            } else if (initElem.isJsonPrimitive() && initElem.getAsJsonPrimitive().isString()) {
+                // Simple string value
+                initializer = initElem.getAsString();
+            }
+
             if (initializer != null && !initializer.isEmpty()) {
                 propDecl.setInitializer(initializer);
             }
@@ -641,6 +675,31 @@ public class TypeScriptScriptParser {
                 String operandStr = operand != null ? convertExpressionToString(operand) : "";
                 return operandStr + operator;
             }
+            case "NonNullExpression": {
+                // Non-null assertion ! has no runtime effect, just output the expression
+                JsonObject expr = exprJson.getAsJsonObject("expression");
+                return expr != null ? convertExpressionToString(expr) : "";
+            }
+            case "AsExpression":
+            case "TypeAssertion": {
+                // Type assertion has no runtime effect, just output the expression
+                // First check if there's a pre-generated text (without the type assertion)
+                if (exprJson.has("text")) {
+                    return exprJson.get("text").getAsString();
+                }
+                JsonObject expr = exprJson.getAsJsonObject("expression");
+                return expr != null ? convertExpressionToString(expr) : "";
+            }
+            case "SpreadElement": {
+                JsonObject expr = exprJson.getAsJsonObject("expression");
+                String exprStr = expr != null ? convertExpressionToString(expr) : "";
+                return "..." + exprStr;
+            }
+            case "SpreadAssignment": {
+                JsonObject expr = exprJson.getAsJsonObject("expression");
+                String exprStr = expr != null ? convertExpressionToString(expr) : "";
+                return "..." + exprStr;
+            }
             default:
                 // Fallback: return the text if available
                 String fallbackText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
@@ -727,7 +786,17 @@ public class TypeScriptScriptParser {
         if (argsArray != null) {
             for (int i = 0; i < argsArray.size(); i++) {
                 if (i > 0) args.append(", ");
-                String arg = argsArray.get(i).getAsString();
+                JsonElement argElement = argsArray.get(i);
+                String arg = "";
+                if (argElement.isJsonObject()) {
+                    // It's a complex expression like ArrowFunction - convert it properly
+                    arg = convertExpressionToString(argElement.getAsJsonObject());
+                } else if (argElement.isJsonPrimitive() && argElement.getAsJsonPrimitive().isString()) {
+                    // It's a simple string argument
+                    arg = argElement.getAsString();
+                } else if (argElement.isJsonNull()) {
+                    arg = "null";
+                }
                 args.append(arg != null ? arg.trim() : "");
             }
         }
@@ -788,9 +857,323 @@ public class TypeScriptScriptParser {
     }
 
     private AstNode convertForOfStatement(JsonObject json) {
-        // For simplicity, generate a placeholder comment
-        // A full implementation would parse the initializer, expression, and statement
-        return new ExpressionStatement("// for...of loop");
+        // Use the pre-generated text if available
+        if (json.has("text")) {
+            return new ExpressionStatement(json.get("text").getAsString());
+        }
+
+        JsonObject initializer = json.getAsJsonObject("initializer");
+        JsonObject expression = json.getAsJsonObject("expression");
+        JsonObject statement = json.getAsJsonObject("statement");
+        boolean awaitModifier = json.has("awaitModifier") && json.get("awaitModifier").getAsBoolean();
+
+        String initStr = initializer != null ? convertExpressionToString(initializer) : "";
+        String exprStr = expression != null ? convertExpressionToString(expression) : "";
+
+        StringBuilder sb = new StringBuilder();
+        if (awaitModifier) {
+            sb.append("for await (");
+        } else {
+            sb.append("for (");
+        }
+        sb.append(initStr).append(" of ").append(exprStr).append(") {\n");
+
+        // Process loop body statements
+        if (statement != null) {
+            AstNode stmt = convertJsonNode(statement);
+            if (stmt instanceof Block) {
+                Block block = (Block) stmt;
+                for (AstNode blockStmt : block.getStatements()) {
+                    String stmtCode = blockStmt.accept(new CodeGenerator());
+                    sb.append("  ").append(stmtCode);
+                }
+            } else {
+                String stmtCode = stmt.accept(new CodeGenerator());
+                sb.append("  ").append(stmtCode);
+            }
+        }
+
+        sb.append("}");
+
+        return new ExpressionStatement(sb.toString());
+    }
+
+    private AstNode convertForInStatement(JsonObject json) {
+        // Use the pre-generated text if available
+        if (json.has("text")) {
+            return new ExpressionStatement(json.get("text").getAsString());
+        }
+
+        JsonObject initializer = json.getAsJsonObject("initializer");
+        JsonObject expression = json.getAsJsonObject("expression");
+        JsonObject statement = json.getAsJsonObject("statement");
+
+        String initStr = initializer != null ? convertExpressionToString(initializer) : "";
+        String exprStr = expression != null ? convertExpressionToString(expression) : "";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("for (").append(initStr).append(" in ").append(exprStr).append(") {\n");
+
+        if (statement != null) {
+            AstNode stmt = convertJsonNode(statement);
+            if (stmt instanceof Block) {
+                Block block = (Block) stmt;
+                for (AstNode blockStmt : block.getStatements()) {
+                    String stmtCode = blockStmt.accept(new CodeGenerator());
+                    sb.append("  ").append(stmtCode);
+                }
+            } else {
+                String stmtCode = stmt.accept(new CodeGenerator());
+                sb.append("  ").append(stmtCode);
+            }
+        }
+
+        sb.append("}");
+
+        return new ExpressionStatement(sb.toString());
+    }
+
+    private AstNode convertWhileStatement(JsonObject json) {
+        // Use the pre-generated text if available
+        if (json.has("text")) {
+            return new ExpressionStatement(json.get("text").getAsString());
+        }
+
+        JsonObject expression = json.getAsJsonObject("expression");
+        JsonObject statement = json.getAsJsonObject("statement");
+
+        String condition = convertExpressionToString(expression);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("while (").append(condition).append(") {\n");
+
+        if (statement != null) {
+            AstNode stmt = convertJsonNode(statement);
+            if (stmt instanceof Block) {
+                Block block = (Block) stmt;
+                for (AstNode blockStmt : block.getStatements()) {
+                    String stmtCode = blockStmt.accept(new CodeGenerator());
+                    sb.append("  ").append(stmtCode);
+                }
+            } else {
+                String stmtCode = stmt.accept(new CodeGenerator());
+                sb.append("  ").append(stmtCode);
+            }
+        }
+
+        sb.append("}");
+
+        return new ExpressionStatement(sb.toString());
+    }
+
+    private AstNode convertDoStatement(JsonObject json) {
+        // Use the pre-generated text if available
+        if (json.has("text")) {
+            return new ExpressionStatement(json.get("text").getAsString());
+        }
+
+        JsonObject expression = json.getAsJsonObject("expression");
+        JsonObject statement = json.getAsJsonObject("statement");
+
+        String condition = convertExpressionToString(expression);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("do {\n");
+
+        if (statement != null) {
+            AstNode stmt = convertJsonNode(statement);
+            if (stmt instanceof Block) {
+                Block block = (Block) stmt;
+                for (AstNode blockStmt : block.getStatements()) {
+                    String stmtCode = blockStmt.accept(new CodeGenerator());
+                    sb.append("  ").append(stmtCode);
+                }
+            } else {
+                String stmtCode = stmt.accept(new CodeGenerator());
+                sb.append("  ").append(stmtCode);
+            }
+        }
+
+        sb.append("} while (").append(condition).append(")");
+
+        return new ExpressionStatement(sb.toString());
+    }
+
+    private AstNode convertForStatement(JsonObject json) {
+        // Use the pre-generated text if available
+        if (json.has("text")) {
+            return new ExpressionStatement(json.get("text").getAsString());
+        }
+
+        JsonObject initializer = json.getAsJsonObject("initializer");
+        JsonObject condition = json.getAsJsonObject("condition");
+        JsonObject incrementor = json.getAsJsonObject("incrementor");
+        JsonObject statement = json.getAsJsonObject("statement");
+
+        String initStr = initializer != null ? convertExpressionToString(initializer) : "";
+        String condStr = condition != null ? convertExpressionToString(condition) : "";
+        String incrStr = incrementor != null ? convertExpressionToString(incrementor) : "";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("for (").append(initStr).append("; ");
+        sb.append(condStr).append("; ");
+        sb.append(incrStr).append(") {\n");
+
+        if (statement != null) {
+            AstNode stmt = convertJsonNode(statement);
+            if (stmt instanceof Block) {
+                Block block = (Block) stmt;
+                for (AstNode blockStmt : block.getStatements()) {
+                    String stmtCode = blockStmt.accept(new CodeGenerator());
+                    sb.append("  ").append(stmtCode);
+                }
+            } else {
+                String stmtCode = stmt.accept(new CodeGenerator());
+                sb.append("  ").append(stmtCode);
+            }
+        }
+
+        sb.append("}");
+
+        return new ExpressionStatement(sb.toString());
+    }
+
+    private AstNode convertSwitchStatement(JsonObject json) {
+        // Use the pre-generated text if available
+        if (json.has("text")) {
+            return new ExpressionStatement(json.get("text").getAsString());
+        }
+
+        JsonObject expression = json.getAsJsonObject("expression");
+        JsonObject caseBlock = json.getAsJsonObject("caseBlock");
+
+        String exprStr = expression != null ? convertExpressionToString(expression) : "";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("switch (").append(exprStr).append(") {\n");
+
+        if (caseBlock != null) {
+            JsonArray clauses = caseBlock.getAsJsonArray("clauses");
+            if (clauses != null) {
+                for (JsonElement clauseElem : clauses) {
+                    JsonObject clause = clauseElem.getAsJsonObject();
+                    String kindName = clause.has("kindName") ? clause.get("kindName").getAsString() : "";
+
+                    if ("CaseClause".equals(kindName)) {
+                        JsonObject clauseExpr = clause.getAsJsonObject("expression");
+                        String caseExpr = clauseExpr != null ? convertExpressionToString(clauseExpr) : "";
+                        sb.append("  case ").append(caseExpr).append(":\n");
+
+                        JsonArray stmts = clause.getAsJsonArray("statements");
+                        if (stmts != null) {
+                            for (JsonElement stmtElem : stmts) {
+                                JsonObject stmt = stmtElem.getAsJsonObject();
+                                AstNode stmtNode = convertJsonNode(stmt);
+                                if (stmtNode != null) {
+                                    String stmtCode = stmtNode.accept(new CodeGenerator());
+                                    sb.append("    ").append(stmtCode);
+                                }
+                            }
+                        }
+                        sb.append("    break;\n");
+                    } else if ("DefaultClause".equals(kindName)) {
+                        sb.append("  default:\n");
+
+                        JsonArray stmts = clause.getAsJsonArray("statements");
+                        if (stmts != null) {
+                            for (JsonElement stmtElem : stmts) {
+                                JsonObject stmt = stmtElem.getAsJsonObject();
+                                AstNode stmtNode = convertJsonNode(stmt);
+                                if (stmtNode != null) {
+                                    String stmtCode = stmtNode.accept(new CodeGenerator());
+                                    sb.append("    ").append(stmtCode);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        sb.append("}");
+
+        return new ExpressionStatement(sb.toString());
+    }
+
+    private AstNode convertTryStatement(JsonObject json) {
+        // Use the pre-generated text if available
+        if (json.has("text")) {
+            return new ExpressionStatement(json.get("text").getAsString());
+        }
+
+        JsonObject tryBlock = json.getAsJsonObject("tryBlock");
+        JsonObject catchClause = json.getAsJsonObject("catchClause");
+        JsonObject finallyBlock = json.getAsJsonObject("finallyBlock");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("try {\n");
+
+        if (tryBlock != null) {
+            AstNode tryNode = convertJsonNode(tryBlock);
+            if (tryNode instanceof Block) {
+                Block block = (Block) tryNode;
+                for (AstNode blockStmt : block.getStatements()) {
+                    String stmtCode = blockStmt.accept(new CodeGenerator());
+                    sb.append("  ").append(stmtCode);
+                }
+            }
+        }
+
+        sb.append("\n}");
+
+        if (catchClause != null) {
+            JsonObject varDecl = catchClause.getAsJsonObject("variableDeclaration");
+            String varName = "";
+            if (varDecl != null) {
+                JsonArray declarations = varDecl.getAsJsonArray("declarations");
+                if (declarations != null && declarations.size() > 0) {
+                    JsonObject decl = declarations.get(0).getAsJsonObject();
+                    varName = decl.has("name") ? decl.get("name").getAsString() : "";
+                }
+            }
+
+            if (!varName.isEmpty()) {
+                sb.append(" catch (").append(varName).append(") {\n");
+            } else {
+                sb.append(" catch {\n");
+            }
+
+            JsonObject catchBlock = catchClause.getAsJsonObject("block");
+            if (catchBlock != null) {
+                AstNode catchNode = convertJsonNode(catchBlock);
+                if (catchNode instanceof Block) {
+                    Block block = (Block) catchNode;
+                    for (AstNode blockStmt : block.getStatements()) {
+                        String stmtCode = blockStmt.accept(new CodeGenerator());
+                        sb.append("  ").append(stmtCode);
+                    }
+                }
+            }
+
+            sb.append("\n}");
+        }
+
+        if (finallyBlock != null) {
+            sb.append(" finally {\n");
+
+            AstNode finallyNode = convertJsonNode(finallyBlock);
+            if (finallyNode instanceof Block) {
+                Block block = (Block) finallyNode;
+                for (AstNode blockStmt : block.getStatements()) {
+                    String stmtCode = blockStmt.accept(new CodeGenerator());
+                    sb.append("  ").append(stmtCode);
+                }
+            }
+
+            sb.append("\n}");
+        }
+
+        return new ExpressionStatement(sb.toString());
     }
 
     private AstNode convertVariableStatement(JsonObject json) {
@@ -798,24 +1181,35 @@ public class TypeScriptScriptParser {
         if (declarationList != null) {
             JsonArray declarations = declarationList.getAsJsonArray("declarations");
             if (declarations != null && declarations.size() > 0) {
-                JsonObject decl = declarations.get(0).getAsJsonObject();
-                String name = decl.has("name") ? decl.get("name").getAsString() : "";
-                String type = decl.has("type") ? decl.get("type").getAsString() : "";
-                JsonObject initializer = decl.getAsJsonObject("initializer");
-                String init = "";
-                if (initializer != null) {
-                    init = convertExpressionToString(initializer);
-                }
+                JsonElement declElement = declarations.get(0);
+                if (declElement.isJsonObject()) {
+                    JsonObject decl = declElement.getAsJsonObject();
+                    String name = decl.has("name") ? decl.get("name").getAsString() : "";
+                    String type = decl.has("type") ? decl.get("type").getAsString() : "";
 
-                StringBuilder sb = new StringBuilder();
-                sb.append("const ").append(name);
-                if (type != null && !type.isEmpty()) {
-                    sb.append(": ").append(type);
+                    String init = "";
+                    JsonElement initElement = decl.get("initializer");
+                    if (initElement != null && initElement.isJsonObject()) {
+                        init = convertExpressionToString(initElement.getAsJsonObject());
+                    }
+
+                    // Get the declaration keyword (let, const, var) from the source
+                    String declarationKind = "const"; // default
+                    if (declarationList.has("declarationKind")) {
+                        declarationKind = declarationList.get("declarationKind").getAsString();
+                    }
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(declarationKind).append(" ").append(name);
+                    // Type annotations are not valid in JavaScript, so we skip them
+                    // if (type != null && !type.isEmpty()) {
+                    //     sb.append(": ").append(type);
+                    // }
+                    if (!init.isEmpty()) {
+                        sb.append(" = ").append(init);
+                    }
+                    return new ExpressionStatement(sb.toString());
                 }
-                if (!init.isEmpty()) {
-                    sb.append(" = ").append(init);
-                }
-                return new ExpressionStatement(sb.toString());
             }
         }
         return new ExpressionStatement("// variable declaration");
