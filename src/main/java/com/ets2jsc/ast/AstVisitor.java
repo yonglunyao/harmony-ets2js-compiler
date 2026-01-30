@@ -49,4 +49,19 @@ public interface AstVisitor<T> {
      * Visit a block node.
      */
     T visit(Block node);
+
+    /**
+     * Visit an import statement node.
+     */
+    T visit(ImportStatement node);
+
+    /**
+     * Visit an export statement node.
+     */
+    T visit(ExportStatement node);
+
+    /**
+     * Visit a component statement node.
+     */
+    T visit(ComponentStatement node);
 }

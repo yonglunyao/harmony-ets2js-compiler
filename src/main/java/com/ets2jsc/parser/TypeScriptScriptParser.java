@@ -8,6 +8,8 @@ import com.ets2jsc.ast.ClassDeclaration;
 import com.ets2jsc.ast.ComponentExpression;
 import com.ets2jsc.ast.Decorator;
 import com.ets2jsc.ast.ExpressionStatement;
+import com.ets2jsc.ast.ImportStatement;
+import com.ets2jsc.ast.ExportStatement;
 import com.ets2jsc.ast.MethodDeclaration;
 import com.ets2jsc.ast.PropertyDeclaration;
 import com.ets2jsc.ast.SourceFile;
@@ -163,6 +165,10 @@ public class TypeScriptScriptParser {
             case "VariableStatement":
             case "FirstStatement":
                 return convertVariableStatement(json);
+            case "ImportDeclaration":
+                return convertImportDeclaration(json);
+            case "ExportDeclaration":
+                return convertExportDeclaration(json);
             default:
                 return null;
         }
@@ -175,6 +181,11 @@ public class TypeScriptScriptParser {
     private ClassDeclaration convertClassDeclaration(JsonObject json) {
         String name = json.get("name").getAsString();
         ClassDeclaration classDecl = new ClassDeclaration(name);
+
+        // Set export flag
+        if (json.has("isExport") && json.get("isExport").getAsBoolean()) {
+            classDecl.setExport(true);
+        }
 
         // Convert decorators
         JsonArray decoratorsArray = json.getAsJsonArray("decorators");
@@ -453,6 +464,99 @@ public class TypeScriptScriptParser {
             }
         }
         return new ExpressionStatement("// variable declaration");
+    }
+
+    private AstNode convertImportDeclaration(JsonObject json) {
+        String moduleSpecifier = json.get("moduleSpecifier").getAsString();
+        // Remove quotes from module specifier
+        moduleSpecifier = moduleSpecifier.replaceAll("^['\"]|['\"]$", "");
+
+        ImportStatement importStmt = new ImportStatement(moduleSpecifier);
+
+        JsonObject importClauseObj = json.getAsJsonObject("importClause");
+        if (importClauseObj != null) {
+            // Check for default import
+            if (importClauseObj.has("name") && !importClauseObj.get("name").isJsonNull()) {
+                String defaultName = importClauseObj.get("name").getAsString();
+                importStmt.addSpecifier(new ImportStatement.ImportSpecifier(
+                    defaultName, defaultName, ImportStatement.ImportSpecifier.SpecifierKind.DEFAULT));
+            }
+
+            // Check for named imports or namespace import
+            JsonArray namedBindings = importClauseObj.getAsJsonArray("namedBindings");
+            if (namedBindings != null) {
+                for (JsonElement bindingElement : namedBindings) {
+                    JsonObject bindingObj = bindingElement.getAsJsonObject();
+
+                    if (bindingObj.has("kind") && "namespace".equals(bindingObj.get("kind").getAsString())) {
+                        // Namespace import: * as Module
+                        String name = bindingObj.get("name").getAsString();
+                        importStmt.addSpecifier(new ImportStatement.ImportSpecifier(
+                            "*", name, ImportStatement.ImportSpecifier.SpecifierKind.NAMESPACE));
+                    } else {
+                        // Named import: { A, B as C }
+                        String name = bindingObj.get("name").getAsString();
+                        String propertyName = bindingObj.has("propertyName") && !bindingObj.get("propertyName").isJsonNull()
+                            ? bindingObj.get("propertyName").getAsString() : name;
+                        importStmt.addSpecifier(new ImportStatement.ImportSpecifier(
+                            propertyName, name, ImportStatement.ImportSpecifier.SpecifierKind.NAMED));
+                    }
+                }
+            }
+        }
+
+        return importStmt;
+    }
+
+    private AstNode convertExportDeclaration(JsonObject json) {
+        // Check if this is a type-only export
+        boolean isTypeOnly = json.has("isTypeOnly") && json.get("isTypeOnly").getAsBoolean();
+
+        // Get module specifier if present (for re-exports)
+        String moduleSpecifier = null;
+        if (json.has("moduleSpecifier") && !json.get("moduleSpecifier").isJsonNull()) {
+            moduleSpecifier = json.get("moduleSpecifier").getAsString();
+            moduleSpecifier = moduleSpecifier.replaceAll("^['\"]|['\"]$", "");
+        }
+
+        // Build the export statement string
+        StringBuilder exportStr = new StringBuilder();
+
+        // Handle named exports/re-exports
+        JsonObject exportClauseObj = json.getAsJsonObject("exportClause");
+        if (exportClauseObj != null) {
+            JsonArray elementsArray = exportClauseObj.getAsJsonArray("elements");
+            if (elementsArray != null && elementsArray.size() > 0) {
+                exportStr.append("{ ");
+                for (int i = 0; i < elementsArray.size(); i++) {
+                    if (i > 0) {
+                        exportStr.append(", ");
+                    }
+                    JsonObject element = elementsArray.get(i).getAsJsonObject();
+                    String name = element.has("name") ? element.get("name").getAsString() : "";
+                    String propertyName = element.has("propertyName") && !element.get("propertyName").isJsonNull()
+                        ? element.get("propertyName").getAsString() : null;
+
+                    if (propertyName != null && !propertyName.equals(name)) {
+                        // { propertyName as name }
+                        exportStr.append(propertyName).append(" as ").append(name);
+                    } else {
+                        // { name }
+                        exportStr.append(name);
+                    }
+                }
+                exportStr.append(" }");
+
+                // Add module specifier if present (re-export)
+                if (moduleSpecifier != null && !moduleSpecifier.isEmpty()) {
+                    exportStr.append(" from '").append(moduleSpecifier).append("'");
+                }
+            }
+        }
+
+        // Create ExportStatement with the generated string
+        String declaration = exportStr.length() > 0 ? exportStr.toString() : null;
+        return new ExportStatement(null, isTypeOnly, declaration);
     }
 }
 

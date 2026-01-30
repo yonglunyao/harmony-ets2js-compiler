@@ -1,7 +1,10 @@
 package com.ets2jsc.generator;
 
 import com.ets2jsc.ast.*;
+import com.ets2jsc.ast.ComponentStatement.ComponentPart;
+import com.ets2jsc.ast.ComponentStatement.PartKind;
 import com.ets2jsc.constant.RuntimeFunctions;
+import com.ets2jsc.transformer.ComponentExpressionTransformer;
 
 import java.util.List;
 
@@ -38,20 +41,41 @@ public class CodeGenerator implements AstVisitor<String> {
         output.setLength(0);
         currentIndent = 0;
 
-        // Generate imports first
-        for (String importPath : sourceFile.getImports()) {
-            writeLine(importPath);
+        // First pass: collect and output import statements
+        for (AstNode statement : sourceFile.getStatements()) {
+            if (statement instanceof ImportStatement) {
+                String code = statement.accept(this);
+                if (!code.isEmpty()) {
+                    writeLine(code);
+                }
+            }
         }
 
-        // Generate statements
+        // Add blank line after imports
+        if (hasImportStatements(sourceFile)) {
+            writeLine("");
+        }
+
+        // Second pass: output other statements
         for (AstNode statement : sourceFile.getStatements()) {
-            String code = statement.accept(this);
-            if (!code.isEmpty()) {
-                writeLine(code);
+            if (!(statement instanceof ImportStatement)) {
+                String code = statement.accept(this);
+                if (!code.trim().isEmpty()) {
+                    writeLine(code);
+                }
             }
         }
 
         return output.toString();
+    }
+
+    private boolean hasImportStatements(SourceFile sourceFile) {
+        for (AstNode statement : sourceFile.getStatements()) {
+            if (statement instanceof ImportStatement) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -75,6 +99,11 @@ public class CodeGenerator implements AstVisitor<String> {
             if (!decorator.getName().equals("Component")) {
                 sb.append("// @").append(decorator.getName()).append("\n");
             }
+        }
+
+        // Add export keyword if present
+        if (node.isExport()) {
+            sb.append("export ");
         }
 
         // Class declaration
@@ -249,6 +278,12 @@ public class CodeGenerator implements AstVisitor<String> {
             return "";
         }
 
+        // Try to transform to component statement (create/pop pattern)
+        AstNode transformed = ComponentExpressionTransformer.transform(expr);
+        if (transformed instanceof ComponentStatement) {
+            return transformed.accept(this);
+        }
+
         // Don't add semicolon if expression already ends with one or is a block
         String trimmed = expr.trim();
         if (trimmed.endsWith(";") || trimmed.endsWith("}") || trimmed.startsWith("{")) {
@@ -274,6 +309,42 @@ public class CodeGenerator implements AstVisitor<String> {
                 }
             }
         }
+        return sb.toString();
+    }
+
+    @Override
+    public String visit(ImportStatement node) {
+        // Return the string representation of the import statement
+        return node.toString();
+    }
+
+    @Override
+    public String visit(ExportStatement node) {
+        // Return the string representation of the export statement
+        // Type exports return empty string and will be filtered out
+        return node.toString();
+    }
+
+    @Override
+    public String visit(ComponentStatement node) {
+        StringBuilder sb = new StringBuilder();
+        String componentName = node.getComponentName();
+
+        for (ComponentPart part : node.getParts()) {
+            sb.append(getIndent());
+            switch (part.getKind()) {
+                case CREATE:
+                    sb.append(componentName).append(".create(").append(part.getCode()).append(");\n");
+                    break;
+                case METHOD:
+                    sb.append(componentName).append(".").append(part.getCode()).append("\n");
+                    break;
+                case POP:
+                    sb.append(componentName).append(".pop();\n");
+                    break;
+            }
+        }
+
         return sb.toString();
     }
 

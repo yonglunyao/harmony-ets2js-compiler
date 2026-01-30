@@ -109,6 +109,17 @@ function convertAstToJson(node, extractedDecorators = []) {
 
         case ts.SyntaxKind.ClassDeclaration:
             result.name = node.name?.escapedText || '';
+            result.isExport = false;
+            // Check for export modifier
+            if (node.modifiers) {
+                for (const mod of node.modifiers) {
+                    const modKindName = getSyntaxKindName(mod.kind);
+                    if (modKindName === 'ExportKeyword') {
+                        result.isExport = true;
+                        break;
+                    }
+                }
+            }
             result.decorators = [];
 
             // Add extracted decorators (for @Component on struct)
@@ -251,6 +262,22 @@ function convertAstToJson(node, extractedDecorators = []) {
                     }
                 }
             }
+            // Check for chained calls (e.g., Text('Hello').fontSize(16).fontColor(Color.Red))
+            // If expression is PropertyAccessExpression with CallExpression as its expression,
+            // this is part of a chain
+            if (result.expression && result.expression.kindName === 'PropertyAccessExpression') {
+                const propExpr = result.expression;
+                if (propExpr.expression && propExpr.expression.kindName === 'CallExpression') {
+                    // This is a chained call, mark it
+                    result.isChainedCall = true;
+                    // Store the base component name (from the innermost CallExpression)
+                    if (propExpr.expression.expression && propExpr.expression.expression.kindName === 'Identifier') {
+                        result.componentName = propExpr.expression.expression.name;
+                    }
+                    // Store the method name (current PropertyAccessExpression)
+                    result.methodName = propExpr.name;
+                }
+            }
             break;
 
         case ts.SyntaxKind.Identifier:
@@ -261,6 +288,54 @@ function convertAstToJson(node, extractedDecorators = []) {
         case ts.SyntaxKind.PropertyAccessExpression:
             result.expression = convertAstToJson(node.expression);
             result.name = node.name.escapedText;
+            // Note: Don't extract arguments here - they're handled by the parent CallExpression
+            // to avoid duplication
+            break;
+
+        case ts.SyntaxKind.ImportDeclaration:
+            result.moduleSpecifier = node.moduleSpecifier.getText();
+            result.importClause = null;
+            if (node.importClause) {
+                const importClause = {
+                    name: node.importClause.name ? node.importClause.name.getText() : null,
+                    namedBindings: []
+                };
+                if (node.importClause.namedBindings) {
+                    if (node.importClause.namedBindings.kind === ts.SyntaxKind.NamedImports) {
+                        for (const element of node.importClause.namedBindings.elements) {
+                            importClause.namedBindings.push({
+                                name: element.name.getText(),
+                                propertyName: element.propertyName ? element.propertyName.getText() : null
+                            });
+                        }
+                    } else if (node.importClause.namedBindings.kind === ts.SyntaxKind.NamespaceImport) {
+                        importClause.namedBindings.push({
+                            kind: 'namespace',
+                            name: node.importClause.namedBindings.name.getText()
+                        });
+                    }
+                }
+                result.importClause = importClause;
+            }
+            break;
+
+        case ts.SyntaxKind.ExportDeclaration:
+            result.exportClause = null;
+            // Check if this is a type-only export (property is on the node itself)
+            result.isTypeOnly = node.isTypeOnly || false;
+            if (node.exportClause) {
+                const exportClause = { elements: [] };
+                if (node.exportClause.kind === ts.SyntaxKind.NamedExports) {
+                    for (const element of node.exportClause.elements) {
+                        exportClause.elements.push({
+                            name: element.name.getText(),
+                            propertyName: element.propertyName ? element.propertyName.getText() : null
+                        });
+                    }
+                }
+                result.exportClause = exportClause;
+            }
+            result.moduleSpecifier = node.moduleSpecifier ? node.moduleSpecifier.getText() : null;
             break;
 
         case ts.SyntaxKind.ArrowFunction:
@@ -328,6 +403,8 @@ function getSyntaxKindName(kind) {
         [ts.SyntaxKind.NumericLiteral]: 'NumericLiteral',
         [ts.SyntaxKind.ReturnStatement]: 'ReturnStatement',
         [ts.SyntaxKind.IfStatement]: 'IfStatement',
+        [ts.SyntaxKind.ImportDeclaration]: 'ImportDeclaration',
+        [ts.SyntaxKind.ExportDeclaration]: 'ExportDeclaration',
     };
 
     return kindMap[kind] || `Unknown_${kind}`;

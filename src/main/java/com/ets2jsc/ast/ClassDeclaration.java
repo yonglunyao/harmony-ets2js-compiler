@@ -14,12 +14,14 @@ public class ClassDeclaration implements AstNode {
     private boolean isStruct;
     private String superClass;
     private String heritageClause;
+    private boolean isExport; // Track if this class is exported
 
     public ClassDeclaration(String name) {
         this.name = name;
         this.decorators = new ArrayList<>();
         this.members = new ArrayList<>();
         this.isStruct = false;
+        this.isExport = false;
     }
 
     @Override
@@ -90,6 +92,14 @@ public class ClassDeclaration implements AstNode {
 
     public void setHeritageClause(String heritageClause) {
         this.heritageClause = heritageClause;
+    }
+
+    public boolean isExport() {
+        return isExport;
+    }
+
+    public void setExport(boolean export) {
+        isExport = export;
     }
 
     /**
