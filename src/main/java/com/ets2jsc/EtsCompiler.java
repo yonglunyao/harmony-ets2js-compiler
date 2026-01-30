@@ -89,7 +89,7 @@ public class EtsCompiler {
     }
 
     /**
-     * Compiles multiple ETS source files.
+     * Compiles multiple ETS source files (sequential).
      *
      * @param sourceFiles list of source file paths
      * @param outputDir output directory
@@ -102,6 +102,43 @@ public class EtsCompiler {
             Path outputPath = outputDir.resolve(outputName);
 
             compile(sourceFile, outputPath);
+        }
+    }
+
+    /**
+     * Compiles multiple ETS source files in parallel.
+     * 使用多线程并行编译多个 ETS 文件
+     *
+     * @param sourceFiles list of source file paths
+     * @param outputDir output directory
+     * @return compilation result with statistics
+     */
+    public CompilationResult compileBatchParallel(List<Path> sourceFiles, Path outputDir) {
+        ParallelEtsCompiler parallelCompiler = new ParallelEtsCompiler(config);
+        try {
+            CompilationResult result = parallelCompiler.compileParallel(sourceFiles, outputDir);
+            return result;
+        } finally {
+            parallelCompiler.shutdown();
+        }
+    }
+
+    /**
+     * Compiles multiple ETS source files in parallel with custom thread pool size.
+     * 使用指定线程池大小并行编译多个 ETS 文件
+     *
+     * @param sourceFiles list of source file paths
+     * @param outputDir output directory
+     * @param threadPoolSize number of threads to use
+     * @return compilation result with statistics
+     */
+    public CompilationResult compileBatchParallel(List<Path> sourceFiles, Path outputDir, int threadPoolSize) {
+        ParallelEtsCompiler parallelCompiler = new ParallelEtsCompiler(config, threadPoolSize);
+        try {
+            CompilationResult result = parallelCompiler.compileParallel(sourceFiles, outputDir);
+            return result;
+        } finally {
+            parallelCompiler.shutdown();
         }
     }
 
@@ -188,8 +225,7 @@ public class EtsCompiler {
     public static void main(String[] args) {
         try {
             if (args.length < 2) {
-                System.err.println("Usage: EtsCompiler <input-file> <output-file>");
-                System.err.println("   or: EtsCompiler <input-dir> <output-dir> --batch");
+                printUsage();
                 System.exit(1);
             }
 
@@ -199,31 +235,106 @@ public class EtsCompiler {
             // Create compiler
             EtsCompiler compiler = new EtsCompiler(config);
 
-            // Check if batch mode
-            if (args.length > 2 && "--batch".equals(args[2])) {
-                // Batch compilation
-                Path inputDir = Path.of(args[0]);
-                Path outputDir = Path.of(args[1]);
+            Path inputPath = Path.of(args[0]);
+            Path outputPath = Path.of(args[1]);
 
-                List<Path> sourceFiles = findSourceFiles(inputDir);
-                compiler.compileBatch(sourceFiles, outputDir);
+            // Check if batch mode or parallel mode
+            if (args.length > 2) {
+                String mode = args[2];
 
-                System.out.println("Compiled " + sourceFiles.size() + " files to " + outputDir);
+                if ("--batch".equals(mode) || "--parallel".equals(mode)) {
+                    // Batch/Parallel compilation
+                    if (!Files.isDirectory(inputPath)) {
+                        System.err.println("错误: " + inputPath + " 不是目录");
+                        System.exit(1);
+                    }
+
+                    List<Path> sourceFiles = findSourceFiles(inputPath);
+
+                    if (sourceFiles.isEmpty()) {
+                        System.out.println("未找到 ETS/TS 文件");
+                        System.exit(0);
+                    }
+
+                    System.out.println("找到 " + sourceFiles.size() + " 个文件");
+
+                    if ("--parallel".equals(mode)) {
+                        // Parallel compilation
+                        int threads = Runtime.getRuntime().availableProcessors();
+                        if (args.length > 3) {
+                            try {
+                                threads = Integer.parseInt(args[3]);
+                            } catch (NumberFormatException e) {
+                                System.err.println("无效的线程数: " + args[3]);
+                                System.exit(1);
+                            }
+                        }
+
+                        System.out.println("使用并行编译模式，线程数: " + threads);
+                        long startTime = System.currentTimeMillis();
+
+                        CompilationResult result = compiler.compileBatchParallel(sourceFiles, outputPath, threads);
+
+                        long duration = System.currentTimeMillis() - startTime;
+
+                        // Print results
+                        System.out.println();
+                        System.out.println("=== 编译结果 ===");
+                        System.out.println(result.getSummary());
+                        System.out.println("吞吐量: " + (result.getTotalCount() * 1000.0 / duration) + " 文件/秒");
+
+                        if (!result.isAllSuccess()) {
+                            System.out.println();
+                            System.out.println("失败的文件:");
+                            for (CompilationResult.FileResult failure : result.getFailures()) {
+                                System.out.println("  - " + failure.getSourcePath());
+                                System.out.println("    错误: " + failure.getMessage());
+                            }
+                            System.exit(1);
+                        }
+                    } else {
+                        // Sequential batch compilation
+                        long startTime = System.currentTimeMillis();
+                        compiler.compileBatch(sourceFiles, outputPath);
+                        long duration = System.currentTimeMillis() - startTime;
+
+                        System.out.println("编译完成 " + sourceFiles.size() + " 个文件到 " + outputPath);
+                        System.out.println("耗时: " + duration + "ms");
+                    }
+                } else {
+                    System.err.println("未知选项: " + mode);
+                    printUsage();
+                    System.exit(1);
+                }
             } else {
                 // Single file compilation
-                Path inputFile = Path.of(args[0]);
-                Path outputFile = Path.of(args[1]);
-
-                compiler.compile(inputFile, outputFile);
-
-                System.out.println("Compiled " + inputFile + " to " + outputFile);
+                compiler.compile(inputPath, outputPath);
+                System.out.println("编译完成: " + inputPath + " -> " + outputPath);
             }
 
         } catch (Exception e) {
-            System.err.println("Compilation failed: " + e.getMessage());
+            System.err.println("编译失败: " + e.getMessage());
             e.printStackTrace();
             System.exit(1);
         }
+    }
+
+    /**
+     * Print usage information.
+     */
+    private static void printUsage() {
+        System.err.println("用法: EtsCompiler <input> <output> [mode] [threads]");
+        System.err.println();
+        System.err.println("模式:");
+        System.err.println("  (无)      - 编译单个文件");
+        System.err.println("  --batch   - 批量编译目录（顺序）");
+        System.err.println("  --parallel - 批量编译目录（并行）");
+        System.err.println();
+        System.err.println("示例:");
+        System.err.println("  EtsCompiler src/App.ets build/App.js");
+        System.err.println("  EtsCompiler src/main/ets build/dist --batch");
+        System.err.println("  EtsCompiler src/main/ets build/dist --parallel");
+        System.err.println("  EtsCompiler src/main/ets build/dist --parallel 8");
     }
 
     /**
