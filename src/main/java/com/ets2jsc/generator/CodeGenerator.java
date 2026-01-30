@@ -233,10 +233,11 @@ public class CodeGenerator implements AstVisitor<String> {
         StringBuilder sb = new StringBuilder();
         sb.append(getIndent());
 
-        // Visibility
-        if (node.getVisibility() == PropertyDeclaration.Visibility.PRIVATE) {
-            sb.append("private ");
-        }
+        // Note: JavaScript class properties don't support visibility keywords like 'private'
+        // Use comments to indicate private properties instead
+        // if (node.getVisibility() == PropertyDeclaration.Visibility.PRIVATE) {
+        //     sb.append("// private: ");
+        // }
 
         // Name and type
         sb.append(node.getName());
@@ -246,14 +247,55 @@ public class CodeGenerator implements AstVisitor<String> {
         //     sb.append(": ").append(node.getTypeAnnotation());
         // }
 
-        // Initializer
+        // Initializer - ensure string literals are quoted
         if (node.getInitializer() != null) {
-            sb.append(" = ").append(node.getInitializer());
+            String initializer = node.getInitializer();
+            // Check if this looks like an unquoted string value
+            // (identifier without quotes that should be a string literal)
+            if (needsQuoting(initializer)) {
+                sb.append(" = \"").append(escapeJsString(initializer)).append("\"");
+            } else {
+                sb.append(" = ").append(initializer);
+            }
         }
 
         sb.append(";\n");
 
         return sb.toString();
+    }
+
+    /**
+     * Checks if a value looks like it needs quotes (unquoted string literal).
+     */
+    private boolean needsQuoting(String value) {
+        if (value == null || value.isEmpty()) {
+            return false;
+        }
+        // If already quoted, don't quote again
+        if (value.startsWith("\"") || value.startsWith("'") || value.startsWith("`")) {
+            return false;
+        }
+        // If it's a number, boolean, null, undefined, or this.xxx, don't quote
+        if (value.matches("\\d+") || value.equals("true") || value.equals("false") ||
+            value.equals("null") || value.equals("undefined") || value.startsWith("this.") ||
+            value.startsWith("new ") || value.contains("(") || value.contains("{") ||
+            value.contains("[") || value.startsWith("$")) {
+            return false;
+        }
+        // Otherwise, it might be an unquoted string literal
+        return true;
+    }
+
+    /**
+     * Escapes special characters in JavaScript strings.
+     */
+    private String escapeJsString(String value) {
+        if (value == null) return "";
+        return value.replace("\\", "\\\\")
+                  .replace("\"", "\\\"")
+                  .replace("\n", "\\n")
+                  .replace("\r", "\\r")
+                  .replace("\t", "\\t");
     }
 
     @Override
