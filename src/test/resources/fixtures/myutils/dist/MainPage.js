@@ -8,7 +8,7 @@ export class MainPage extends View {
         Row.create();
             Column.create();
         Text(this.message).fontSize($r('app.float.page_text_font_size')).fontWeight(FontWeight.Bold).onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.message = "Welcome";
+    this.message = "Welcome";
   });
       Column.pop();
 

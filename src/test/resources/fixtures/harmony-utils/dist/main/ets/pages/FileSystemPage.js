@@ -44,10 +44,10 @@ export class FileSystemPage extends View {
 
                         Row.create({space: 16});
               Button("刷新").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.listFiles();
+    this.listFiles();
   });
               Button("新建文件夹").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.createDirectory();
+    this.createDirectory();
   });
             Row.pop();
 
@@ -56,10 +56,10 @@ export class FileSystemPage extends View {
 
                         Row.create({space: 16});
               TextInput({placeholder: "搜索关键词..."}).width("60%").onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.searchText = value;
+    this.searchText = value;
   });
               Button("搜索").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.searchFiles();
+    this.searchFiles();
   });
             Row.pop();
 
@@ -68,10 +68,10 @@ export class FileSystemPage extends View {
 
                         Row.create({space: 16});
               Button("选择源文件").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.selectSourceFile();
+    this.selectSourceFile();
   });
               Button("选择目标文件").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.selectTargetFile();
+    this.selectTargetFile();
   });
             Row.pop();
 
@@ -90,10 +90,10 @@ export class FileSystemPage extends View {
 
                         Row.create({space: 16});
               Button("清空路径").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.currentPath = "/data/storage/el2/base/haps/entry/files";
+    this.currentPath = "/data/storage/el2/base/haps/entry/files";
   });
               Button("根目录").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.currentPath = "/";
+    this.currentPath = "/";
   });
             Row.pop();
 
@@ -127,10 +127,10 @@ export class FileSystemPage extends View {
 
                         Row.create({space: 16});
               Button("选择源文件").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.selectSourceFile();
+    this.selectSourceFile();
   });
               Button("选择目标文件").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.selectTargetFile();
+    this.selectTargetFile();
   });
             Row.pop();
 
@@ -138,14 +138,14 @@ export class FileSystemPage extends View {
             Divider.pop();
 
             Button("文件操作").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.showFileOptions();
+    this.showFileOptions();
   });
                         Divider.create();
             Divider.pop();
 
                         Row.create({space: 16});
               Button("刷新").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.listFiles();
+    this.listFiles();
   });
             Row.pop();
 
@@ -158,10 +158,10 @@ export class FileSystemPage extends View {
             Text.pop();
 
             TextInput({placeholder: "搜索关键词..."}).width("60%").onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.searchText = value;
+    this.searchText = value;
   });
             Button("搜索").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.searchFiles();
+    this.searchFiles();
   });
           Column.pop();
 
@@ -216,12 +216,12 @@ export class FileSystemPage extends View {
               Divider.pop();
 
               Button("删除文件").onClick(() => {
-    if ({"kind":110,"kindName":"ThisKeyword"}.selectedFile) {
+    if (this.selectedFile) {
     const success = await FileManager.deleteFile(this.selectedFile.uri);
     if (success) {
     Logger.success("删除文件成功");
-    {"kind":110,"kindName":"ThisKeyword"}.selectedFile = null;
-    {"kind":110,"kindName":"ThisKeyword"}.files = {"kind":110,"kindName":"ThisKeyword"}.files.filter((f) => f.uri !== {"kind":110,"kindName":"ThisKeyword"}.selectedFile.uri);
+    this.selectedFile = null;
+    this.files = this.files.filter((f) => f.uri !== this.selectedFile.uri);
     }
     }
   });
@@ -260,7 +260,7 @@ export class FileSystemPage extends View {
 
   listFiles() {
     FileManager.listFiles(this.currentPath).then((files) => {
-    {"kind":110,"kindName":"ThisKeyword"}.files = files;
+    this.files = files;
     Logger.success(`列出文件成功，共 ${files.length} 个文件`);
   }).catch((error) => {
     Logger.error("列出文件失败", error);
@@ -270,7 +270,7 @@ export class FileSystemPage extends View {
   createDirectory() {
     FileManager.createDirectory(this.currentPath + '/new_folder').then(() => {
     Logger.success("创建目录成功");
-    {"kind":110,"kindName":"ThisKeyword"}.listFiles();
+    this.listFiles();
   }).catch((error) => {
     Logger.error("创建目录失败", error);
   });

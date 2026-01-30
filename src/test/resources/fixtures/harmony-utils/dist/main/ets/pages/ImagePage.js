@@ -18,15 +18,15 @@ export class ImagePage extends View {
 
   async selectImage() {
     try {
-  const photoSelectOptions = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"photoAccessHelper","text":"photoAccessHelper"},"name":"PhotoSelectOptions"},"arguments":[]};
+  const photoSelectOptions = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"photoAccessHelper","text":"photoAccessHelper"},"name":"PhotoSelectOptions","text":"photoAccessHelper.PhotoSelectOptions"},"arguments":[]};
   photoSelectOptions.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_TYPE;
   photoSelectOptions.maxSelectNumber = 1;
-  const photoPicker = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"photoAccessHelper","text":"photoAccessHelper"},"name":"PhotoViewPicker"},"arguments":[]};
+  const photoPicker = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"photoAccessHelper","text":"photoAccessHelper"},"name":"PhotoViewPicker","text":"photoAccessHelper.PhotoViewPicker"},"arguments":[]};
   const result = await photoPicker.select(photoSelectOptions);
   if (result && result.photoUris && result.photoUris.length > 0) {
-  {"kind":110,"kindName":"ThisKeyword"}.selectedImageUri = result.photoUris[0];
+  this.selectedImageUri = result.photoUris[0];
   const info = await ImageProcessor.getImageInfo(this.selectedImageUri);
-  {"kind":110,"kindName":"ThisKeyword"}.imageInfo = {"kind":229,"kindName":"TemplateExpression"};
+  this.imageInfo = {"kind":229,"kindName":"TemplateExpression"};
   Logger.success("图片选择成功");
 }
 } catch (error) {
@@ -44,7 +44,7 @@ export class ImagePage extends View {
           Text.pop();
 
           Button("选择图片").width("100%").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.selectImage();
+    this.selectImage();
   });
           If.create();
           if (this.selectedImageUri) {
@@ -55,15 +55,15 @@ export class ImagePage extends View {
                             Text.create("质量:");
               Text.pop();
 
-              Slider({value: {"kind":110,"kindName":"ThisKeyword"}.quality, min: 10, max: 100, step: 10}).width("60%").onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.quality = value;
+              Slider({value: this.quality, min: 10, max: 100, step: 10}).width("60%").onChange((value) => {
+    this.quality = value;
   });
               Text(`${this.quality}%`);
             Row.pop();
 
             Button("压缩图片").width("100%").onClick(() => {
-    if ({"kind":110,"kindName":"ThisKeyword"}.selectedImageUri) {
-    {"kind":110,"kindName":"ThisKeyword"}.processedImageUri = await ImageProcessor.compressImage(this.selectedImageUri, this.quality);
+    if (this.selectedImageUri) {
+    this.processedImageUri = await ImageProcessor.compressImage(this.selectedImageUri, this.quality);
     }
   });
           }
@@ -92,7 +92,7 @@ export class ImagePage extends View {
           Text.pop();
 
           Button("选择图片").width("100%").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.selectImage();
+    this.selectImage();
   });
           If.create();
           if (this.selectedImageUri) {
@@ -100,29 +100,29 @@ export class ImagePage extends View {
             Image(this.selectedImageUri).width("80%").height(200).objectFit(ImageFit.Contain);
                         Row.create({space: 8});
               TextInput({placeholder: "X"}).width(80).type(InputType.Number).onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.cropX = value;
+    this.cropX = value;
   });
               TextInput({placeholder: "Y"}).width(80).type(InputType.Number).onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.cropY = value;
+    this.cropY = value;
   });
             Row.pop();
 
                         Row.create({space: 8});
               TextInput({placeholder: "宽度"}).width(80).type(InputType.Number).onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.cropWidth = value;
+    this.cropWidth = value;
   });
               TextInput({placeholder: "高度"}).width(80).type(InputType.Number).onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.cropHeight = value;
+    this.cropHeight = value;
   });
             Row.pop();
 
             Button("裁剪图片").width("100%").onClick(() => {
-    if ({"kind":110,"kindName":"ThisKeyword"}.selectedImageUri) {
+    if (this.selectedImageUri) {
     const x = parseInt(this.cropX) || 0;
     const y = parseInt(this.cropY) || 0;
     const w = parseInt(this.cropWidth) || 200;
     const h = parseInt(this.cropHeight) || 200;
-    {"kind":110,"kindName":"ThisKeyword"}.processedImageUri = await ImageProcessor.cropImage(this.selectedImageUri, x, y, w, h);
+    this.processedImageUri = await ImageProcessor.cropImage(this.selectedImageUri, x, y, w, h);
     }
   });
           }
@@ -151,7 +151,7 @@ export class ImagePage extends View {
           Text.pop();
 
           Button("选择图片").width("100%").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.selectImage();
+    this.selectImage();
   });
           If.create();
           if (this.selectedImageUri) {
@@ -161,15 +161,15 @@ export class ImagePage extends View {
                             Text.create("角度:");
               Text.pop();
 
-              Slider({value: {"kind":110,"kindName":"ThisKeyword"}.rotationAngle, min: 0, max: 360, step: 90}).width("60%").onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.rotationAngle = value;
+              Slider({value: this.rotationAngle, min: 0, max: 360, step: 90}).width("60%").onChange((value) => {
+    this.rotationAngle = value;
   });
               Text(`${this.rotationAngle}°`);
             Row.pop();
 
             Button("旋转图片").width("100%").onClick(() => {
-    if ({"kind":110,"kindName":"ThisKeyword"}.selectedImageUri) {
-    {"kind":110,"kindName":"ThisKeyword"}.processedImageUri = await ImageProcessor.rotateImage(this.selectedImageUri, this.rotationAngle);
+    if (this.selectedImageUri) {
+    this.processedImageUri = await ImageProcessor.rotateImage(this.selectedImageUri, this.rotationAngle);
     }
   });
           }
@@ -198,7 +198,7 @@ export class ImagePage extends View {
           Text.pop();
 
           Button("选择图片").width("100%").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.selectImage();
+    this.selectImage();
   });
           If.create();
           if (this.selectedImageUri) {
@@ -206,13 +206,13 @@ export class ImagePage extends View {
             Image(this.selectedImageUri).width("80%").height(200).objectFit(ImageFit.Contain);
                         Row.create({space: 16});
               Button("灰度").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.processedImageUri = await ImageProcessor.applyGrayscaleFilter(this.selectedImageUri);
+    this.processedImageUri = await ImageProcessor.applyGrayscaleFilter(this.selectedImageUri);
   });
               Button("黑白").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.processedImageUri = await ImageProcessor.applyBlackWhiteFilter(this.selectedImageUri);
+    this.processedImageUri = await ImageProcessor.applyBlackWhiteFilter(this.selectedImageUri);
   });
               Button("高对比度").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.processedImageUri = await ImageProcessor.applyHighContrastFilter(this.selectedImageUri);
+    this.processedImageUri = await ImageProcessor.applyHighContrastFilter(this.selectedImageUri);
   });
             Row.pop();
 

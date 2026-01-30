@@ -1,13 +1,17 @@
+# Maven
 target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -36,6 +40,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+Thumbs.db
 
 ### Test artifacts ###
 **/abc*/
@@ -48,4 +53,3 @@ test-import-output.js
 test-import-output.js.map
 test.abc
 debug-import.js
-compile-harmony-utils.sh

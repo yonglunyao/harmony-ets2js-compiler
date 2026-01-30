@@ -15,7 +15,7 @@ export class CryptographyUtil {
   const iv = {"kind":215,"kindName":"NewExpression","expression":{"kind":80,"kindName":"Identifier","name":"Uint8Array","text":"Uint8Array"},"arguments":[{"kind":9,"kindName":"FirstLiteralToken","text":"16"}]};
   const ivParamsSpec = {algName: , iv: };
   await cipher.init(cryptoFramework.CryptoMode.ENCRYPT_MODE, symKey, ivParamsSpec);
-  const encoder = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"util","text":"util"},"name":"TextEncoder"},"arguments":[]};
+  const encoder = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"util","text":"util"},"name":"TextEncoder","text":"util.TextEncoder"},"arguments":[]};
   const plainData = encoder.encodeInto(plainText);
   const cipherData = await cipher.doFinal("{data: plainData}");
   const result = base64Helper.encodeToStringSync(cipherData.data);
@@ -51,7 +51,7 @@ export class CryptographyUtil {
   static async sha256(input /* string */) {
     try {
   const md = cryptoFramework.createMd("SHA256");
-  const encoder = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"util","text":"util"},"name":"TextEncoder"},"arguments":[]};
+  const encoder = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"util","text":"util"},"name":"TextEncoder","text":"util.TextEncoder"},"arguments":[]};
   const data = encoder.encodeInto(input);
   await md.update("{data: data}");
   const hashData = await md.digest();
@@ -67,7 +67,7 @@ export class CryptographyUtil {
   static async md5(input /* string */) {
     try {
   const md = cryptoFramework.createMd("MD5");
-  const encoder = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"util","text":"util"},"name":"TextEncoder"},"arguments":[]};
+  const encoder = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"util","text":"util"},"name":"TextEncoder","text":"util.TextEncoder"},"arguments":[]};
   const data = encoder.encodeInto(input);
   await md.update("{data: data}");
   const hashData = await md.digest();
@@ -82,7 +82,7 @@ export class CryptographyUtil {
 
   static encodeBase64(input /* string */) {
     try {
-  const encoder = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"util","text":"util"},"name":"TextEncoder"},"arguments":[]};
+  const encoder = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"util","text":"util"},"name":"TextEncoder","text":"util.TextEncoder"},"arguments":[]};
   const data = encoder.encodeInto(input);
   const result = base64Helper.encodeToStringSync(data);
   Logger.success("Base64编码成功");

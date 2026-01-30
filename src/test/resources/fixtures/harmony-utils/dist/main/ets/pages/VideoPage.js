@@ -29,16 +29,16 @@ export class VideoPage extends View {
 
         Button("选择视频").width("100%").onClick(() => {
     try {
-    const photoSelectOptions = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"photoAccessHelper","text":"photoAccessHelper"},"name":"PhotoSelectOptions"},"arguments":[]};
+    const photoSelectOptions = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"photoAccessHelper","text":"photoAccessHelper"},"name":"PhotoSelectOptions","text":"photoAccessHelper.PhotoSelectOptions"},"arguments":[]};
     photoSelectOptions.MIMEType = photoAccessHelper.PhotoViewMIMETypes.VIDEO_TYPE;
     photoSelectOptions.maxSelectNumber = 1;
-    const photoPicker = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"photoAccessHelper","text":"photoAccessHelper"},"name":"PhotoViewPicker"},"arguments":[]};
+    const photoPicker = {"kind":215,"kindName":"NewExpression","expression":{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"photoAccessHelper","text":"photoAccessHelper"},"name":"PhotoViewPicker","text":"photoAccessHelper.PhotoViewPicker"},"arguments":[]};
     const result = await photoPicker.select(photoSelectOptions);
     if (result && result.photoUris && result.photoUris.length > 0) {
-    {"kind":110,"kindName":"ThisKeyword"}.selectedVideoUri = result.photoUris[0];
+    this.selectedVideoUri = result.photoUris[0];
     const info = await VideoProcessor.getVideoInfo(this.selectedVideoUri);
-    {"kind":110,"kindName":"ThisKeyword"}.videoInfo = info;
-    {"kind":110,"kindName":"ThisKeyword"}.capturedFrame = "";
+    this.videoInfo = info;
+    this.capturedFrame = "";
     Logger.success("视频选择成功");
     }
     } catch (error) {
@@ -91,8 +91,8 @@ export class VideoPage extends View {
             Button("获取时长").onClick(() => {
     try {
     const duration = await VideoProcessor.getDuration(this.selectedVideoUri);
-    {"kind":110,"kindName":"ThisKeyword"}.videoInfo.duration = duration;
-    {"kind":110,"kindName":"ThisKeyword"}.videoInfo.durationFormatted = VideoProcessor.formatDuration(duration);
+    this.videoInfo.duration = duration;
+    this.videoInfo.durationFormatted = VideoProcessor.formatDuration(duration);
     Logger.success(`获取时长成功：${this.videoInfo.durationFormatted}`);
     } catch (error) {
     Logger.error("获取时长失败", error);
@@ -110,12 +110,12 @@ export class VideoPage extends View {
 
                     Row.create({space: 16});
             TextInput({placeholder: "截图时间点(毫秒)", text: {"kind":229,"kindName":"TemplateExpression"}}).type(InputType.Number).width(120).onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.captureTime = parseInt(value) || 1000;
+    this.captureTime = parseInt(value) || 1000;
   });
             Button("截图").onClick(() => {
     try {
     const frameUri = await VideoProcessor.captureFrame(this.selectedVideoUri, this.captureTime);
-    {"kind":110,"kindName":"ThisKeyword"}.capturedFrame = frameUri;
+    this.capturedFrame = frameUri;
     Logger.success("截图成功");
     } catch (error) {
     Logger.error("截图失败", error);

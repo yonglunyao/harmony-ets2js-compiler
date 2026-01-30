@@ -39,23 +39,23 @@ export class CryptographyPage extends View {
           Text.pop();
 
           TextInput({placeholder: "输入文本"}).width("100%").height(50).onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.inputText = value;
+    this.inputText = value;
   });
           TextInput({placeholder: "输入密钥（Base64编码）"}).width("100%").height(50).onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.keyText = value;
+    this.keyText = value;
   });
                     Row.create({space: 16});
             Button("生成密钥").onClick(() => {
-    {"kind":110,"kindName":"ThisKeyword"}.keyText = await CryptographyUtil.generateAESKey();
+    this.keyText = await CryptographyUtil.generateAESKey();
   });
             Button("加密").onClick(() => {
-    if ({"kind":110,"kindName":"ThisKeyword"}.inputText && {"kind":110,"kindName":"ThisKeyword"}.keyText) {
-    {"kind":110,"kindName":"ThisKeyword"}.outputText = await CryptographyUtil.encryptAES(this.inputText, this.keyText);
+    if (this.inputText && this.keyText) {
+    this.outputText = await CryptographyUtil.encryptAES(this.inputText, this.keyText);
     }
   });
             Button("解密").onClick(() => {
-    if ({"kind":110,"kindName":"ThisKeyword"}.inputText && {"kind":110,"kindName":"ThisKeyword"}.keyText) {
-    {"kind":110,"kindName":"ThisKeyword"}.outputText = await CryptographyUtil.decryptAES(this.inputText, this.keyText);
+    if (this.inputText && this.keyText) {
+    this.outputText = await CryptographyUtil.decryptAES(this.inputText, this.keyText);
     }
   });
           Row.pop();
@@ -79,17 +79,17 @@ export class CryptographyPage extends View {
           Text.pop();
 
           TextInput({placeholder: "输入文本"}).width("100%").height(50).onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.inputText = value;
+    this.inputText = value;
   });
                     Row.create({space: 16});
             Button("SHA256").onClick(() => {
-    if ({"kind":110,"kindName":"ThisKeyword"}.inputText) {
-    {"kind":110,"kindName":"ThisKeyword"}.hashResult = await CryptographyUtil.sha256(this.inputText);
+    if (this.inputText) {
+    this.hashResult = await CryptographyUtil.sha256(this.inputText);
     }
   });
             Button("MD5").onClick(() => {
-    if ({"kind":110,"kindName":"ThisKeyword"}.inputText) {
-    {"kind":110,"kindName":"ThisKeyword"}.hashResult = await CryptographyUtil.md5(this.inputText);
+    if (this.inputText) {
+    this.hashResult = await CryptographyUtil.md5(this.inputText);
     }
   });
           Row.pop();
@@ -113,17 +113,17 @@ export class CryptographyPage extends View {
           Text.pop();
 
           TextInput({placeholder: "输入文本"}).width("100%").height(50).onChange((value) => {
-    {"kind":110,"kindName":"ThisKeyword"}.base64Input = value;
+    this.base64Input = value;
   });
                     Row.create({space: 16});
             Button("编码").onClick(() => {
-    if ({"kind":110,"kindName":"ThisKeyword"}.base64Input) {
-    {"kind":110,"kindName":"ThisKeyword"}.base64Result = CryptographyUtil.encodeBase64(this.base64Input);
+    if (this.base64Input) {
+    this.base64Result = CryptographyUtil.encodeBase64(this.base64Input);
     }
   });
             Button("解码").onClick(() => {
-    if ({"kind":110,"kindName":"ThisKeyword"}.base64Input) {
-    {"kind":110,"kindName":"ThisKeyword"}.base64Result = CryptographyUtil.decodeBase64(this.base64Input);
+    if (this.base64Input) {
+    this.base64Result = CryptographyUtil.decodeBase64(this.base64Input);
     }
   });
           Row.pop();

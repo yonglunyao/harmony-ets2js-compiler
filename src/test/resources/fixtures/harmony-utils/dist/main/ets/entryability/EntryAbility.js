@@ -6,7 +6,7 @@ const DOMAIN = 0;
 export class EntryAbility {
   onCreate(want /* Want */, launchParam /* AbilityConstant.LaunchParam */) {
     try {
-  {"kind":110,"kindName":"ThisKeyword"}.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET);
+  this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET);
 } catch (err) {
   hilog.error(DOMAIN, "testTag", "Failed to set colorMode. Cause: %{public}s", JSON.stringify(err));
 }

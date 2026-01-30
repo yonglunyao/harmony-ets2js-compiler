@@ -1,3 +1,4 @@
+你知道怎么修复这些问题吗，继续技术方案，而不是你的猜测
 import image from '@ohos.multimedia.image';
 import fs from '@ohos.file.fs';
 import { Logger } from '../utils/Logger';

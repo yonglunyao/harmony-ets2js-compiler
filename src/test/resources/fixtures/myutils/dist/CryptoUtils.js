@@ -49,7 +49,7 @@ if (padding === "NoPadding") {
 }
 } catch (err) {
   const error = err;
-  {"kind":258,"kindName":"ThrowStatement"}
+  throw {"kind":215,"kindName":"NewExpression","expression":{"kind":80,"kindName":"Identifier","name":"Error","text":"Error"},"arguments":[{"kind":229,"kindName":"TemplateExpression"}]}
 }
   }
 
@@ -96,7 +96,7 @@ if (padding === "NoPadding") {
   return decrypted.toString(CryptoJS.enc.Utf8);
 } catch (err) {
   const error = err;
-  {"kind":258,"kindName":"ThrowStatement"}
+  throw {"kind":215,"kindName":"NewExpression","expression":{"kind":80,"kindName":"Identifier","name":"Error","text":"Error"},"arguments":[{"kind":229,"kindName":"TemplateExpression"}]}
 }
   }
 

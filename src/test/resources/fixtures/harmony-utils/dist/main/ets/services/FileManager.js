@@ -128,7 +128,7 @@ export class FileManager {
     try {
   const stat = fs.statSync(fileUri);
   const file = fs.openSync(fileUri, 1);
-  const arrayBuffer = {"kind":215,"kindName":"NewExpression","expression":{"kind":80,"kindName":"Identifier","name":"ArrayBuffer","text":"ArrayBuffer"},"arguments":[{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"stat","text":"stat"},"name":"size"}]};
+  const arrayBuffer = {"kind":215,"kindName":"NewExpression","expression":{"kind":80,"kindName":"Identifier","name":"ArrayBuffer","text":"ArrayBuffer"},"arguments":[{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"stat","text":"stat"},"name":"size","text":"stat.size"}]};
   fs.readSync(file.fd, arrayBuffer);
   fs.closeSync(file);
   const uint8Array = {"kind":215,"kindName":"NewExpression","expression":{"kind":80,"kindName":"Identifier","name":"Uint8Array","text":"Uint8Array"},"arguments":[{"kind":80,"kindName":"Identifier","name":"arrayBuffer","text":"arrayBuffer"}]};
@@ -148,7 +148,7 @@ export class FileManager {
     try {
   const mode = append ? (2 | 512) : (2 | 64);
   const file = fs.openSync(fileUri, mode);
-  const arrayBuffer = {"kind":215,"kindName":"NewExpression","expression":{"kind":80,"kindName":"Identifier","name":"ArrayBuffer","text":"ArrayBuffer"},"arguments":[{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"content","text":"content"},"name":"length"}]};
+  const arrayBuffer = {"kind":215,"kindName":"NewExpression","expression":{"kind":80,"kindName":"Identifier","name":"ArrayBuffer","text":"ArrayBuffer"},"arguments":[{"kind":212,"kindName":"PropertyAccessExpression","expression":{"kind":80,"kindName":"Identifier","name":"content","text":"content"},"name":"length","text":"content.length"}]};
   const uint8Array = {"kind":215,"kindName":"NewExpression","expression":{"kind":80,"kindName":"Identifier","name":"Uint8Array","text":"Uint8Array"},"arguments":[{"kind":80,"kindName":"Identifier","name":"arrayBuffer","text":"arrayBuffer"}]};
   for (let i = 0; i < content.length; i++) {
   uint8Array[i] = content.charCodeAt(i);
