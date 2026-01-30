@@ -256,6 +256,18 @@ public class TypeScriptScriptParser {
                 return convertPropertyAssignment(json);
             case "ShorthandPropertyAssignment":
                 return convertShorthandPropertyAssignment(json);
+            case "TemplateExpression":
+            case "NoSubstitutionTemplateLiteral":
+                // Template expressions are handled via convertExpressionToString
+                return new ExpressionStatement(convertExpressionToString(json));
+            case "ImportExpression":
+                // Dynamic imports are handled via convertExpressionToString
+                return new ExpressionStatement(convertExpressionToString(json));
+            case "InterfaceDeclaration":
+                // Interface declarations don't generate runtime code
+                return null;
+            case "FunctionDeclaration":
+                return convertFunctionDeclaration(json);
             case "IfStatement":
                 return convertIfStatement(json);
             case "TrueLiteral":
@@ -276,19 +288,28 @@ public class TypeScriptScriptParser {
         String name = json.get("name").getAsString();
         ClassDeclaration classDecl = new ClassDeclaration(name);
 
-        // Set export flag
-        if (json.has("isExport") && json.get("isExport").getAsBoolean()) {
-            classDecl.setExport(true);
-        }
-
-        // Convert decorators
+        // Convert decorators first
         JsonArray decoratorsArray = json.getAsJsonArray("decorators");
+        boolean hasEntryDecorator = false;
         if (decoratorsArray != null) {
             for (JsonElement decElement : decoratorsArray) {
                 JsonObject decObj = decElement.getAsJsonObject();
                 String decName = decObj.get("name").getAsString();
                 classDecl.addDecorator(new Decorator(decName));
+                // Check for @Entry decorator
+                if ("Entry".equals(decName)) {
+                    hasEntryDecorator = true;
+                }
             }
+        }
+
+        // Set export flag
+        boolean isExported = json.has("isExport") && json.get("isExport").getAsBoolean();
+        if (isExported) {
+            classDecl.setExport(true);
+        } else if (hasEntryDecorator) {
+            // @Entry components must be exported - automatically add export
+            classDecl.setExport(true);
         }
 
         // Convert members
@@ -359,6 +380,69 @@ public class TypeScriptScriptParser {
         }
 
         return methodDecl;
+    }
+
+    /**
+     * Convert a standalone function declaration (not a class method).
+     * Standalone functions are converted to ExpressionStatement with function syntax.
+     */
+    private AstNode convertFunctionDeclaration(JsonObject json) {
+        String name = json.get("name").getAsString();
+
+        // Check for async modifier
+        boolean isAsync = false;
+        JsonArray modifiersArray = json.getAsJsonArray("modifiers");
+        if (modifiersArray != null) {
+            for (JsonElement modElement : modifiersArray) {
+                JsonObject modObj = modElement.getAsJsonObject();
+                String modKindName = modObj.has("kindName") ? modObj.get("kindName").getAsString() : "";
+                if ("AsyncKeyword".equals(modKindName) || "async".equals(modKindName)) {
+                    isAsync = true;
+                    break;
+                }
+            }
+        }
+
+        // Convert parameters
+        JsonArray paramsArray = json.getAsJsonArray("parameters");
+        StringBuilder params = new StringBuilder();
+        if (paramsArray != null && paramsArray.size() > 0) {
+            for (int i = 0; i < paramsArray.size(); i++) {
+                if (i > 0) params.append(", ");
+                JsonObject paramObj = paramsArray.get(i).getAsJsonObject();
+                String paramName = paramObj.get("name").getAsString();
+                params.append(paramName);
+            }
+        }
+
+        // Convert body
+        JsonElement bodyElem = json.get("body");
+        StringBuilder body = new StringBuilder();
+        if (bodyElem != null && !bodyElem.isJsonNull()) {
+            JsonObject bodyObj = bodyElem.getAsJsonObject();
+            JsonArray statementsArray = bodyObj.getAsJsonArray("statements");
+            if (statementsArray != null) {
+                for (JsonElement stmtElem : statementsArray) {
+                    JsonObject stmtObj = stmtElem.getAsJsonObject();
+                    AstNode stmt = convertJsonNode(stmtObj);
+                    if (stmt != null) {
+                        String stmtCode = stmt.accept(new CodeGenerator());
+                        body.append("  ").append(stmtCode);
+                    }
+                }
+            }
+        }
+
+        // Build function declaration string
+        StringBuilder sb = new StringBuilder();
+        if (isAsync) {
+            sb.append("async ");
+        }
+        sb.append("function ").append(name).append("(").append(params).append(") {\n");
+        sb.append(body);
+        sb.append("}\n");
+
+        return new ExpressionStatement(sb.toString());
     }
 
     private PropertyDeclaration convertPropertyDeclaration(JsonObject json) {
@@ -579,17 +663,37 @@ public class TypeScriptScriptParser {
                 }
                 return "await";
             case "Identifier":
+            case "ImportKeyword":
+                // ImportKeyword is the "import" keyword, treat it like an identifier
                 String text = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
                 return text.trim();
             case "PropertyAccessExpression":
                 String propResult = convertPropertyAccessToString(exprJson);
                 return propResult.trim();  // Remove leading/trailing whitespace
             case "StringLiteral":
-                // Add quotes around string literals (parse-ets.js returns text without quotes)
+                // String literals may already have quotes from parse-ets.js
                 String strText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
+                if (strText.startsWith("\"") || strText.startsWith("'")) {
+                    return strText;
+                }
                 return "\"" + strText + "\"";
             case "NumericLiteral":
                 String numText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
+                // Check for computed value (for octal conversion)
+                if (exprJson.has("value")) {
+                    Number value = exprJson.get("value").getAsNumber();
+                    return String.valueOf(value.intValue());
+                }
+                // Manual octal conversion if needed
+                if (numText.startsWith("0o") || numText.startsWith("0O")) {
+                    String octalStr = numText.substring(2);
+                    try {
+                        int decimalValue = Integer.parseInt(octalStr, 8);
+                        return String.valueOf(decimalValue);
+                    } catch (NumberFormatException e) {
+                        return numText;
+                    }
+                }
                 return numText.trim();
             case "BinaryExpression":
                 return convertBinaryExpressionToString(exprJson);
@@ -700,6 +804,51 @@ public class TypeScriptScriptParser {
                 String exprStr = expr != null ? convertExpressionToString(expr) : "";
                 return "..." + exprStr;
             }
+            case "TemplateExpression": {
+                // Handle template strings with interpolation: `hello ${name}`
+                JsonObject head = exprJson.getAsJsonObject("head");
+                String headText = head != null && head.has("text") ? head.get("text").getAsString() : "";
+
+                JsonArray spans = exprJson.getAsJsonArray("templateSpans");
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("`");
+
+                // Add head text
+                sb.append(escapeTemplateLiteral(headText));
+
+                if (spans != null) {
+                    for (JsonElement spanElem : spans) {
+                        JsonObject span = spanElem.getAsJsonObject();
+
+                        // Handle interpolation expression
+                        JsonObject expr = span.getAsJsonObject("expression");
+                        String exprStr = expr != null ? convertExpressionToString(expr) : "";
+                        sb.append("${").append(exprStr).append("}");
+
+                        // Handle text after interpolation
+                        JsonObject literal = span.getAsJsonObject("literal");
+                        String litText = literal != null && literal.has("text") ? literal.get("text").getAsString() : "";
+                        sb.append(escapeTemplateLiteral(litText));
+                    }
+                }
+
+                sb.append("`");
+                return sb.toString();
+            }
+            case "NoSubstitutionTemplateLiteral": {
+                // Handle template strings without interpolation: `hello world`
+                // The text field contains just the content (without backticks)
+                String templateText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
+                return "`" + escapeTemplateLiteral(templateText) + "`";
+            }
+            case "ImportExpression": {
+                // Handle dynamic import: await import('module')
+                // TypeScript ImportExpression uses 'expression' field (not 'argument')
+                JsonObject expr = exprJson.getAsJsonObject("expression");
+                String modulePath = expr != null ? convertExpressionToString(expr) : "";
+                return "import(" + modulePath + ")";
+            }
             default:
                 // Fallback: return the text if available
                 String fallbackText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
@@ -781,6 +930,20 @@ public class TypeScriptScriptParser {
         JsonObject expression = json.getAsJsonObject("expression");
         String base = convertExpressionToString(expression);
 
+        // Check for dynamic import pattern: import('module')
+        if ("import".equals(base)) {
+            JsonArray argsArray = json.getAsJsonArray("arguments");
+            if (argsArray != null && argsArray.size() > 0) {
+                JsonElement argElement = argsArray.get(0);
+                if (argElement.isJsonObject()) {
+                    String modulePath = convertExpressionToString(argElement.getAsJsonObject());
+                    return "import(" + modulePath + ")";
+                } else if (argElement.isJsonPrimitive() && argElement.getAsJsonPrimitive().isString()) {
+                    return "import(" + argElement.getAsString() + ")";
+                }
+            }
+        }
+
         JsonArray argsArray = json.getAsJsonArray("arguments");
         StringBuilder args = new StringBuilder();
         if (argsArray != null) {
@@ -825,6 +988,17 @@ public class TypeScriptScriptParser {
         }
 
         return base + "." + property;
+    }
+
+    /**
+     * Escapes special characters in template literals.
+     */
+    private String escapeTemplateLiteral(String str) {
+        if (str == null) return "";
+        // Escape backslashes, backticks, and ${
+        return str.replace("\\", "\\\\")
+                  .replace("`", "\\`")
+                  .replace("${", "\\${");
     }
 
     private Identifier convertIdentifier(JsonObject json) {

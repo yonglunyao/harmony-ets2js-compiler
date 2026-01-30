@@ -36,3 +36,16 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Test artifacts ###
+**/abc*/
+**/compiled/
+**/*.js.map
+**/*.abc
+test-output.js
+test-output.js.map
+test-import-output.js
+test-import-output.js.map
+test.abc
+debug-import.js
+compile-harmony-utils.sh

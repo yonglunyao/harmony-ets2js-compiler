@@ -75,6 +75,19 @@ function preprocessEts(sourceCode) {
     // Replace struct with class
     processedCode = processedCode.replace(/\bstruct\s+/g, 'class ');
 
+    // Extract @Entry decorator and ensure export
+    // Pattern: @Entry followed by optional @Component and class declaration
+    const entryPattern = /@Entry\s*\n(?:@Component\s*\n)?(?:export\s+)?class\s+(\w+)/g;
+    const entryClasses = [];
+    while ((match = entryPattern.exec(processedCode)) !== null) {
+        entryClasses.push(match[1]);
+        // Add export if missing
+        const classDecl = match[0];
+        if (!classDecl.includes('export')) {
+            processedCode = processedCode.replace(classDecl, classDecl.replace('class ', 'export class '));
+        }
+    }
+
     return {
         code: processedCode,
         decorators: extractedDecorators
@@ -177,6 +190,31 @@ function convertAstToJson(node, extractedDecorators = []) {
                 });
             }
             result.body = node.body ? convertAstToJson(node.body) : null;
+            result.asteriskToken = node.asteriskToken ? true : false;
+            break;
+
+        case ts.SyntaxKind.FunctionDeclaration:
+            result.name = node.name?.escapedText || '';
+            result.modifiers = [];
+            if (node.modifiers) {
+                for (const mod of node.modifiers) {
+                    result.modifiers.push({
+                        kind: mod.kind,
+                        kindName: getSyntaxKindName(mod.kind)
+                    });
+                }
+            }
+            result.parameters = [];
+            for (const param of (node.parameters || [])) {
+                result.parameters.push({
+                    name: param.name?.escapedText || '',
+                    type: param.type?.getText() || '',
+                    hasDotDotDot: param.dotDotDotToken ? true : false,
+                    questionToken: param.questionToken ? true : false
+                });
+            }
+            result.body = node.body ? convertAstToJson(node.body) : null;
+            // Add asterisk for generator functions
             result.asteriskToken = node.asteriskToken ? true : false;
             break;
 
@@ -301,10 +339,16 @@ function convertAstToJson(node, extractedDecorators = []) {
                 } else {
                     // For regular calls, always convert to JSON to strip TypeScript syntax
                     const argJson = convertAstToJson(arg);
-                    // Use text property if available (it's been processed to remove TS syntax)
-                    // Otherwise fall back to getText() for simple cases
-                    if (argJson && argJson.text) {
-                        // For StringLiteral, ensure quotes are included
+                    // Store the JSON object for complex expressions (ObjectLiteral, ArrayLiteral, etc.)
+                    // This allows the Java code to properly convert them to strings
+                    if (argJson && argJson.kindName &&
+                        (argJson.kindName === 'ObjectLiteralExpression' ||
+                         argJson.kindName === 'ArrayLiteralExpression' ||
+                         argJson.kindName === 'ArrowFunction')) {
+                        // Store the JSON object, not the text, for proper processing in Java
+                        result.arguments.push(argJson);
+                    } else if (argJson && argJson.text) {
+                        // For simple expressions (identifiers, literals, etc.), use the text
                         if (argJson.kindName === 'StringLiteral') {
                             // Check if text already has quotes
                             if (argJson.text.startsWith('"') || argJson.text.startsWith("'")) {
@@ -374,6 +418,12 @@ function convertAstToJson(node, extractedDecorators = []) {
 
             break;
 
+        case ts.SyntaxKind.ImportKeyword:
+            // The "import" keyword - treat as an identifier with text "import"
+            result.name = 'import';
+            result.text = 'import';
+            break;
+
         case ts.SyntaxKind.PropertyAccessExpression:
             result.expression = convertAstToJson(node.expression);
             result.name = node.name.escapedText;
@@ -426,6 +476,20 @@ function convertAstToJson(node, extractedDecorators = []) {
             result.type = node.type ? node.type.getText() : null;
             // Add text representation without the type assertion (just the expression)
             result.text = generateAsExpressionText(node);
+            break;
+
+        case ts.SyntaxKind.ImportExpression:
+            // ImportExpression has expression field which is the module specifier
+            // Note: TypeScript uses 'expression' not 'argument' for ImportExpression
+            result.expression = convertAstToJson(node.expression);
+            // Add text representation for code generation
+            result.text = generateImportExpressionText(node);
+            break;
+
+        case ts.SyntaxKind.InterfaceDeclaration:
+            result.name = node.name?.escapedText || '';
+            // Interface declarations don't generate runtime code
+            result.isTypeOnly = true;
             break;
 
         case ts.SyntaxKind.ImportDeclaration:
@@ -488,11 +552,31 @@ function convertAstToJson(node, extractedDecorators = []) {
             break;
 
         case ts.SyntaxKind.StringLiteral:
-            result.text = node.text;
+            // node.text doesn't include quotes, so we need to add them
+            result.text = '"' + node.text + '"';
             break;
 
         case ts.SyntaxKind.NumericLiteral:
             result.text = node.text;
+            // Add computed value for octal conversion
+            result.value = node.numericLiteralValue;
+            break;
+
+        case ts.SyntaxKind.TemplateExpression:
+            result.head = { text: node.head.text };
+            result.templateSpans = [];
+            for (const span of node.templateSpans) {
+                result.templateSpans.push({
+                    expression: convertAstToJson(span.expression),
+                    literal: { text: span.literal.text }
+                });
+            }
+            // Add text representation (strips TypeScript syntax)
+            result.text = generateTemplateExpressionText(node);
+            break;
+
+        case ts.SyntaxKind.NoSubstitutionTemplateLiteral:
+            result.text = '`' + node.text + '`';
             break;
 
         case ts.SyntaxKind.TrueKeyword:
@@ -697,6 +781,7 @@ function getSyntaxKindName(kind) {
         [ts.SyntaxKind.ExpressionStatement]: 'ExpressionStatement',
         [ts.SyntaxKind.CallExpression]: 'CallExpression',
         [ts.SyntaxKind.Identifier]: 'Identifier',
+        [ts.SyntaxKind.ImportKeyword]: 'ImportKeyword',
         [ts.SyntaxKind.PropertyAccessExpression]: 'PropertyAccessExpression',
         [ts.SyntaxKind.ArrowFunction]: 'ArrowFunction',
         [ts.SyntaxKind.StringLiteral]: 'StringLiteral',
@@ -743,6 +828,11 @@ function getSyntaxKindName(kind) {
         [ts.SyntaxKind.ContinueStatement]: 'ContinueStatement',
         [ts.SyntaxKind.SpreadElement]: 'SpreadElement',
         [ts.SyntaxKind.SpreadAssignment]: 'SpreadAssignment',
+        [ts.SyntaxKind.TemplateExpression]: 'TemplateExpression',
+        [ts.SyntaxKind.NoSubstitutionTemplateLiteral]: 'NoSubstitutionTemplateLiteral',
+        [ts.SyntaxKind.ImportExpression]: 'ImportExpression',
+        [ts.SyntaxKind.InterfaceDeclaration]: 'InterfaceDeclaration',
+        [ts.SyntaxKind.FunctionDeclaration]: 'FunctionDeclaration',
     };
 
     return kindMap[kind] || `Unknown_${kind}`;
@@ -1007,6 +1097,16 @@ function generateAsExpressionText(node) {
 }
 
 /**
+ * Generate text representation for import expression
+ */
+function generateImportExpressionText(node) {
+    // TypeScript ImportExpression uses 'expression' field
+    const expr = node.expression ? convertAstToJson(node.expression) : null;
+    const modulePath = expr ? jsonToCodeString(expr) : '';
+    return 'import(' + modulePath + ')';
+}
+
+/**
  * Generate text representation for object literal expression (strips TypeScript syntax)
  */
 function generateObjectLiteralExpressionText(node) {
@@ -1018,6 +1118,8 @@ function generateObjectLiteralExpressionText(node) {
         if (prop.kind === ts.SyntaxKind.PropertyAssignment) {
             const name = prop.name.getText();
             const valueJson = convertAstToJson(prop.initializer);
+            // For object literals in code generation, we need to recursively process the value
+            // Use jsonToCodeString with the correct field 'value' for PropertyAssignment JSON
             const valueStr = valueJson ? jsonToCodeString(valueJson) : '';
             return name + ': ' + valueStr;
         } else if (prop.kind === ts.SyntaxKind.ShorthandPropertyAssignment) {
@@ -1031,6 +1133,36 @@ function generateObjectLiteralExpressionText(node) {
     }).join(', ');
 
     return '{' + props + '}';
+}
+
+/**
+ * Generate text representation for template expression (strips TypeScript syntax)
+ */
+function generateTemplateExpressionText(node) {
+    if (!node.templateSpans || node.templateSpans.length === 0) {
+        return '`' + escapeTemplateLiteral(node.head ? node.head.text : '') + '`';
+    }
+
+    let result = '`';
+    result += escapeTemplateLiteral(node.head ? node.head.text : '');
+
+    for (const span of node.templateSpans) {
+        const exprJson = convertAstToJson(span.expression);
+        const exprStr = exprJson ? jsonToCodeString(exprJson) : '';
+        result += '${' + exprStr + '}';
+        result += escapeTemplateLiteral(span.literal ? span.literal.text : '');
+    }
+
+    result += '`';
+    return result;
+}
+
+/**
+ * Escape special characters in template literals
+ */
+function escapeTemplateLiteral(str) {
+    if (!str) return '';
+    return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 }
 
 /**
@@ -1224,7 +1356,14 @@ function jsonToCodeString(json) {
         }
 
         case 'PropertyAssignment': {
-            return json.name + ': ' + jsonToCodeString(json.initializer);
+            return json.name + ': ' + jsonToCodeString(json.value);
+        }
+
+        case 'NewExpression': {
+            const expr = json.expression;
+            const args = json.arguments || [];
+            const argStr = args.map(arg => jsonToCodeString(arg)).join(', ');
+            return 'new ' + jsonToCodeString(expr) + '(' + argStr + ')';
         }
 
         case 'ArrowFunction': {
@@ -1241,6 +1380,24 @@ function jsonToCodeString(json) {
 
         case 'SpreadAssignment': {
             return '...' + jsonToCodeString(json.expression);
+        }
+
+        case 'TemplateExpression': {
+            // Use pre-generated text
+            if (json.text) return json.text;
+            return '/* template expression */';
+        }
+
+        case 'NoSubstitutionTemplateLiteral': {
+            const text = json.text || '';
+            return '`' + escapeTemplateLiteral(text) + '`';
+        }
+
+        case 'ImportExpression': {
+            // Use the expression field for the module specifier
+            const expr = json.expression;
+            const modulePath = expr ? jsonToCodeString(expr) : '';
+            return 'import(' + modulePath + ')';
         }
 
         case 'BreakStatement': {
