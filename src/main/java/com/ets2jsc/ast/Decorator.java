@@ -67,9 +67,35 @@ public class Decorator implements AstNode {
      * Returns true if this is a state decorator.
      */
     public boolean isStateDecorator() {
-        return "State".equals(name) || "Prop".equals(name) ||
-               "Link".equals(name) || "Provide".equals(name) ||
-               "Consume".equals(name);
+        return "State".equals(name);
+    }
+
+    /**
+     * Returns true if this is a Prop decorator.
+     */
+    public boolean isPropDecorator() {
+        return "Prop".equals(name);
+    }
+
+    /**
+     * Returns true if this is a Link decorator.
+     */
+    public boolean isLinkDecorator() {
+        return "Link".equals(name);
+    }
+
+    /**
+     * Returns true if this is a Provide decorator.
+     */
+    public boolean isProvideDecorator() {
+        return "Provide".equals(name);
+    }
+
+    /**
+     * Returns true if this is a Consume decorator.
+     */
+    public boolean isConsumeDecorator() {
+        return "Consume".equals(name);
     }
 
     /**

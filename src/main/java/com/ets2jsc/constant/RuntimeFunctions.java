@@ -17,6 +17,7 @@ public final class RuntimeFunctions {
     public static final String CREATE_PROP = "createProp";
     public static final String CREATE_LINK = "createLink";
     public static final String INITIALIZE_CONSUME_V2 = "initializeConsumeV2";
+    public static final String INITIALIZE_PROVIDE = "initializeProvide";
 
     // View stack functions
     public static final String VIEWSTACKPROCESSOR = "ViewStackProcessor";
@@ -44,8 +45,8 @@ public final class RuntimeFunctions {
 
     // Type names
     public static final String OBSERVED_PROPERTY_SIMPLE = "ObservedPropertySimple";
-    public static final String SYNCHED_PROPERTY_SIMPLE_ONE_WAY = "SynchedPropertySimpleOneWay";
-    public static final String SYNCHED_PROPERTY_SIMPLE_TWO_WAY = "SynchedPropertySimpleTwoWay";
+    public static final String OBSERVED_PROPERTY_SIMPLE_ONE_WAY = "ObservedPropertySimpleOneWay";
+    public static final String OBSERVED_PROPERTY_SIMPLE_TWO_WAY = "ObservedPropertySimpleTwoWay";
     public static final String VIEW = "View";
     public static final String BUILDER_PARAM = "BuilderParam";
 

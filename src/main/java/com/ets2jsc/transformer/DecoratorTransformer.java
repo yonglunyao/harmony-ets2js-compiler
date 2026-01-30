@@ -41,7 +41,7 @@ public class DecoratorTransformer implements AstTransformer {
         if (node instanceof PropertyDeclaration) {
             PropertyDeclaration prop = (PropertyDeclaration) node;
             return prop.getDecorators().stream()
-                    .anyMatch(d -> d.isStateDecorator());
+                    .anyMatch(d -> d.isStateDecorator() || d.isPropDecorator() || d.isLinkDecorator());
         }
         return false;
     }
@@ -59,22 +59,54 @@ public class DecoratorTransformer implements AstTransformer {
             classDecl.setStruct(false);
             classDecl.setSuperClass(RuntimeFunctions.VIEW);
 
-            // Add private properties for state variables
+            // Add private properties for state/prop/link/provide/consume variables
             List<PropertyDeclaration> properties = classDecl.getProperties();
             List<PropertyDeclaration> stateProperties = new ArrayList<>();
+            List<PropertyDeclaration> propProperties = new ArrayList<>();
+            List<PropertyDeclaration> linkProperties = new ArrayList<>();
+            List<PropertyDeclaration> provideProperties = new ArrayList<>();
+            List<PropertyDeclaration> consumeProperties = new ArrayList<>();
 
             for (PropertyDeclaration prop : properties) {
                 if (prop.hasDecorator(Decorators.STATE)) {
                     stateProperties.add(prop);
+                } else if (prop.hasDecorator(Decorators.PROP)) {
+                    propProperties.add(prop);
+                } else if (prop.hasDecorator(Decorators.LINK)) {
+                    linkProperties.add(prop);
+                } else if (prop.hasDecorator(Decorators.PROVIDE)) {
+                    provideProperties.add(prop);
+                } else if (prop.hasDecorator(Decorators.CONSUME)) {
+                    consumeProperties.add(prop);
                 }
             }
 
-            // Transform state properties
+            // Transform State properties
             for (PropertyDeclaration stateProp : stateProperties) {
                 transformStateProperty(classDecl, stateProp);
             }
 
-            // Add constructor if needed
+            // Transform Prop properties
+            for (PropertyDeclaration propProp : propProperties) {
+                transformPropProperty(classDecl, propProp);
+            }
+
+            // Transform Link properties
+            for (PropertyDeclaration linkProp : linkProperties) {
+                transformLinkProperty(classDecl, linkProp);
+            }
+
+            // Transform Provide properties
+            for (PropertyDeclaration provideProp : provideProperties) {
+                transformProvideProperty(classDecl, provideProp);
+            }
+
+            // Transform Consume properties
+            for (PropertyDeclaration consumeProp : consumeProperties) {
+                transformConsumeProperty(classDecl, consumeProp);
+            }
+
+            // Add constructor if needed (only for State properties)
             if (!stateProperties.isEmpty()) {
                 addConstructor(classDecl, stateProperties);
             }
@@ -197,11 +229,163 @@ public class DecoratorTransformer implements AstTransformer {
             case Decorators.STATE:
                 return RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE;
             case Decorators.PROP:
-                return RuntimeFunctions.SYNCHED_PROPERTY_SIMPLE_ONE_WAY;
+                return RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE_ONE_WAY;
             case Decorators.LINK:
-                return RuntimeFunctions.SYNCHED_PROPERTY_SIMPLE_TWO_WAY;
+                return RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE_TWO_WAY;
             default:
                 return RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE;
         }
+    }
+
+    /**
+     * Transforms a Prop property.
+     * Creates a private variable with ObservedPropertySimpleOneWay and getter/setter.
+     * Prop properties are passed from parent component (one-way data flow).
+     * They use createProp() instead of createState().
+     */
+    private void transformPropProperty(ClassDeclaration classDecl, PropertyDeclaration propProp) {
+        String propName = propProp.getName();
+        String privateName = propName + "__";
+        String propType = propProp.getTypeAnnotation();
+
+        // Create private property declaration
+        PropertyDeclaration privateProp = new PropertyDeclaration(privateName);
+        privateProp.setTypeAnnotation(RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE_ONE_WAY + "<" + propType + ">");
+        privateProp.setVisibility(PropertyDeclaration.Visibility.PRIVATE);
+        // No initializer - Prop properties are set by parent component
+
+        // Create getter
+        MethodDeclaration getter = new MethodDeclaration("get " + propName);
+        getter.setReturnType(propType);
+        getter.setBody(new ExpressionStatement("return this." + privateName + ".get()"));
+
+        // Create setter
+        MethodDeclaration setter = new MethodDeclaration("set " + propName);
+        MethodDeclaration.Parameter valueParam = new MethodDeclaration.Parameter("newValue", propType);
+        setter.addParameter(valueParam);
+        setter.setReturnType("void");
+        setter.setBody(new ExpressionStatement("this." + privateName + ".set(newValue)"));
+
+        // Find and remove original property from class
+        classDecl.getMembers().remove(propProp);
+
+        // Add new members: private property, getter, setter
+        classDecl.addMember(privateProp);
+        classDecl.addMember(getter);
+        classDecl.addMember(setter);
+    }
+
+    /**
+     * Transforms a Link property.
+     * Creates a private variable with ObservedPropertySimpleTwoWay and getter/setter.
+     * Link properties allow two-way data flow between parent and child.
+     * They use createLink() instead of createProp().
+     */
+    private void transformLinkProperty(ClassDeclaration classDecl, PropertyDeclaration linkProp) {
+        String propName = linkProp.getName();
+        String privateName = propName + "__";
+        String propType = linkProp.getTypeAnnotation();
+
+        // Create private property declaration
+        PropertyDeclaration privateProp = new PropertyDeclaration(privateName);
+        privateProp.setTypeAnnotation(RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE_TWO_WAY + "<" + propType + ">");
+        privateProp.setVisibility(PropertyDeclaration.Visibility.PRIVATE);
+        // No initializer - Link properties are set by parent component
+
+        // Create getter
+        MethodDeclaration getter = new MethodDeclaration("get " + propName);
+        getter.setReturnType(propType);
+        getter.setBody(new ExpressionStatement("return this." + privateName + ".get()"));
+
+        // Create setter
+        MethodDeclaration setter = new MethodDeclaration("set " + propName);
+        MethodDeclaration.Parameter valueParam = new MethodDeclaration.Parameter("newValue", propType);
+        setter.addParameter(valueParam);
+        setter.setReturnType("void");
+        setter.setBody(new ExpressionStatement("this." + privateName + ".set(newValue)"));
+
+        // Find and remove original property from class
+        classDecl.getMembers().remove(linkProp);
+
+        // Add new members: private property, getter, setter
+        classDecl.addMember(privateProp);
+        classDecl.addMember(getter);
+        classDecl.addMember(setter);
+    }
+
+    /**
+     * Transforms a Provide property.
+     * Creates a private variable with ObservedPropertySimple and getter/setter.
+     * Provide properties provide data to descendant components.
+     */
+    private void transformProvideProperty(ClassDeclaration classDecl, PropertyDeclaration provideProp) {
+        String propName = provideProp.getName();
+        String privateName = propName + "__";
+        String propType = provideProp.getTypeAnnotation();
+
+        // Create private property declaration
+        PropertyDeclaration privateProp = new PropertyDeclaration(privateName);
+        privateProp.setTypeAnnotation(RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE + "<" + propType + ">");
+        privateProp.setVisibility(PropertyDeclaration.Visibility.PRIVATE);
+        // Provide properties are initialized at declaration
+        privateProp.setInitializer(provideProp.getInitializer());
+
+        // Create getter
+        MethodDeclaration getter = new MethodDeclaration("get " + propName);
+        getter.setReturnType(propType);
+        getter.setBody(new ExpressionStatement("return this." + privateName + ".get()"));
+
+        // Create setter
+        MethodDeclaration setter = new MethodDeclaration("set " + propName);
+        MethodDeclaration.Parameter valueParam = new MethodDeclaration.Parameter("newValue", propType);
+        setter.addParameter(valueParam);
+        setter.setReturnType("void");
+        setter.setBody(new ExpressionStatement("this." + privateName + ".set(newValue)"));
+
+        // Find and remove original property from class
+        classDecl.getMembers().remove(provideProp);
+
+        // Add new members: private property, getter, setter
+        classDecl.addMember(privateProp);
+        classDecl.addMember(getter);
+        classDecl.addMember(setter);
+    }
+
+    /**
+     * Transforms a Consume property.
+     * Creates a private variable with ObservedPropertySimple and getter/setter.
+     * Consume properties consume data from ancestor components.
+     */
+    private void transformConsumeProperty(ClassDeclaration classDecl, PropertyDeclaration consumeProp) {
+        String propName = consumeProp.getName();
+        String privateName = propName + "__";
+        String propType = consumeProp.getTypeAnnotation();
+
+        // Create private property declaration
+        PropertyDeclaration privateProp = new PropertyDeclaration(privateName);
+        privateProp.setTypeAnnotation(RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE + "<" + propType + ">");
+        privateProp.setVisibility(PropertyDeclaration.Visibility.PRIVATE);
+        // Consume properties are initialized at declaration
+        privateProp.setInitializer(consumeProp.getInitializer());
+
+        // Create getter
+        MethodDeclaration getter = new MethodDeclaration("get " + propName);
+        getter.setReturnType(propType);
+        getter.setBody(new ExpressionStatement("return this." + privateName + ".get()"));
+
+        // Create setter
+        MethodDeclaration setter = new MethodDeclaration("set " + propName);
+        MethodDeclaration.Parameter valueParam = new MethodDeclaration.Parameter("newValue", propType);
+        setter.addParameter(valueParam);
+        setter.setReturnType("void");
+        setter.setBody(new ExpressionStatement("this." + privateName + ".set(newValue)"));
+
+        // Find and remove original property from class
+        classDecl.getMembers().remove(consumeProp);
+
+        // Add new members: private property, getter, setter
+        classDecl.addMember(privateProp);
+        classDecl.addMember(getter);
+        classDecl.addMember(setter);
     }
 }

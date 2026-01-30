@@ -10,6 +10,7 @@ import java.util.List;
 public class ComponentStatement implements AstNode {
     private final String componentName;
     private final List<ComponentPart> parts;
+    private Block children;  // Children block for components like Column() { ... }
 
     public ComponentStatement(String componentName) {
         this.componentName = componentName;
@@ -26,6 +27,18 @@ public class ComponentStatement implements AstNode {
 
     public List<ComponentPart> getParts() {
         return parts;
+    }
+
+    public Block getChildren() {
+        return children;
+    }
+
+    public void setChildren(Block children) {
+        this.children = children;
+    }
+
+    public boolean hasChildren() {
+        return children != null;
     }
 
     @Override

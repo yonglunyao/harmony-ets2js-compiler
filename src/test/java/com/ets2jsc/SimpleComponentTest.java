@@ -83,7 +83,8 @@ public class SimpleComponentTest {
         BuildMethodTransformer transformer = new BuildMethodTransformer(true);
         for (AstNode node : sourceFile.getStatements()) {
             if (node instanceof ClassDeclaration) {
-                ClassDeclaration classDecl = (ClassDeclaration) node;
+                AstNode transformed = transformer.transform(node);
+                ClassDeclaration classDecl = (ClassDeclaration) transformed;
 
                 // Check if build method was renamed to initialRender
                 boolean hasInitialRender = classDecl.getMethods().stream()
@@ -108,6 +109,19 @@ public class SimpleComponentTest {
         // Parse
         AstBuilder parser = new AstBuilder();
         SourceFile sourceFile = parser.build("simple-component.ets", sourceCode);
+
+        // Apply transformations
+        DecoratorTransformer decoratorTransformer = new DecoratorTransformer(true);
+        BuildMethodTransformer buildMethodTransformer = new BuildMethodTransformer(true);
+
+        for (int i = 0; i < sourceFile.getStatements().size(); i++) {
+            AstNode node = sourceFile.getStatements().get(i);
+            if (node instanceof ClassDeclaration) {
+                node = decoratorTransformer.transform(node);
+                node = buildMethodTransformer.transform(node);
+                sourceFile.getStatements().set(i, node);
+            }
+        }
 
         // Generate code
         CodeGenerator generator = new CodeGenerator();

@@ -55,9 +55,11 @@ public class StatePropertyTest {
         SourceFile sourceFile = parser.build("state-property.ets", sourceCode);
 
         DecoratorTransformer transformer = new DecoratorTransformer(true);
-        for (AstNode node : sourceFile.getStatements()) {
+        for (int i = 0; i < sourceFile.getStatements().size(); i++) {
+            AstNode node = sourceFile.getStatements().get(i);
             if (node instanceof ClassDeclaration) {
-                ClassDeclaration classDecl = (ClassDeclaration) node;
+                AstNode transformed = transformer.transform(node);
+                ClassDeclaration classDecl = (ClassDeclaration) transformed;
 
                 // Check for private variables with __ suffix
                 boolean hasCountPrivate = classDecl.getProperties().stream()
@@ -80,9 +82,11 @@ public class StatePropertyTest {
         SourceFile sourceFile = parser.build("state-property.ets", sourceCode);
 
         DecoratorTransformer transformer = new DecoratorTransformer(true);
-        for (AstNode node : sourceFile.getStatements()) {
+        for (int i = 0; i < sourceFile.getStatements().size(); i++) {
+            AstNode node = sourceFile.getStatements().get(i);
             if (node instanceof ClassDeclaration) {
-                ClassDeclaration classDecl = (ClassDeclaration) node;
+                AstNode transformed = transformer.transform(node);
+                ClassDeclaration classDecl = (ClassDeclaration) transformed;
 
                 // Check for getter and setter methods
                 boolean hasCountGetter = classDecl.getMethods().stream()
