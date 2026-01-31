@@ -3,13 +3,13 @@ package com.ets2jsc;
 import com.ets2jsc.ast.AstNode;
 import com.ets2jsc.ast.SourceFile;
 import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.constant.Symbols;
 import com.ets2jsc.generator.CodeGenerator;
 import com.ets2jsc.generator.JsWriter;
 import com.ets2jsc.generator.SourceMapGenerator;
 import com.ets2jsc.parser.AstBuilder;
 import com.ets2jsc.transformer.AstTransformer;
 import com.ets2jsc.transformer.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,7 +20,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 并行 ETS 编译器，支持多线程编译多个 ETS 文件。
+ * 优化版：共享编译器实例，减少资源创建开销
  * Parallel ETS compiler supporting multi-threaded compilation of multiple ETS files.
+ * Optimized version: Shared compiler instance, reduced resource creation overhead.
  */
 public class ParallelEtsCompiler {
 
@@ -30,6 +32,7 @@ public class ParallelEtsCompiler {
     private final JsWriter jsWriter;
     private final ExecutorService executorService;
     private final int threadPoolSize;
+    private final EtsCompiler sharedCompiler;  // 共享编译器实例，避免每个任务重复创建资源
 
     /**
      * 创建并行编译器
@@ -42,10 +45,17 @@ public class ParallelEtsCompiler {
         this.codeGenerator = new CodeGenerator(config);
         this.jsWriter = new JsWriter();
 
-        // 确定线程池大小
-        this.threadPoolSize = (threadPoolSize != null && threadPoolSize > 0)
-            ? threadPoolSize
-            : Runtime.getRuntime().availableProcessors();
+        // 创建共享的编译器实例，避免每个任务重复创建资源
+        this.sharedCompiler = new EtsCompiler(config);
+
+        // 框定线程池大小 - 对于小文件任务，限制最大线程数以避免过度线程创建开销
+        int cpuCores = Runtime.getRuntime().availableProcessors();
+        if (threadPoolSize != null && threadPoolSize > 0) {
+            // 对于小文件编译，建议线程数不超过 CPU 核心数的倍数
+            this.threadPoolSize = Math.min(threadPoolSize, cpuCores * Symbols.MAX_THREAD_MULTIPLIER);
+        } else {
+            this.threadPoolSize = cpuCores;
+        }
 
         // 创建线程池
         this.executorService = Executors.newFixedThreadPool(this.threadPoolSize,
@@ -104,16 +114,15 @@ public class ParallelEtsCompiler {
 
         // 提交编译任务
         List<Future<CompilationResult.FileResult>> futures = new ArrayList<>();
-
         for (Path sourceFile : sourceFiles) {
             Future<CompilationResult.FileResult> future = executorService.submit(
-                new CompilationTask(sourceFile, outputDir)
+                new CompilationTask(sourceFile, outputDir, config, sharedCompiler)
             );
             futures.add(future);
         }
 
         // 收集结果
-        for (int i = 0; i < futures.size(); i++) {
+        for (int i = Symbols.INDEX_ZERO; i < futures.size(); i++) {
             try {
                 CompilationResult.FileResult fileResult = futures.get(i).get();
                 result.addFileResult(fileResult.getSourcePath(), fileResult);
@@ -135,7 +144,7 @@ public class ParallelEtsCompiler {
     public void shutdown() {
         executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+            if (!executorService.awaitTermination(Symbols.THREAD_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                 executorService.shutdownNow();
             }
         } catch (InterruptedException e) {
@@ -152,16 +161,19 @@ public class ParallelEtsCompiler {
     }
 
     /**
-     * 编译任务
+     * 编译任务 - 使用共享编译器实例
      */
     private class CompilationTask implements Callable<CompilationResult.FileResult> {
-
         private final Path sourcePath;
         private final Path outputDir;
+        private final CompilerConfig config;
+        private final EtsCompiler compiler;  // 使用共享编译器实例
 
-        public CompilationTask(Path sourcePath, Path outputDir) {
+        public CompilationTask(Path sourcePath, Path outputDir, CompilerConfig config, EtsCompiler compiler) {
             this.sourcePath = sourcePath;
             this.outputDir = outputDir;
+            this.config = config;
+            this.compiler = compiler;
         }
 
         @Override
@@ -174,15 +186,10 @@ public class ParallelEtsCompiler {
             Path outputPath = outputDir.resolve(outputName);
 
             try {
-                // 创建线程本地的编译器实例
-                EtsCompiler compiler = new EtsCompiler(config);
-
-                // 编译文件
+                // 使用共享的编译器实例进行编译
                 compiler.compile(sourcePath, outputPath);
-
                 long duration = System.currentTimeMillis() - startTime;
                 return CompilationResult.FileResult.success(sourcePath, outputPath, duration);
-
             } catch (EtsCompiler.CompilationException e) {
                 long duration = System.currentTimeMillis() - startTime;
                 return CompilationResult.FileResult.failure(sourcePath, outputPath, e.getMessage(), e, duration);
@@ -277,7 +284,6 @@ public class ParallelEtsCompiler {
             // 返回适当的退出码
             compiler.shutdown();
             System.exit(result.isAllSuccess() ? 0 : 1);
-
         } catch (IOException e) {
             System.err.println("错误: " + e.getMessage());
             e.printStackTrace();
@@ -291,14 +297,12 @@ public class ParallelEtsCompiler {
      */
     private static List<Path> findSourceFiles(Path dir) throws IOException {
         List<Path> sourceFiles = new ArrayList<>();
-
         if (Files.isDirectory(dir)) {
             Files.walk(dir)
                 .filter(path -> path.toString().endsWith(".ets") ||
                                path.toString().endsWith(".ts"))
                 .forEach(sourceFiles::add);
         }
-
         return sourceFiles;
     }
 }

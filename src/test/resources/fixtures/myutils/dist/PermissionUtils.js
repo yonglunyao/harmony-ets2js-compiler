@@ -68,11 +68,11 @@ export class PermissionUtils {
   }
 
   static getDeniedPermissions(results /* PermissionResult[] */) {
-    return results.filter((result) => !result.granted).map((result) => result.permission);
+    return results.filter(/* arrow function */).map((result) => result.permission);
   }
 
   static getGrantedPermissions(results /* PermissionResult[] */) {
-    return results.filter((result) => result.granted).map((result) => result.permission);
+    return results.filter(/* arrow function */).map((result) => result.permission);
   }
 
   CommonPermissions = {INTERNET: "ohos.permission.INTERNET", GET_NETWORK_INFO: "ohos.permission.GET_NETWORK_INFO", LOCATION: "ohos.permission.LOCATION", APPROXIMATELY_LOCATION: "ohos.permission.APPROXIMATELY_LOCATION", READ_WRITE_DOWNLOAD_DIRECTORY: "ohos.permission.READ_WRITE_DOWNLOAD_DIRECTORY", CAMERA: "ohos.permission.CAMERA", MICROPHONE: "ohos.permission.MICROPHONE", READ_CONTACTS: "ohos.permission.READ_CONTACTS", WRITE_CONTACTS: "ohos.permission.WRITE_CONTACTS", READ_PASTEBOARD: "ohos.permission.READ_PASTEBOARD", WRITE_PASTEBOARD: "ohos.permission.WRITE_PASTEBOARD", NOTIFICATION_CONTROLLER: "ohos.permission.NOTIFICATION_CONTROLLER", SYSTEM_FLOAT_WINDOW: "ohos.permission.SYSTEM_FLOAT_WINDOW", KEEP_BACKGROUND_RUNNING: "ohos.permission.KEEP_BACKGROUND_RUNNING", SET_ALARM: "ohos.permission.SET_ALARM"};

@@ -5,6 +5,7 @@ import com.ets2jsc.ast.ComponentStatement.ComponentPart;
 import com.ets2jsc.ast.ComponentStatement.PartKind;
 import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.constant.RuntimeFunctions;
+import com.ets2jsc.constant.Symbols;
 import com.ets2jsc.transformer.ComponentExpressionTransformer;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class CodeGenerator implements AstVisitor<String> {
 
     public CodeGenerator(CompilerConfig config) {
         this.output = new StringBuilder();
-        this.indent = "  ";
+        this.indent = Symbols.DEFAULT_INDENT;
         this.currentIndent = 0;
         this.config = config != null ? config : new CompilerConfig();
         this.insideComponentClass = false;
@@ -276,7 +277,7 @@ public class CodeGenerator implements AstVisitor<String> {
             return false;
         }
         // If it's a number, boolean, null, undefined, or this.xxx, don't quote
-        if (value.matches("\\d+") || value.equals("true") || value.equals("false") ||
+        if (value.matches(Symbols.DIGITS_REGEX) || value.equals("true") || value.equals("false") ||
             value.equals("null") || value.equals("undefined") || value.startsWith("this.") ||
             value.startsWith("new ") || value.contains("(") || value.contains("{") ||
             value.contains("[") || value.startsWith("$")) {
@@ -396,29 +397,54 @@ public class CodeGenerator implements AstVisitor<String> {
         StringBuilder sb = new StringBuilder();
         String componentName = node.getComponentName();
 
-        // Process each part
         for (ComponentPart part : node.getParts()) {
-            switch (part.getKind()) {
-                case CREATE:
-                    sb.append(getIndent()).append(componentName).append(".create(").append(part.getCode()).append(");\n");
-                    break;
-                case METHOD:
-                    sb.append(getIndent()).append(componentName).append(".").append(part.getCode()).append("\n");
-                    break;
-                case POP:
-                    // Output children before pop() if this component has children
-                    if (node.hasChildren()) {
-                        // Increase indent for children
-                        currentIndent++;
-                        sb.append(node.getChildren().accept(this));
-                        currentIndent--;
-                    }
-                    sb.append(getIndent()).append(componentName).append(".pop();\n");
-                    break;
-            }
+            renderComponentPart(sb, componentName, node, part);
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Renders a single component part based on its kind.
+     */
+    private void renderComponentPart(StringBuilder sb, String componentName, ComponentStatement node, ComponentPart part) {
+        switch (part.getKind()) {
+            case CREATE:
+                renderCreatePart(sb, componentName, part.getCode());
+                break;
+            case METHOD:
+                renderMethodPart(sb, componentName, part.getCode());
+                break;
+            case POP:
+                renderPopPart(sb, componentName, node);
+                break;
+        }
+    }
+
+    /**
+     * Renders a component creation part.
+     */
+    private void renderCreatePart(StringBuilder sb, String componentName, String code) {
+        sb.append(getIndent()).append(componentName).append(".create(").append(code).append(");\n");
+    }
+
+    /**
+     * Renders a component method call part.
+     */
+    private void renderMethodPart(StringBuilder sb, String componentName, String code) {
+        sb.append(getIndent()).append(componentName).append(".").append(code).append("\n");
+    }
+
+    /**
+     * Renders a component pop part, including children if present.
+     */
+    private void renderPopPart(StringBuilder sb, String componentName, ComponentStatement node) {
+        if (node.hasChildren()) {
+            currentIndent++;
+            sb.append(node.getChildren().accept(this));
+            currentIndent--;
+        }
+        sb.append(getIndent()).append(componentName).append(".pop();\n");
     }
 
     @Override
@@ -451,58 +477,75 @@ public class CodeGenerator implements AstVisitor<String> {
 
     @Override
     public String visit(IfStatement node) {
+        // Use standard if-else for pure JavaScript mode or outside component classes
+        if (config.isPureJavaScript() || !insideComponentClass) {
+            return renderStandardIfElse(node);
+        }
+        return renderArkUIIf(node);
+    }
+
+    /**
+     * Renders standard JavaScript if-else statement without ArkUI runtime.
+     */
+    private String renderStandardIfElse(IfStatement node) {
         StringBuilder sb = new StringBuilder();
 
-        // Generate standard if-else if pure JavaScript mode OR not inside a component class
-        boolean useStandardIfElse = config.isPureJavaScript() || !insideComponentClass;
+        sb.append(getIndent()).append("if (").append(node.getCondition()).append(") {\n");
+        currentIndent++;
+        sb.append(node.getThenBlock().accept(this));
+        currentIndent--;
+        sb.append(getIndent()).append("}\n");
 
-        if (useStandardIfElse) {
-            // Standard if-else without ArkUI runtime
-            sb.append(getIndent()).append("if (").append(node.getCondition()).append(") {\n");
+        if (node.hasElse()) {
+            sb.append(getIndent()).append("else {\n");
             currentIndent++;
-            String thenCode = node.getThenBlock().accept(this);
-            sb.append(thenCode);
+            sb.append(node.getElseBlock().accept(this));
             currentIndent--;
             sb.append(getIndent()).append("}\n");
-
-            if (node.hasElse()) {
-                sb.append(getIndent()).append("else {\n");
-                currentIndent++;
-                String elseCode = node.getElseBlock().accept(this);
-                sb.append(elseCode);
-                currentIndent--;
-                sb.append(getIndent()).append("}\n");
-            }
-        } else {
-            // ArkUI runtime mode: include If.create(), branchId(), pop()
-            sb.append(getIndent()).append("If.create();\n");
-
-            sb.append(getIndent()).append("if (").append(node.getCondition()).append(") {\n");
-            currentIndent++;
-
-            sb.append(getIndent()).append("If.branchId(0);\n");
-            String thenCode = node.getThenBlock().accept(this);
-            sb.append(thenCode);
-
-            currentIndent--;
-            sb.append(getIndent()).append("}\n");
-
-            if (node.hasElse()) {
-                sb.append(getIndent()).append("else {\n");
-                currentIndent++;
-
-                sb.append(getIndent()).append("If.branchId(1);\n");
-                String elseCode = node.getElseBlock().accept(this);
-                sb.append(elseCode);
-
-                currentIndent--;
-                sb.append(getIndent()).append("}\n");
-            }
-
-            sb.append(getIndent()).append("If.pop();\n");
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Renders ArkUI runtime if-else statement with If.create(), branchId(), and pop().
+     */
+    private String renderArkUIIf(IfStatement node) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(getIndent()).append("If.create();\n");
+        renderArkUIIfBranch(node, 0, sb);
+
+        if (node.hasElse()) {
+            renderArkUIElseBranch(node, sb);
+        }
+
+        sb.append(getIndent()).append("If.pop();\n");
+        return sb.toString();
+    }
+
+    /**
+     * Renders the 'then' branch of an ArkUI if statement.
+     */
+    private void renderArkUIIfBranch(IfStatement node, int branchId, StringBuilder sb) {
+        sb.append(getIndent()).append("if (").append(node.getCondition()).append(") {\n");
+        currentIndent++;
+        sb.append(getIndent()).append("If.branchId(").append(branchId).append(");\n");
+        sb.append(node.getThenBlock().accept(this));
+        currentIndent--;
+        sb.append(getIndent()).append("}\n");
+    }
+
+    /**
+     * Renders the 'else' branch of an ArkUI if statement.
+     */
+    private void renderArkUIElseBranch(IfStatement node, StringBuilder sb) {
+        sb.append(getIndent()).append("else {\n");
+        currentIndent++;
+        sb.append(getIndent()).append("If.branchId(1);\n");
+        sb.append(node.getElseBlock().accept(this));
+        currentIndent--;
+        sb.append(getIndent()).append("}\n");
     }
 
     /**

@@ -3,13 +3,13 @@ const BUILD_MODE_NAME = "debug";
 const DEBUG = true;
 const TARGET_NAME = "default";
 export class BuildProfile {
-  HAR_VERSION = HAR_VERSION;
+  HAR_VERSION = "HAR_VERSION";
 
-  BUILD_MODE_NAME = BUILD_MODE_NAME;
+  BUILD_MODE_NAME = "BUILD_MODE_NAME";
 
-  DEBUG = DEBUG;
+  DEBUG = "DEBUG";
 
-  TARGET_NAME = TARGET_NAME;
+  TARGET_NAME = "TARGET_NAME";
 
 }
 

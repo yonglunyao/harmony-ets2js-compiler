@@ -18,7 +18,7 @@ export class MainPage extends View {
     height("100%");
   }
 
-  private message__ = Hello World;
+  message__ = "Hello World";
 
   get message() {
     return this.message__.get();

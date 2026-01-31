@@ -1,0 +1,32 @@
+package com.ets2jsc.parser.internal.converters.expressions;
+
+import com.ets2jsc.parser.internal.ConversionContext;
+import com.ets2jsc.parser.internal.NodeConverter;
+import com.google.gson.JsonObject;
+
+/**
+ * Converter for string literal expressions.
+ * Handles: "string", 'string'
+ */
+public class StringLiteralConverter implements NodeConverter {
+
+    @Override
+    public boolean canConvert(String kindName) {
+        return "StringLiteral".equals(kindName);
+    }
+
+    @Override
+    public Object convert(JsonObject json, ConversionContext context) {
+        // String literals may already have quotes from parse-ets.js
+        String strText = json.has("text") ? json.get("text").getAsString() : "";
+        if (strText.startsWith("\"") || strText.startsWith("'")) {
+            return strText;
+        }
+        return "\"" + strText + "\"";
+    }
+
+    @Override
+    public int getPriority() {
+        return 100;
+    }
+}
