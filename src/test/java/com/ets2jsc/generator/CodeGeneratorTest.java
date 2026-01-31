@@ -9,13 +9,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 CodeGenerator 代码生成器
+ * Test CodeGenerator 代码Generate器
  */
-@DisplayName("代码生成器测试")
+@DisplayName("代码Generate器Test")
 class CodeGeneratorTest {
 
     @Test
-    @DisplayName("测试类声明生成")
+    @DisplayName("TestClassDeclarationGenerate")
     void testClassDeclarationGeneration() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -29,7 +29,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试带父类的类声明")
+    @DisplayName("Test带父Class ofClassDeclaration")
     void testClassDeclarationWithSuperClass() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -42,7 +42,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试属性声明生成")
+    @DisplayName("TestProperty DeclarationGenerate")
     void testPropertyDeclarationGeneration() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -57,7 +57,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试未加引号的字符串自动加引号")
+    @DisplayName("Test未加引号 of字符串自动加引号")
     void testUnquotedStringAutoQuoted() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -67,11 +67,11 @@ class CodeGeneratorTest {
         String code = generator.generate(prop);
 
         assertTrue(code.contains("\"Hello World\""),
-            "未加引号的字符串应该自动添加引号");
+            "未加引号 of字符串should自动Add引号");
     }
 
     @Test
-    @DisplayName("测试数字不加引号")
+    @DisplayName("Test数字不加引号")
     void testNumericNotQuoted() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -85,7 +85,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试布尔值不加引号")
+    @DisplayName("Test布尔值不加引号")
     void testBooleanNotQuoted() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -103,7 +103,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 this 引用不加引号")
+    @DisplayName("Test this 引用不加引号")
     void testThisReferenceNotQuoted() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -116,7 +116,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试方法声明生成")
+    @DisplayName("TestMethodDeclarationGenerate")
     void testMethodDeclarationGeneration() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -133,7 +133,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试构造函数生成")
+    @DisplayName("Test构造FunctionGenerate")
     void testConstructorGeneration() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -148,7 +148,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 getter 方法生成")
+    @DisplayName("Test getter MethodGenerate")
     void testGetterGeneration() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -163,7 +163,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 setter 方法生成")
+    @DisplayName("Test setter MethodGenerate")
     void testSetterGeneration() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -178,7 +178,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试静态方法生成")
+    @DisplayName("Test静态MethodGenerate")
     void testStaticMethodGeneration() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -193,7 +193,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 SourceFile 生成")
+    @DisplayName("Test SourceFile Generate")
     void testSourceFileGeneration() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -208,7 +208,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 Block 生成")
+    @DisplayName("Test Block Generate")
     void testBlockGeneration() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -223,7 +223,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 ImportStatement 生成")
+    @DisplayName("Test ImportStatement Generate")
     void testImportStatementGeneration() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -237,7 +237,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 ExportStatement 生成")
+    @DisplayName("Test ExportStatement Generate")
     void testExportStatementGeneration() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -251,7 +251,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 ForEachStatement 生成（纯 JS 模式）")
+    @DisplayName("Test ForEachStatement Generate（Pure JS Mode）")
     void testForEachPureJSMode() {
         CompilerConfig config = new CompilerConfig();
         config.setPureJavaScript(true);
@@ -265,7 +265,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 ForEachStatement 生成（ArkUI 模式）")
+    @DisplayName("Test ForEachStatement Generate（ArkUI Mode）")
     void testForEachArkUIMode() {
         CompilerConfig config = new CompilerConfig();
         config.setPureJavaScript(false);
@@ -279,7 +279,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 IfStatement 生成（纯 JS 模式）")
+    @DisplayName("Test IfStatement Generate（Pure JS Mode）")
     void testIfStatementPureJSMode() {
         CompilerConfig config = new CompilerConfig();
         config.setPureJavaScript(true);
@@ -293,7 +293,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 IfStatement 生成（ArkUI 模式，在组件类中）")
+    @DisplayName("Test IfStatement Generate（ArkUI Mode，在ComponentClass中）")
     void testIfStatementArkUIModeInComponent() {
         CompilerConfig config = new CompilerConfig();
         config.setPureJavaScript(false);
@@ -311,7 +311,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试字符串转义")
+    @DisplayName("Test字符串转义")
     void testStringEscaping() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -321,11 +321,11 @@ class CodeGeneratorTest {
         String code = generator.generate(prop);
 
         assertTrue(code.contains("\\\""),
-            "引号应该被转义");
+            "引号should被转义");
     }
 
     @Test
-    @DisplayName("测试包含换行符的字符串")
+    @DisplayName("TestContains换行符 of字符串")
     void testStringWithNewline() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -335,11 +335,11 @@ class CodeGeneratorTest {
         String code = generator.generate(prop);
 
         assertTrue(code.contains("\\n"),
-            "换行符应该被转义");
+            "换行符should被转义");
     }
 
     @Test
-    @DisplayName("测试已加引号的字符串不重复加引号")
+    @DisplayName("Test已加引号 of字符串不重复加引号")
     void testAlreadyQuotedString() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -348,13 +348,13 @@ class CodeGeneratorTest {
 
         String code = generator.generate(prop);
 
-        // 不应该有双重引号
+        // 不should有双重引号
         assertTrue(code.contains("= 'already quoted'"));
         assertFalse(code.contains("''already quoted''"));
     }
 
     @Test
-    @DisplayName("测试模板字符串不加引号")
+    @DisplayName("Test模板字符串不加引号")
     void testTemplateStringNotQuoted() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -367,7 +367,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试对象字面量不加引号")
+    @DisplayName("TestObject字面量不加引号")
     void testObjectLiteralNotQuoted() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -380,7 +380,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试数组字面量不加引号")
+    @DisplayName("TestArray字面量不加引号")
     void testArrayLiteralNotQuoted() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -393,7 +393,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 new 表达式不加引号")
+    @DisplayName("Test new Expression不加引号")
     void testNewExpressionNotQuoted() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -406,7 +406,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试资源引用不加引号")
+    @DisplayName("Test资源引用不加引号")
     void testResourceReferenceNotQuoted() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -419,7 +419,7 @@ class CodeGeneratorTest {
     }
 
     @Test
-    @DisplayName("测试 null 和不加引号")
+    @DisplayName("Test null 和不加引号")
     void testNullNotQuoted() {
         CodeGenerator generator = new CodeGenerator();
 
@@ -431,7 +431,7 @@ class CodeGeneratorTest {
         assertTrue(code.contains("= null"));
     }
 
-    @DisplayName("测试 undefined 不加引号")
+    @DisplayName("Test undefined 不加引号")
     void testUndefinedNotQuoted() {
         CodeGenerator generator = new CodeGenerator();
 

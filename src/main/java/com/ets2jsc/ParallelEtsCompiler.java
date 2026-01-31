@@ -6,6 +6,9 @@ import com.ets2jsc.generator.CodeGenerator;
 import com.ets2jsc.generator.JsWriter;
 import com.ets2jsc.transformer.AstTransformer;
 import com.ets2jsc.transformer.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Optimized version: Shared compiler instance, reduced resource creation overhead.
  */
 public class ParallelEtsCompiler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ParallelEtsCompiler.class);
 
     private final CompilerConfig config;
     private final List<AstTransformer> transformers;
@@ -79,7 +84,7 @@ public class ParallelEtsCompiler {
      * @return Compilation result
      */
     public CompilationResult compileParallel(List<Path> sourceFiles, Path outputDir) {
-        System.out.println("Concurrent threads: " + threadPoolSize);
+        LOGGER.info("Concurrent threads: {}", threadPoolSize);
         CompilationResult result = new CompilationResult();
 
         try {

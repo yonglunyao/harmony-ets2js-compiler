@@ -6,13 +6,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 ClassDeclaration 类声明
+ * Test class for ClassDeclaration
  */
-@DisplayName("ClassDeclaration 测试")
+@DisplayName("Class Declaration Tests")
 class ClassDeclarationTest {
 
     @Test
-    @DisplayName("测试类声明创建")
+    @DisplayName("Test class declaration creation")
     void testClassDeclarationCreation() {
         ClassDeclaration classDecl = new ClassDeclaration("MyClass");
 
@@ -26,7 +26,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取类名")
+    @DisplayName("TestGetClass名")
     void testGetName() {
         ClassDeclaration classDecl = new ClassDeclaration("TestClass");
 
@@ -34,7 +34,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试设置父类")
+    @DisplayName("TestSet父Class")
     void testSetSuperClass() {
         ClassDeclaration classDecl = new ClassDeclaration("MyView");
         classDecl.setSuperClass("View");
@@ -43,7 +43,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取父类")
+    @DisplayName("TestGet父Class")
     void testGetSuperClass() {
         ClassDeclaration classDecl = new ClassDeclaration("MyView");
         classDecl.setSuperClass("View");
@@ -52,7 +52,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试设置导出")
+    @DisplayName("TestSetExport")
     void testSetExport() {
         ClassDeclaration classDecl = new ClassDeclaration("MyClass");
         assertFalse(classDecl.isExport());
@@ -65,7 +65,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试设置 struct")
+    @DisplayName("TestSet struct")
     void testSetStruct() {
         ClassDeclaration classDecl = new ClassDeclaration("MyComponent");
         classDecl.setStruct(true);
@@ -77,7 +77,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试添加装饰器")
+    @DisplayName("TestAddDecorator")
     void testAddDecorator() {
         ClassDeclaration classDecl = new ClassDeclaration("MyComponent");
         Decorator decorator1 = new Decorator("Component");
@@ -92,7 +92,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取装饰器")
+    @DisplayName("TestGetDecorator")
     void testGetDecorators() {
         ClassDeclaration classDecl = new ClassDeclaration("MyComponent");
         Decorator decorator = new Decorator("Component");
@@ -104,7 +104,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试添加成员")
+    @DisplayName("TestAdd成员")
     void testAddMember() {
         ClassDeclaration classDecl = new ClassDeclaration("MyClass");
         PropertyDeclaration prop = new PropertyDeclaration("myProp");
@@ -117,7 +117,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取成员")
+    @DisplayName("TestGet成员")
     void testGetMembers() {
         ClassDeclaration classDecl = new ClassDeclaration("MyClass");
         PropertyDeclaration prop = new PropertyDeclaration("value");
@@ -129,7 +129,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 hasDecorator")
+    @DisplayName("Test hasDecorator")
     void testHasDecorator() {
         ClassDeclaration classDecl = new ClassDeclaration("MyComponent");
         classDecl.addDecorator(new Decorator("Component"));
@@ -141,7 +141,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取属性")
+    @DisplayName("TestGet属性")
     void testGetProperties() {
         ClassDeclaration classDecl = new ClassDeclaration("MyClass");
 
@@ -159,7 +159,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取方法")
+    @DisplayName("TestGetMethod")
     void testGetMethods() {
         ClassDeclaration classDecl = new ClassDeclaration("MyClass");
 
@@ -177,7 +177,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试空类声明")
+    @DisplayName("TestEmptyClassDeclaration")
     void testEmptyClassDeclaration() {
         ClassDeclaration classDecl = new ClassDeclaration("EmptyClass");
 
@@ -188,7 +188,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 accept 方法")
+    @DisplayName("Test accept Method")
     void testAcceptMethod() {
         ClassDeclaration classDecl = new ClassDeclaration("MyClass");
 
@@ -197,7 +197,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试多个装饰器")
+    @DisplayName("TestMultipleDecorator")
     void testMultipleDecorators() {
         ClassDeclaration classDecl = new ClassDeclaration("MyComponent");
 
@@ -214,7 +214,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试混合成员")
+    @DisplayName("Test混合成员")
     void testMixedMembers() {
         ClassDeclaration classDecl = new ClassDeclaration("MyClass");
 
@@ -230,7 +230,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试继承链")
+    @DisplayName("TestInherit链")
     void testInheritanceChain() {
         ClassDeclaration child = new ClassDeclaration("ChildClass");
         child.setSuperClass("ParentClass");
@@ -243,7 +243,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试导出的结构体类")
+    @DisplayName("TestExport of结构体Class")
     void testExportedStructClass() {
         ClassDeclaration classDecl = new ClassDeclaration("MyView");
 
@@ -257,7 +257,7 @@ class ClassDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试装饰器大小写敏感")
+    @DisplayName("TestDecorator大小写敏感")
     void testHasDecoratorCaseSensitive() {
         ClassDeclaration classDecl = new ClassDeclaration("MyComponent");
         classDecl.addDecorator(new Decorator("Component"));

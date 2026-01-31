@@ -9,13 +9,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 ImportStatement 和 ExportStatement
+ * Test ImportStatement 和 ExportStatement
  */
-@DisplayName("导入/导出语句测试")
+@DisplayName("Import/ExportStatementTest")
 class ImportExportTest {
 
     @Test
-    @DisplayName("测试默认导入")
+    @DisplayName("TestDefaultImport")
     void testDefaultImport() {
         ImportStatement importStmt = new ImportStatement("module");
         importStmt.addSpecifier(new ImportStatement.ImportSpecifier(
@@ -30,7 +30,7 @@ class ImportExportTest {
     }
 
     @Test
-    @DisplayName("测试命名导入")
+    @DisplayName("Test命名Import")
     void testNamedImport() {
         ImportStatement importStmt = new ImportStatement("library");
 
@@ -44,7 +44,7 @@ class ImportExportTest {
     }
 
     @Test
-    @DisplayName("测试多个命名导入")
+    @DisplayName("TestMultiple命名Import")
     void testMultipleNamedImports() {
         ImportStatement importStmt = new ImportStatement("utils");
 
@@ -61,7 +61,7 @@ class ImportExportTest {
     }
 
     @Test
-    @DisplayName("测试命名空间导入")
+    @DisplayName("Test命名Empty间Import")
     void testNamespaceImport() {
         ImportStatement importStmt = new ImportStatement("library");
 
@@ -75,7 +75,7 @@ class ImportExportTest {
     }
 
     @Test
- @DisplayName("测试导入模块路径")
+ @DisplayName("TestImport模BlockPath")
     void testImportModulePath() {
         ImportStatement import1 = new ImportStatement("./local");
         ImportStatement import2 = new ImportStatement("npm/package");
@@ -87,7 +87,7 @@ class ImportExportTest {
     }
 
     @Test
-    @DisplayName("测试导入说明符类型")
+    @DisplayName("TestImport说明符Class型")
     void testImportSpecifierKind() {
         ImportStatement.ImportSpecifier defaultSpec =
             new ImportStatement.ImportSpecifier("x", "x",
@@ -112,7 +112,7 @@ class ImportExportTest {
     }
 
     @Test
-    @DisplayName("测试导出语句类型")
+    @DisplayName("TestExportStatementClass型")
     void testExportStatementType() {
         ClassDeclaration classDecl = new ClassDeclaration("TestClass");
         ExportStatement exportStmt = new ExportStatement(classDecl, false, "class TestClass {}");
@@ -121,7 +121,7 @@ class ImportExportTest {
     }
 
     @Test
-    @DisplayName("测试导入语句类型")
+    @DisplayName("TestImportStatementClass型")
     void testImportStatementType() {
         ImportStatement importStmt = new ImportStatement("module");
 
@@ -129,7 +129,7 @@ class ImportExportTest {
     }
 
     @Test
-    @DisplayName("测试导入说明符字段")
+    @DisplayName("TestImport说明符Field")
     void testImportSpecifierFields() {
         ImportStatement.ImportSpecifier spec =
             new ImportStatement.ImportSpecifier("imported", "local",

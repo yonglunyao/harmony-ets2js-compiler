@@ -40,7 +40,7 @@ public class CodeGenerator implements AstVisitor<String> {
      */
     public String generate(AstNode node) {
         if (node == null) {
-            return "";
+            throw new IllegalArgumentException("AST node cannot be null");
         }
         return node.accept(this);
     }
@@ -321,6 +321,12 @@ public class CodeGenerator implements AstVisitor<String> {
     @Override
     public String visit(IfStatement node) {
         return componentCodeGenerator.visitIf(node, insideComponentClass);
+    }
+
+    @Override
+    public String visit(EmptyStatement node) {
+        // Empty statement produces no output
+        return "";
     }
 
     // Helper classes for context management

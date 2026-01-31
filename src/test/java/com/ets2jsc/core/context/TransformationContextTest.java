@@ -2,7 +2,6 @@ package com.ets2jsc.core.context;
 
 import com.ets2jsc.ast.ClassDeclaration;
 import com.ets2jsc.ast.MethodDeclaration;
-import com.ets2jsc.config.CompilerConfig;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

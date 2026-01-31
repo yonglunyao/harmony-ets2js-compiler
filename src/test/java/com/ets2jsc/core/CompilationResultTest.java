@@ -7,13 +7,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试编译结果汇总
+ * Test class for CompilationResult
  */
-@DisplayName("编译结果测试")
+@DisplayName("Compilation Result Tests")
 class CompilationResultTest {
 
     @Test
-    @DisplayName("测试编译结果创建")
+    @DisplayName("Test compilation result creation")
     void testCompilationResultCreation() {
         CompilationResult result = new CompilationResult();
 
@@ -25,7 +25,7 @@ class CompilationResultTest {
     }
 
     @Test
-    @DisplayName("测试添加成功结果")
+    @DisplayName("Test add success result")
     void testAddSuccessResult() {
         CompilationResult result = new CompilationResult();
         java.nio.file.Path path = java.nio.file.Paths.get("test.ets");
@@ -41,7 +41,7 @@ class CompilationResultTest {
     }
 
     @Test
-    @DisplayName("测试添加失败结果")
+    @DisplayName("Test add failure result")
     void testAddFailureResult() {
         CompilationResult result = new CompilationResult();
         java.nio.file.Path path = java.nio.file.Paths.get("error.ets");
@@ -58,7 +58,7 @@ class CompilationResultTest {
     }
 
     @Test
-    @DisplayName("测试添加跳过结果")
+    @DisplayName("Test add skipped result")
     void testAddSkippedResult() {
         CompilationResult result = new CompilationResult();
         java.nio.file.Path path = java.nio.file.Paths.get("skip.ets");
@@ -73,7 +73,7 @@ class CompilationResultTest {
     }
 
     @Test
-    @DisplayName("测试获取失败列表")
+    @DisplayName("Test get failures list")
     void testGetFailures() {
         CompilationResult result = new CompilationResult();
         java.nio.file.Path path1 = java.nio.file.Paths.get("error1.ets");
@@ -91,7 +91,8 @@ class CompilationResultTest {
         assertEquals(2, failures.size());
     }
 
-    @DisplayName("测试摘要信息")
+    @Test
+    @DisplayName("Test summary information")
     void testSummary() {
         CompilationResult result = new CompilationResult();
         java.nio.file.Path path = java.nio.file.Paths.get("test.ets");
@@ -103,13 +104,13 @@ class CompilationResultTest {
 
         String summary = result.getSummary();
         assertNotNull(summary);
-        assertTrue(summary.contains("总计"));
-        assertTrue(summary.contains("成功"));
-        assertTrue(summary.contains("耗时"));
+        assertTrue(summary.contains("Total"));
+        assertTrue(summary.contains("Success"));
+        assertTrue(summary.contains("Duration"));
     }
 
     @Test
-    @DisplayName("测试完成标记")
+    @DisplayName("Test mark completed")
     void testMarkCompleted() {
         CompilationResult result = new CompilationResult();
 
@@ -118,7 +119,7 @@ class CompilationResultTest {
         result.markCompleted();
 
         long duration1 = result.getDurationMs();
-        // 稍等一下确保时间更新
+        // Wait a moment to ensure time update
         try {
             Thread.sleep(10);
         } catch (InterruptedException e) {
@@ -130,7 +131,7 @@ class CompilationResultTest {
     }
 
     @Test
-    @DisplayName("测试文件结果状态")
+    @DisplayName("Test file result status")
     void testFileResultStatus() {
         java.nio.file.Path path = java.nio.file.Paths.get("test.ets");
         java.nio.file.Path outputPath = java.nio.file.Paths.get("test.js");
@@ -147,7 +148,7 @@ class CompilationResultTest {
     }
 
     @Test
-    @DisplayName("测试文件结果字段")
+    @DisplayName("Test file result fields")
     void testFileResultFields() {
         java.nio.file.Path path = java.nio.file.Paths.get("test.ets");
         java.nio.file.Path outputPath = java.nio.file.Paths.get("test.js");
@@ -156,7 +157,7 @@ class CompilationResultTest {
 
         assertEquals(path, result.getSourcePath());
         assertEquals(outputPath, result.getOutputPath());
-        assertEquals("编译成功", result.getMessage());
+        assertEquals("Compilation succeeded", result.getMessage());
         assertNull(result.getError());
         assertEquals(100, result.getDurationMs());
     }

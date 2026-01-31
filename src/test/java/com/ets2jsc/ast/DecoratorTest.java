@@ -9,13 +9,13 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 Decorator 装饰器
+ * Test Decorator Decorator
  */
-@DisplayName("Decorator 测试")
+@DisplayName("Decorator Tests")
 class DecoratorTest {
 
     @Test
-    @DisplayName("测试 Decorator 创建")
+    @DisplayName("Test Decorator Creation")
     void testDecoratorCreation() {
         Decorator decorator = new Decorator("Component");
 
@@ -26,7 +26,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试获取装饰器名称")
+    @DisplayName("TestGetDecoratorName")
     void testGetName() {
         Decorator decorator1 = new Decorator("Component");
         Decorator decorator2 = new Decorator("State");
@@ -38,7 +38,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试设置装饰器名称")
+    @DisplayName("TestSetDecoratorName")
     void testSetName() {
         Decorator decorator = new Decorator("Component");
         decorator.setName("Entry");
@@ -47,7 +47,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试获取参数")
+    @DisplayName("TestGetParameter")
     void testGetArguments() {
         Decorator decorator = new Decorator("Component");
 
@@ -56,7 +56,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试设置参数")
+    @DisplayName("TestSetParameter")
     void testSetArgument() {
         Decorator decorator = new Decorator("CustomDecorator");
 
@@ -72,7 +72,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试获取单个参数")
+    @DisplayName("TestGet单个Parameter")
     void testGetArgument() {
         Decorator decorator = new Decorator("Component");
         decorator.setArgument("name", "MyComponent");
@@ -81,7 +81,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试获取不存在的参数")
+    @DisplayName("TestGet不exists ofParameter")
     void testGetNonExistentArgument() {
         Decorator decorator = new Decorator("Component");
 
@@ -89,7 +89,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试获取和设置原始表达式")
+    @DisplayName("TestGet和Set原始Expression")
     void testGetSetRawExpression() {
         Decorator decorator = new Decorator("Component");
         decorator.setRawExpression("@Component({ name: 'MyComponent' })");
@@ -98,7 +98,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试原始表达式初始值")
+    @DisplayName("Test原始Expression初始值")
     void testRawExpressionInitial() {
         Decorator decorator = new Decorator("Component");
 
@@ -106,7 +106,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isComponentDecorator - Component")
+    @DisplayName("Test isComponentDecorator - Component")
     void testIsComponentDecoratorComponent() {
         Decorator decorator = new Decorator("Component");
 
@@ -114,7 +114,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isComponentDecorator - Entry")
+    @DisplayName("Test isComponentDecorator - Entry")
     void testIsComponentDecoratorEntry() {
         Decorator decorator = new Decorator("Entry");
 
@@ -122,7 +122,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isComponentDecorator - Preview")
+    @DisplayName("Test isComponentDecorator - Preview")
     void testIsComponentDecoratorPreview() {
         Decorator decorator = new Decorator("Preview");
 
@@ -130,7 +130,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isComponentDecorator - CustomDialog")
+    @DisplayName("Test isComponentDecorator - CustomDialog")
     void testIsComponentDecoratorCustomDialog() {
         Decorator decorator = new Decorator("CustomDialog");
 
@@ -138,7 +138,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isComponentDecorator - 非组件装饰器")
+    @DisplayName("Test isComponentDecorator - 非ComponentDecorator")
     void testIsComponentDecoratorNonComponent() {
         Decorator decorator1 = new Decorator("State");
         Decorator decorator2 = new Decorator("Prop");
@@ -150,7 +150,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isStateDecorator")
+    @DisplayName("Test isStateDecorator")
     void testIsStateDecorator() {
         Decorator state = new Decorator("State");
         Decorator prop = new Decorator("Prop");
@@ -160,7 +160,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isPropDecorator")
+    @DisplayName("Test isPropDecorator")
     void testIsPropDecorator() {
         Decorator prop = new Decorator("Prop");
         Decorator state = new Decorator("State");
@@ -170,7 +170,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isLinkDecorator")
+    @DisplayName("Test isLinkDecorator")
     void testIsLinkDecorator() {
         Decorator link = new Decorator("Link");
         Decorator prop = new Decorator("Prop");
@@ -180,7 +180,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isProvideDecorator")
+    @DisplayName("Test isProvideDecorator")
     void testIsProvideDecorator() {
         Decorator provide = new Decorator("Provide");
         Decorator consume = new Decorator("Consume");
@@ -190,7 +190,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isConsumeDecorator")
+    @DisplayName("Test isConsumeDecorator")
     void testIsConsumeDecorator() {
         Decorator consume = new Decorator("Consume");
         Decorator provide = new Decorator("Provide");
@@ -200,7 +200,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isMethodDecorator - Builder")
+    @DisplayName("Test isMethodDecorator - Builder")
     void testIsMethodDecoratorBuilder() {
         Decorator decorator = new Decorator("Builder");
 
@@ -208,7 +208,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isMethodDecorator - Extend")
+    @DisplayName("Test isMethodDecorator - Extend")
     void testIsMethodDecoratorExtend() {
         Decorator decorator = new Decorator("Extend");
 
@@ -216,7 +216,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isMethodDecorator - Styles")
+    @DisplayName("Test isMethodDecorator - Styles")
     void testIsMethodDecoratorStyles() {
         Decorator decorator = new Decorator("Styles");
 
@@ -224,7 +224,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isMethodDecorator - Watch")
+    @DisplayName("Test isMethodDecorator - Watch")
     void testIsMethodDecoratorWatch() {
         Decorator decorator = new Decorator("Watch");
 
@@ -232,7 +232,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 isMethodDecorator - 非方法装饰器")
+    @DisplayName("Test isMethodDecorator - 非MethodDecorator")
     void testIsMethodDecoratorNonMethod() {
         Decorator decorator1 = new Decorator("State");
         Decorator decorator2 = new Decorator("Component");
@@ -242,7 +242,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 accept 方法")
+    @DisplayName("Test accept Method")
     void testAcceptMethod() {
         Decorator decorator = new Decorator("Component");
 
@@ -251,7 +251,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试装饰器大小写敏感")
+    @DisplayName("TestDecorator大小写敏感")
     void testDecoratorCaseSensitive() {
         Decorator decorator1 = new Decorator("Component");
         Decorator decorator2 = new Decorator("component");
@@ -263,7 +263,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试覆盖参数值")
+    @DisplayName("Test覆盖Parameter值")
     void testOverwriteArgument() {
         Decorator decorator = new Decorator("Component");
 
@@ -275,7 +275,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试不同类型的参数值")
+    @DisplayName("TestdifferentClass型 ofParameter值")
     void testDifferentArgumentValueTypes() {
         Decorator decorator = new Decorator("Custom");
 
@@ -293,7 +293,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试 P1 装饰器")
+    @DisplayName("Test P1 Decorator")
     void testP1Decorators() {
         Decorator provide = new Decorator("Provide");
         Decorator consume = new Decorator("Consume");
@@ -303,7 +303,7 @@ class DecoratorTest {
     }
 
     @Test
-    @DisplayName("测试参数列表是可修改的")
+    @DisplayName("TestParameterList是可Modify of")
     void testArgumentsMapIsModifiable() {
         Decorator decorator = new Decorator("Component");
 

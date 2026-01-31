@@ -6,6 +6,8 @@ import com.ets2jsc.constant.RuntimeFunctions;
 import com.ets2jsc.constant.Symbols;
 import com.ets2jsc.transformer.decorators.PropertyTransformer;
 import com.ets2jsc.transformer.decorators.impl.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +17,8 @@ import java.util.List;
  * Handles @Component, @State, @Prop, @Link, @Provide, @Consume.
  */
 public class DecoratorTransformer implements AstTransformer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DecoratorTransformer.class);
 
     private final List<PropertyTransformer> propertyTransformers;
 
@@ -249,13 +253,13 @@ public class DecoratorTransformer implements AstTransformer {
      */
     private void validateEntryDecorator(ClassDeclaration classDecl) {
         if (!classDecl.isStruct()) {
-            System.err.println("Warning: @Entry decorator should only be used on struct components. "
-                + "Found on class: " + classDecl.getName());
+            LOGGER.warn("@Entry decorator should only be used on struct components. Found on class: {}",
+                classDecl.getName());
         }
 
         if (!classDecl.hasDecorator(Decorators.COMPONENT)) {
-            System.err.println("Warning: @Entry decorator should be used together with @Component. "
-                + "Found on class: " + classDecl.getName());
+            LOGGER.warn("@Entry decorator should be used together with @Component. Found on class: {}",
+                classDecl.getName());
         }
     }
 }

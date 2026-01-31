@@ -9,11 +9,17 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Converter for property declarations.
  * Handles: property: type = initialValue;
  */
 public class PropertyDeclarationConverter implements NodeConverter {
+
+    private static final String KEYWORD_NEW = "new ";
+    private static final Pattern TYPE_ARGUMENTS_PATTERN = Pattern.compile("(new\\s+\\w+)<[^>]*>");
 
     @Override
     public boolean canConvert(String kindName) {
@@ -71,7 +77,8 @@ public class PropertyDeclarationConverter implements NodeConverter {
     private String extractInitializer(JsonElement initElem, JsonObject json, ConversionContext context) {
         // Priority 1: Pre-processed initializerText
         if (json.has("initializerText")) {
-            return json.get("initializerText").getAsString();
+            String initializerText = json.get("initializerText").getAsString();
+            return stripTypeArguments(initializerText);
         }
 
         // Priority 2: Complex expression object
@@ -85,6 +92,20 @@ public class PropertyDeclarationConverter implements NodeConverter {
         }
 
         return null;
+    }
+
+    /**
+     * Strips TypeScript type arguments from new expressions.
+     * Converts: new Map<string, Object>() to new Map()
+     * CC: 2 (null check + matcher find)
+     */
+    private String stripTypeArguments(String text) {
+        if (text == null || !text.contains(KEYWORD_NEW)) {
+            return text;
+        }
+
+        Matcher matcher = TYPE_ARGUMENTS_PATTERN.matcher(text);
+        return matcher.replaceAll("$1");
     }
 
     /**
@@ -110,8 +131,12 @@ public class PropertyDeclarationConverter implements NodeConverter {
         }
 
         for (int i = 0; i < decoratorsArray.size(); i++) {
-            JsonObject decObj = decoratorsArray.get(i).getAsJsonObject();
-            String decName = decObj.get("name").getAsString();
+            JsonElement decElement = decoratorsArray.get(i);
+            if (decElement.isJsonNull() || !decElement.isJsonObject()) {
+                continue;
+            }
+            JsonObject decObj = decElement.getAsJsonObject();
+            String decName = decObj.has("name") ? decObj.get("name").getAsString() : "";
             propDecl.addDecorator(new Decorator(decName));
         }
     }

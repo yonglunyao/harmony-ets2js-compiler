@@ -1,6 +1,7 @@
 package com.ets2jsc.parser.internal;
 
 import com.ets2jsc.ast.AstNode;
+import com.ets2jsc.ast.EmptyStatement;
 import com.ets2jsc.parser.internal.converters.statements.*;
 import com.google.gson.JsonObject;
 
@@ -18,6 +19,7 @@ public class StatementConverterRegistry extends NodeConverterRegistry {
     protected void initializeConverters() {
         // Register all statement converters
         register(new ClassDeclarationConverter());
+        register(new ConstructorConverter());
         register(new MethodDeclarationConverter());
         register(new PropertyDeclarationConverter());
         register(new FunctionDeclarationConverter());
@@ -35,6 +37,7 @@ public class StatementConverterRegistry extends NodeConverterRegistry {
         register(new ImportConverter());
         register(new ExportConverter());
         register(new ExpressionConverter());
+        register(new EmptyStatementConverter());
     }
 
     /**

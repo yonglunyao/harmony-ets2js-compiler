@@ -44,8 +44,12 @@ public class MethodDeclarationConverter implements NodeConverter {
         }
 
         for (int i = 0; i < decoratorsArray.size(); i++) {
-            JsonObject decObj = decoratorsArray.get(i).getAsJsonObject();
-            String decName = decObj.get("name").getAsString();
+            JsonElement decElement = decoratorsArray.get(i);
+            if (decElement.isJsonNull() || !decElement.isJsonObject()) {
+                continue;
+            }
+            JsonObject decObj = decElement.getAsJsonObject();
+            String decName = decObj.has("name") ? decObj.get("name").getAsString() : "";
             methodDecl.addDecorator(new Decorator(decName));
         }
     }
@@ -61,7 +65,11 @@ public class MethodDeclarationConverter implements NodeConverter {
         }
 
         for (int i = 0; i < modifiersArray.size(); i++) {
-            JsonObject modObj = modifiersArray.get(i).getAsJsonObject();
+            JsonElement modElement = modifiersArray.get(i);
+            if (modElement.isJsonNull() || !modElement.isJsonObject()) {
+                continue;
+            }
+            JsonObject modObj = modElement.getAsJsonObject();
             String modKindName = getKindName(modObj);
             applyModifier(methodDecl, modKindName);
         }
@@ -91,9 +99,15 @@ public class MethodDeclarationConverter implements NodeConverter {
         }
 
         for (int i = 0; i < paramsArray.size(); i++) {
-            JsonObject paramObj = paramsArray.get(i).getAsJsonObject();
-            String paramName = paramObj.get("name").getAsString();
-            String paramType = paramObj.get("type").getAsString();
+            JsonElement paramElement = paramsArray.get(i);
+            if (paramElement.isJsonNull() || !paramElement.isJsonObject()) {
+                continue;
+            }
+            JsonObject paramObj = paramElement.getAsJsonObject();
+            String paramName = paramObj.has("name") ? paramObj.get("name").getAsString() : "";
+            String paramType = paramObj.has("type") && !paramObj.get("type").isJsonNull()
+                ? paramObj.get("type").getAsString()
+                : "any";
             MethodDeclaration.Parameter param = new MethodDeclaration.Parameter(paramName, paramType);
             methodDecl.addParameter(param);
         }

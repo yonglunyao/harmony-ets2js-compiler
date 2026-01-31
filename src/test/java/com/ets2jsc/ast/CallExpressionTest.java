@@ -8,13 +8,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 CallExpression 调用表达式
+ * Test class for CallExpression
  */
-@DisplayName("CallExpression 测试")
+@DisplayName("Call Expression Tests")
 class CallExpressionTest {
 
     @Test
-    @DisplayName("测试 CallExpression 创建")
+    @DisplayName("Test call expression creation")
     void testCallExpressionCreation() {
         CallExpression call = new CallExpression("test");
 
@@ -25,7 +25,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试获取函数名")
+    @DisplayName("TestGetFunctionName")
     void testGetFunctionName() {
         CallExpression call = new CallExpression("myFunction");
 
@@ -33,7 +33,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试设置函数名")
+    @DisplayName("TestSetFunctionName")
     void testSetFunctionName() {
         CallExpression call = new CallExpression("oldName");
         call.setFunctionName("newName");
@@ -42,7 +42,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试添加参数")
+    @DisplayName("TestAddParameter")
     void testAddArgument() {
         CallExpression call = new CallExpression("test");
         ExpressionStatement arg1 = new ExpressionStatement("x");
@@ -57,7 +57,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试获取参数列表")
+    @DisplayName("TestGetParameterList")
     void testGetArguments() {
         CallExpression call = new CallExpression("test");
         ExpressionStatement arg = new ExpressionStatement("value");
@@ -69,7 +69,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试空参数列表")
+    @DisplayName("TestEmptyParameterList")
     void testEmptyArguments() {
         CallExpression call = new CallExpression("test");
 
@@ -77,7 +77,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试获取和设置 callee")
+    @DisplayName("TestGetAndSetCallee")
     void testGetSetCallee() {
         CallExpression call = new CallExpression("test");
         ExpressionStatement callee = new ExpressionStatement("obj.method");
@@ -88,7 +88,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试初始 callee 为 null")
+    @DisplayName("TestInitialCalleeIsNull")
     void testCeeleeInitiallyNull() {
         CallExpression call = new CallExpression("test");
 
@@ -96,7 +96,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试 isComponentCall 初始值")
+    @DisplayName("TestIsComponentCallInitialValue")
     void testIsComponentCallInitial() {
         CallExpression call = new CallExpression("Text");
 
@@ -104,7 +104,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试设置 componentCall")
+    @DisplayName("TestSet componentCall")
     void testSetComponentCall() {
         CallExpression call = new CallExpression("Text");
         call.setComponentCall(true);
@@ -116,7 +116,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试 isControlFlow - ForEach")
+    @DisplayName("Test isControlFlow - ForEach")
     void testIsControlFlowForEach() {
         CallExpression call = new CallExpression("ForEach");
 
@@ -124,7 +124,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试 isControlFlow - LazyForEach")
+    @DisplayName("Test isControlFlow - LazyForEach")
     void testIsControlFlowLazyForEach() {
         CallExpression call = new CallExpression("LazyForEach");
 
@@ -132,7 +132,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试 isControlFlow - If")
+    @DisplayName("Test isControlFlow - If")
     void testIsControlFlowIf() {
         CallExpression call = new CallExpression("If");
 
@@ -140,7 +140,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试 isControlFlow - 非控制流函数")
+    @DisplayName("TestIsControlFlowNonControlFlowFunction")
     void testIsControlFlowNonControl() {
         CallExpression call1 = new CallExpression("Text");
         CallExpression call2 = new CallExpression("console.log");
@@ -152,7 +152,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试多个参数")
+    @DisplayName("TestMultipleParameter")
     void testMultipleArguments() {
         CallExpression call = new CallExpression("myFunction");
 
@@ -166,7 +166,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试不同函数名")
+    @DisplayName("TestDifferentFunctionNames")
     void testDifferentFunctionNames() {
         CallExpression call1 = new CallExpression("console.log");
         CallExpression call2 = new CallExpression("Text.create");
@@ -184,7 +184,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试 accept 方法")
+    @DisplayName("Test accept Method")
     void testAcceptMethod() {
         CallExpression call = new CallExpression("test");
 
@@ -193,7 +193,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试链式调用（通过 callee）")
+    @DisplayName("TestChainedCallViaCallee")
     void testChainedCall() {
         CallExpression call = new CallExpression("then");
         ExpressionStatement callee = new ExpressionStatement("promise");
@@ -205,7 +205,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试带参数的控制流调用")
+    @DisplayName("TestControlFlowCallWithParameters")
     void testControlFlowWithArguments() {
         CallExpression call = new CallExpression("ForEach");
         call.addArgument(new ExpressionStatement("this.items"));
@@ -216,7 +216,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试设置多个 callee")
+    @DisplayName("TestSetMultiple callee")
     void testMultipleCalleeSets() {
         CallExpression call = new CallExpression("test");
 
@@ -230,7 +230,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试修改函数名后 isControlFlow 变化")
+    @DisplayName("TestIsControlFlowChangesAfterModifyFunctionName")
     void testIsControlFlowAfterNameChange() {
         CallExpression call = new CallExpression("Text");
         assertFalse(call.isControlFlow());
@@ -246,7 +246,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试控制流函数大小写敏感")
+    @DisplayName("TestControlFlowFunctionCaseSensitive")
     void testControlFlowCaseSensitive() {
         CallExpression call1 = new CallExpression("ForEach");
         CallExpression call2 = new CallExpression("foreach");
@@ -260,7 +260,7 @@ class CallExpressionTest {
     }
 
     @Test
-    @DisplayName("测试组件调用标记")
+    @DisplayName("TestComponentCallMarking")
     void testComponentCallFlag() {
         CallExpression textCall = new CallExpression("Text");
         CallExpression columnCall = new CallExpression("Column");

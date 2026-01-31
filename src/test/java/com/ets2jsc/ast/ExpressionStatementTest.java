@@ -6,13 +6,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 ExpressionStatement 表达式语句
+ * Test ExpressionStatement ExpressionStatement
  */
-@DisplayName("表达式语句测试")
+@DisplayName("ExpressionStatementTest")
 class ExpressionStatementTest {
 
     @Test
-    @DisplayName("测试基本表达式语句")
+    @DisplayName("Test基本ExpressionStatement")
     void testBasicExpressionStatement() {
         ExpressionStatement stmt = new ExpressionStatement("x + y");
 
@@ -21,7 +21,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试带分号的表达式语句")
+    @DisplayName("Test带分号 ofExpressionStatement")
     void testExpressionWithSemicolon() {
         ExpressionStatement stmt = new ExpressionStatement("console.log('test');");
 
@@ -29,7 +29,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试空表达式语句")
+    @DisplayName("TestEmptyExpressionStatement")
     void testEmptyExpressionStatement() {
         ExpressionStatement stmt = new ExpressionStatement("");
 
@@ -37,7 +37,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试 null 表达式语句")
+    @DisplayName("Test null ExpressionStatement")
     void testNullExpressionStatement() {
         ExpressionStatement stmt = new ExpressionStatement(null);
 
@@ -45,7 +45,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试方法调用表达式")
+    @DisplayName("TestMethodCallExpression")
     void testMethodCallExpression() {
         ExpressionStatement stmt = new ExpressionStatement("obj.method(param1, param2)");
 
@@ -57,7 +57,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试赋值表达式")
+    @DisplayName("Test赋值Expression")
     void testAssignmentExpression() {
         ExpressionStatement stmt = new ExpressionStatement("x = 42");
 
@@ -65,7 +65,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试复合赋值表达式")
+    @DisplayName("Test复合赋值Expression")
     void testCompoundAssignmentExpression() {
         ExpressionStatement stmt1 = new ExpressionStatement("x += 5");
         ExpressionStatement stmt2 = new ExpressionStatement("x -= 3");
@@ -77,7 +77,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试一元表达式")
+    @DisplayName("Test一元Expression")
     void testUnaryExpression() {
         ExpressionStatement stmt1 = new ExpressionStatement("++x");
         ExpressionStatement stmt2 = new ExpressionStatement("--y");
@@ -91,7 +91,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试二元表达式")
+    @DisplayName("Test二元Expression")
     void testBinaryExpression() {
         ExpressionStatement stmt1 = new ExpressionStatement("a + b");
         ExpressionStatement stmt2 = new ExpressionStatement("x > y");
@@ -105,7 +105,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试三元表达式")
+    @DisplayName("Test三元Expression")
     void testTernaryExpression() {
         ExpressionStatement stmt = new ExpressionStatement("condition ? value1 : value2");
 
@@ -113,7 +113,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试对象方法调用表达式")
+    @DisplayName("TestObjectMethodCallExpression")
     void testObjectMethodCallExpression() {
         ExpressionStatement stmt1 = new ExpressionStatement("this.myMethod()");
         ExpressionStatement stmt2 = new ExpressionStatement("obj.prop.method()");
@@ -123,7 +123,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试成员访问表达式")
+    @DisplayName("Test成员访问Expression")
     void testMemberAccessExpression() {
         ExpressionStatement stmt1 = new ExpressionStatement("obj.property");
         ExpressionStatement stmt2 = new ExpressionStatement("this.value");
@@ -135,7 +135,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试数组访问表达式")
+    @DisplayName("TestArray访问Expression")
     void testArrayAccessExpression() {
         ExpressionStatement stmt1 = new ExpressionStatement("arr[0]");
         ExpressionStatement stmt2 = new ExpressionStatement("items[index]");
@@ -147,7 +147,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试 new 表达式")
+    @DisplayName("Test new Expression")
     void testNewExpression() {
         ExpressionStatement stmt1 = new ExpressionStatement("new Object()");
         ExpressionStatement stmt2 = new ExpressionStatement("new Array(10)");
@@ -159,7 +159,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试模板字符串表达式")
+    @DisplayName("Test模板字符串Expression")
     void testTemplateStringExpression() {
         ExpressionStatement stmt = new ExpressionStatement("`Hello ${name}!`");
 
@@ -167,7 +167,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试数组字面量表达式")
+    @DisplayName("TestArray字面量Expression")
     void testArrayLiteralExpression() {
         ExpressionStatement stmt = new ExpressionStatement("[1, 2, 3]");
 
@@ -175,7 +175,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试对象字面量表达式")
+    @DisplayName("TestObject字面量Expression")
     void testObjectLiteralExpression() {
         ExpressionStatement stmt = new ExpressionStatement("{ key: 'value', num: 42 }");
 
@@ -183,7 +183,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试箭头函数表达式")
+    @DisplayName("Test箭头FunctionExpression")
     void testArrowFunctionExpression() {
         ExpressionStatement stmt1 = new ExpressionStatement("() => {}");
         ExpressionStatement stmt2 = new ExpressionStatement("(x) => x * 2");
@@ -195,7 +195,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试 async 函数调用表达式")
+    @DisplayName("Test async FunctionCallExpression")
     void testAsyncFunctionCallExpression() {
         ExpressionStatement stmt = new ExpressionStatement("await myAsyncFunction()");
 
@@ -203,7 +203,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试 return 语句")
+    @DisplayName("Test return Statement")
     void testReturnStatement() {
         ExpressionStatement stmt1 = new ExpressionStatement("return");
         ExpressionStatement stmt2 = new ExpressionStatement("return value");
@@ -215,7 +215,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试 break 和 continue 语句")
+    @DisplayName("Test break 和 continue Statement")
     void testBreakContinueStatements() {
         ExpressionStatement breakStmt = new ExpressionStatement("break");
         ExpressionStatement continueStmt = new ExpressionStatement("continue");
@@ -225,7 +225,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试变量声明表达式")
+    @DisplayName("Test变量DeclarationExpression")
     void testVariableDeclarationExpression() {
         ExpressionStatement stmt1 = new ExpressionStatement("const x = 1");
         ExpressionStatement stmt2 = new ExpressionStatement("let y = 2");
@@ -237,7 +237,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试复杂嵌套表达式")
+    @DisplayName("Test复杂NestedExpression")
     void testComplexNestedExpression() {
         ExpressionStatement stmt = new ExpressionStatement(
             "obj.items.find(item => item.id === target)?.name"
@@ -247,7 +247,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试可选链表达式")
+    @DisplayName("Test可选链Expression")
     void testOptionalChainingExpression() {
         ExpressionStatement stmt1 = new ExpressionStatement("obj?.prop");
         ExpressionStatement stmt2 = new ExpressionStatement("obj?.method?.()");
@@ -259,7 +259,7 @@ class ExpressionStatementTest {
     }
 
     @Test
-    @DisplayName("测试空值合并表达式")
+    @DisplayName("TestEmpty值合并Expression")
     void testNullishCoalescingExpression() {
         ExpressionStatement stmt = new ExpressionStatement("value ?? defaultValue");
 

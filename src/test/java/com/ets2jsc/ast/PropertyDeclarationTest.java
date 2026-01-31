@@ -3,16 +3,18 @@ package com.ets2jsc.ast;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 PropertyDeclaration 属性声明类
+ * Test class for PropertyDeclaration
  */
-@DisplayName("属性声明测试")
+@DisplayName("Property Declaration Tests")
 class PropertyDeclarationTest {
 
     @Test
-    @DisplayName("测试属性创建和基本属性")
+    @DisplayName("Test property creation and basic properties")
     void testPropertyCreation() {
         PropertyDeclaration prop = new PropertyDeclaration("myProperty");
 
@@ -23,7 +25,7 @@ class PropertyDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试类型注解")
+    @DisplayName("Test type annotation")
     void testTypeAnnotation() {
         PropertyDeclaration prop = new PropertyDeclaration("count");
 
@@ -38,7 +40,7 @@ class PropertyDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试初始化器")
+    @DisplayName("Test initializer")
     void testInitializer() {
         PropertyDeclaration prop = new PropertyDeclaration("message");
 
@@ -53,7 +55,7 @@ class PropertyDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试装饰器添加和检查")
+    @DisplayName("Test decorator addition and check")
     void testDecorators() {
         PropertyDeclaration prop = new PropertyDeclaration("count");
 
@@ -74,23 +76,23 @@ class PropertyDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取装饰器")
+    @DisplayName("Test get decorator")
     void testGetDecorator() {
         PropertyDeclaration prop = new PropertyDeclaration("data");
 
         Decorator stateDecorator = new Decorator("State");
         prop.addDecorator(stateDecorator);
 
-        Decorator retrieved = prop.getDecorator("State");
-        assertNotNull(retrieved);
-        assertEquals("State", retrieved.getName());
+        Optional<Decorator> retrieved = prop.getDecorator("State");
+        assertTrue(retrieved.isPresent());
+        assertEquals("State", retrieved.get().getName());
 
-        Decorator notFound = prop.getDecorator("Prop");
-        assertNull(notFound);
+        Optional<Decorator> notFound = prop.getDecorator("Prop");
+        assertFalse(notFound.isPresent());
     }
 
     @Test
-    @DisplayName("测试可见性设置")
+    @DisplayName("Test visibility setting")
     void testVisibility() {
         PropertyDeclaration prop = new PropertyDeclaration("secret");
 
@@ -105,7 +107,7 @@ class PropertyDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试只读属性")
+    @DisplayName("Test read-only property")
     void testReadOnly() {
         PropertyDeclaration prop = new PropertyDeclaration("constant");
 
@@ -119,7 +121,7 @@ class PropertyDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取私有变量名")
+    @DisplayName("Test get private variable name")
     void testGetPrivateVarName() {
         PropertyDeclaration prop = new PropertyDeclaration("count");
 
@@ -130,7 +132,7 @@ class PropertyDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取 ObservedProperty 类型")
+    @DisplayName("Test get ObservedProperty type")
     void testGetObservedPropertyType() {
         PropertyDeclaration stateProp = new PropertyDeclaration("count");
         stateProp.addDecorator(new Decorator("State"));
@@ -146,7 +148,7 @@ class PropertyDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试多个装饰器")
+    @DisplayName("Test multiple decorators")
     void testMultipleDecorators() {
         PropertyDeclaration prop = new PropertyDeclaration("value");
 
@@ -161,7 +163,7 @@ class PropertyDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试带有各种装饰器的 ObservedProperty 类型")
+    @DisplayName("Test ObservedProperty type with various decorators")
     void testObservedPropertyTypeWithVariousDecorators() {
         // Provide decorator should use ObservedPropertySimple
         PropertyDeclaration provideProp = new PropertyDeclaration("theme");

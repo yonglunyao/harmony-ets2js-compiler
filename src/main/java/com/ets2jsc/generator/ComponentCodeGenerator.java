@@ -118,7 +118,7 @@ public class ComponentCodeGenerator {
     }
 
     /**
-     * Generates if branch.
+     * Generates if branched.
      * CC: 1 (string building)
      */
     private String generateIfBranch(IfStatement node, int branchId) {
@@ -224,16 +224,12 @@ public class ComponentCodeGenerator {
         }
 
         String renderPart(String componentName, ComponentStatement node, ComponentStatement.ComponentPart part) {
-            switch (part.kind()) {
-                case CREATE:
-                    return renderCreatePart(componentName, part.code());
-                case METHOD:
-                    return renderMethodPart(componentName, part.code());
-                case POP:
-                    return renderPopPart(componentName, node);
-                default:
-                    return "";
-            }
+            return switch (part.kind()) {
+                case CREATE -> renderCreatePart(componentName, part.code());
+                case METHOD -> renderMethodPart(componentName, part.code());
+                case POP -> renderPopPart(componentName, node);
+                default -> "";
+            };
         }
 
         String renderCreatePart(String componentName, String code) {

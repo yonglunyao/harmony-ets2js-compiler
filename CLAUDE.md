@@ -71,6 +71,62 @@ src/main/java/com/ets2jsc/
 4. 转换器在 `transformer/` 包中
 5. 代码生成器在 `generator/` 包中
 
+## 编码规范要求
+
+### ⚠️ MANDATORY: 遵循编码规范
+
+**所有代码编写必须严格遵循 `docs/CODING_STANDARDS.md` 中定义的编码规范。**
+
+在提交任何代码之前，请确保：
+
+#### 强制要求 (Must Follow)
+
+1. **禁止使用魔鬼数字**
+   - 所有常量必须定义在专门的常量类中（如 `Symbols.java`、`RuntimeFunctions.java`）
+   - 不允许在代码中直接使用魔法数字或字符串
+
+2. **避免返回null**
+   - 优先使用异常机制处理错误情况
+   - 对于可能不存在返回值的方法，使用 `Optional<T>` 而非返回 `null`
+
+3. **使用自定义异常**
+   - 禁止直接使用 `RuntimeException`
+   - 使用 `exception` 包中的自定义异常类（`ParserException`、`ParserInitializationException` 等）
+
+4. **使用SLF4J日志框架**
+   - 禁止使用 `System.err` 或 `System.out` 输出日志
+   - 使用 `@Slf4j` 或创建 `Logger` 实例进行日志记录
+
+5. **控制圈复杂度**
+   - 单方法圈复杂度必须 ≤ 10
+   - 建议控制在 5 以内
+
+6. **英文注释和命名**
+   - 所有代码注释、文档、变量命名必须使用英文
+   - 禁止使用中文注释
+
+#### 代码审查清单
+
+在提交 Pull Request 前，请确认以下项目：
+
+- [ ] 无魔鬼数字（所有常量已提取）
+- [ ] 无不合理的 null 返回（优先使用异常或 Optional）
+- [ ] 使用了具体的异常类型（非 RuntimeException）
+- [ ] 使用 SLF4J 进行日志记录
+- [ ] 圈复杂度 ≤ 10
+- [ ] 所有注释和命名使用英文
+- [ ] 编写/更新了单元测试
+- [ ] 添加了必要的 JavaDoc 文档
+- [ ] 代码通过 `mvn test` 测试
+
+#### 查看完整规范
+
+详细的编码规范请参阅：**`docs/CODING_STANDARDS.md`**
+
+---
+
+## 常用命令
+
 ## 常用命令
 
 ### 添加依赖

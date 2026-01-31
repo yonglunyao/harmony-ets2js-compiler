@@ -14,7 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试并行编译功能
+ * Test Parallel Compilation Functionality
  * Test parallel compilation functionality
  */
 class ParallelCompilationTest {
@@ -23,17 +23,17 @@ class ParallelCompilationTest {
     Path tempDir;
 
     /**
-     * 测试并行编译多个简单文件
+     * Test parallel compile multiple simple files
      */
     @Test
     void testParallelCompilation() throws Exception {
-        // 创建测试文件
+        // create test files
         Path sourceDir = tempDir.resolve("sources");
         Path outputDir = tempDir.resolve("output");
         Files.createDirectories(sourceDir);
         Files.createDirectories(outputDir);
 
-        // 创建多个测试文件
+        // create multiple test files
         for (int i = 1; i <= 5; i++) {
             String content = ""
                 + "@Component\n"
@@ -49,7 +49,7 @@ class ParallelCompilationTest {
             Files.writeString(sourceFile, content);
         }
 
-        // 使用并行编译
+        // use parallel compilation
         CompilerConfig config = CompilerConfig.createDefault();
         EtsCompiler compiler = new EtsCompiler(config);
 
@@ -59,24 +59,24 @@ class ParallelCompilationTest {
 
         CompilationResult result = compiler.compileBatchParallel(sourceFiles, outputDir, 2);
 
-        // 验证结果
-        assertEquals(5, result.getTotalCount(), "应该编译 5 个文件");
-        assertTrue(result.isAllSuccess(), "所有文件应该编译成功");
-        assertTrue(result.getDurationMs() >= 0, "耗时应该非负");
+        // verify results
+        assertEquals(5, result.getTotalCount(), "should compile 5 files");
+        assertTrue(result.isAllSuccess(), "all files should compile successfully");
+        assertTrue(result.getDurationMs() >= 0, "duration should be non-negative");
 
-        // 验证输出文件存在
+        // verify output files exist
         for (int i = 1; i <= 5; i++) {
             Path outputFile = outputDir.resolve("Test" + i + ".js");
-            assertTrue(Files.exists(outputFile), "输出文件应该存在: " + outputFile);
+            assertTrue(Files.exists(outputFile), "output file should exist: " + outputFile);
         }
     }
 
     /**
-     * 测试并行编译的性能优势
+     * Test parallel compilation performance advantage
      */
     @Test
     void testParallelPerformance() throws Exception {
-        // 创建测试文件
+        // create test files
         Path sourceDir = tempDir.resolve("sources");
         Path outputDir1 = tempDir.resolve("output1");
         Path outputDir2 = tempDir.resolve("output2");
@@ -84,7 +84,7 @@ class ParallelCompilationTest {
         Files.createDirectories(outputDir1);
         Files.createDirectories(outputDir2);
 
-        // 创建多个测试文件
+        // create multiple test files
         int fileCount = 10;
         for (int i = 1; i <= fileCount; i++) {
             String content = ""
@@ -111,7 +111,7 @@ class ParallelCompilationTest {
             .filter(p -> p.toString().endsWith(".ets"))
             .toList();
 
-        // 顺序编译
+        // sequential compilation
         EtsCompiler compiler1 = new EtsCompiler(config);
         long sequentialStart = System.currentTimeMillis();
         for (Path sourceFile : sourceFiles) {
@@ -121,37 +121,37 @@ class ParallelCompilationTest {
         }
         long sequentialTime = System.currentTimeMillis() - sequentialStart;
 
-        // 并行编译
+        // parallel compilation
         EtsCompiler compiler2 = new EtsCompiler(config);
         long parallelStart = System.currentTimeMillis();
         CompilationResult result = compiler2.compileBatchParallel(sourceFiles, outputDir2, 4);
         long parallelTime = System.currentTimeMillis() - parallelStart;
 
-        // 验证结果
-        assertTrue(result.isAllSuccess(), "并行编译应该成功");
+        // verify results
+        assertTrue(result.isAllSuccess(), "parallel compilation should succeed");
 
-        // 输出性能对比
-        System.out.println("=== 性能对比 ===");
-        System.out.println("文件数: " + fileCount);
-        System.out.println("顺序编译耗时: " + sequentialTime + "ms");
-        System.out.println("并行编译耗时: " + parallelTime + "ms");
-        System.out.println("性能提升: " + ((sequentialTime - parallelTime) * 100.0 / sequentialTime) + "%");
-        System.out.println("吞吐量: " + (fileCount * 1000.0 / parallelTime) + " 文件/秒");
+        // output performance comparison
+        System.out.println("=== Performance Comparison ===");
+        System.out.println("Files: " + fileCount);
+        System.out.println("sequential compilationDuration: " + sequentialTime + "ms");
+        System.out.println("parallel compilationDuration: " + parallelTime + "ms");
+        System.out.println("Performance improvement: " + ((sequentialTime - parallelTime) * 100.0 / sequentialTime) + "%");
+        System.out.println("Throughput: " + (fileCount * 1000.0 / parallelTime) + " files/sec");
     }
 
     /**
-     * 测试并行编译的错误处理
-     * 使用不存在的文件来测试错误处理
+     * Test parallel compilation error handling
+     * use non-existent file to test error handling
      */
     @Test
     void testParallelErrorHandling() throws Exception {
-        // 创建测试文件
+        // create test files
         Path sourceDir = tempDir.resolve("sources");
         Path outputDir = tempDir.resolve("output");
         Files.createDirectories(sourceDir);
         Files.createDirectories(outputDir);
 
-        // 创建一个空文件（可能导致解析问题）
+        // create an empty file (may cause parsing issues)
         Files.writeString(sourceDir.resolve("Good.ets"),
             "@Component\nstruct Good { build() { Column() {} } }");
         Files.writeString(sourceDir.resolve("Bad.ets"), "");
@@ -167,21 +167,21 @@ class ParallelCompilationTest {
 
         CompilationResult result = compiler.compileBatchParallel(sourceFiles, outputDir, 2);
 
-        // 验证结果 - 至少应该处理了所有文件
-        assertTrue(result.getTotalCount() >= 0, "应该处理文件");
+        // verify results - should process all files
+        assertTrue(result.getTotalCount() >= 0, "should process files");
 
-        // 验证结果摘要可用
+        // verify results summary is available
         String summary = result.getSummary();
-        assertNotNull(summary, "摘要应该非空");
-        assertTrue(summary.contains("总计"), "摘要应包含总计信息");
+        assertNotNull(summary, "summary should not be empty");
+        assertTrue(summary.contains("Total"), "summary should contain total information");
     }
 
     /**
-     * 测试不同线程数的性能
+     * Test performance with different thread counts
      */
     @Test
     void testDifferentThreadCounts() throws Exception {
-        // 创建测试文件
+        // create test files
         Path sourceDir = tempDir.resolve("sources");
         Files.createDirectories(sourceDir);
 
@@ -206,8 +206,8 @@ class ParallelCompilationTest {
             .filter(p -> p.toString().endsWith(".ets"))
             .toList();
 
-        System.out.println("=== 不同线程数性能测试 ===");
-        System.out.println("文件数: " + fileCount);
+        System.out.println("=== Different Thread Count Performance Test ===");
+        System.out.println("Files: " + fileCount);
         System.out.println();
 
         int[] threadCounts = {1, 2, 4, 8};
@@ -220,13 +220,13 @@ class ParallelCompilationTest {
             CompilationResult result = compiler.compileBatchParallel(sourceFiles, outputDir, threads);
             long duration = System.currentTimeMillis() - startTime;
 
-            System.out.println("线程数: " + threads);
-            System.out.println("  耗时: " + duration + "ms");
-            System.out.println("  吞吐量: " + (fileCount * 1000.0 / duration) + " 文件/秒");
-            System.out.println("  结果: " + result.getSummary());
+            System.out.println("Threads: " + threads);
+            System.out.println("  Duration: " + duration + "ms");
+            System.out.println("  Throughput: " + (fileCount * 1000.0 / duration) + " files/sec");
+            System.out.println("  Result: " + result.getSummary());
             System.out.println();
 
-            assertTrue(result.isAllSuccess(), "编译应该成功");
+            assertTrue(result.isAllSuccess(), "compilation should succeed");
         }
     }
 }

@@ -11,6 +11,10 @@ import com.ets2jsc.transformer.decorators.PropertyTransformer;
  * State properties are the core reactive state in ArkUI components.
  * They use ObservedPropertySimple and are initialized in the constructor
  * using createState().
+ * <p>
+ * Note: getInitializer() returns null to indicate no declaration-time initialization.
+ * The createPrivateProperty() method handles this by not setting an initializer
+ * on the private property, which is the correct behavior for @State properties.
  */
 public class StatePropertyTransformer extends PropertyTransformer {
 
@@ -21,7 +25,8 @@ public class StatePropertyTransformer extends PropertyTransformer {
 
     @Override
     protected String getInitializer(PropertyDeclaration prop) {
-        // State properties are initialized in constructor, not at declaration
+        // State properties are initialized in constructor, not at declaration.
+        // Returning null signals createPrivateProperty() to skip initializer setting.
         return null;
     }
 

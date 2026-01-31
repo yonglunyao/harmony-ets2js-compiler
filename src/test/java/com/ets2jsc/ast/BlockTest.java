@@ -6,13 +6,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 Block 代码块
+ * Test class for Block code block
  */
-@DisplayName("Block 测试")
+@DisplayName("Block Tests")
 class BlockTest {
 
     @Test
-    @DisplayName("测试 Block 创建")
+    @DisplayName("Test block creation")
     void testBlockCreation() {
         Block block = new Block();
 
@@ -22,7 +22,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试添加语句")
+    @DisplayName("TestAddStatement")
     void testAddStatement() {
         Block block = new Block();
         ExpressionStatement stmt = new ExpressionStatement("const x = 1;");
@@ -34,7 +34,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试获取语句列表")
+    @DisplayName("TestGetStatementList")
     void testGetStatements() {
         Block block = new Block();
         ExpressionStatement stmt1 = new ExpressionStatement("const x = 1;");
@@ -47,7 +47,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试空块")
+    @DisplayName("TestEmptyBlock")
     void testEmptyBlock() {
         Block block = new Block();
 
@@ -56,7 +56,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试多个语句")
+    @DisplayName("TestMultipleStatement")
     void testMultipleStatements() {
         Block block = new Block();
 
@@ -68,7 +68,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试嵌套块")
+    @DisplayName("TestNestedBlock")
     void testNestedBlocks() {
         Block outer = new Block();
         Block inner = new Block();
@@ -84,7 +84,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试包含 if 语句的块")
+    @DisplayName("Test block containing if statement")
     void testBlockWithIfStatement() {
         Block block = new Block();
         Block thenBlock = new Block();
@@ -99,7 +99,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试 accept 方法")
+    @DisplayName("Test accept Method")
     void testAcceptMethod() {
         Block block = new Block();
 
@@ -108,7 +108,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试语句顺序保持")
+    @DisplayName("Test statement order preservation")
     void testStatementOrder() {
         Block block = new Block();
 
@@ -126,7 +126,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试添加 null 语句")
+    @DisplayName("TestAdd null Statement")
     void testAddNullStatement() {
         Block block = new Block();
 
@@ -138,7 +138,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试修改语句列表")
+    @DisplayName("TestModifyStatementList")
     void testModifyStatementsList() {
         Block block = new Block();
         ExpressionStatement stmt1 = new ExpressionStatement("const x = 1;");
@@ -153,7 +153,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试包含表达式的块")
+    @DisplayName("Test block containing expressions")
     void testBlockWithExpressions() {
         Block block = new Block();
 
@@ -166,7 +166,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试深层嵌套块")
+    @DisplayName("Test deeply nested blocks")
     void testDeeplyNestedBlocks() {
         Block level1 = new Block();
         Block level2 = new Block();
@@ -185,7 +185,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试块中的不同语句类型")
+    @DisplayName("Test block with different statement types")
     void testMixedStatementTypes() {
         Block block = new Block();
 
@@ -197,7 +197,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试重复添加相同语句")
+    @DisplayName("Test adding same statement multiple times")
     void testAddSameStatementMultipleTimes() {
         Block block = new Block();
         ExpressionStatement stmt = new ExpressionStatement("const x = 1;");
@@ -213,7 +213,7 @@ class BlockTest {
     }
 
     @Test
-    @DisplayName("测试添加后修改语句对象")
+    @DisplayName("Test modify statement after adding")
     void testModifyStatementAfterAdding() {
         Block block = new Block();
         ExpressionStatement stmt = new ExpressionStatement("const x = 1;");

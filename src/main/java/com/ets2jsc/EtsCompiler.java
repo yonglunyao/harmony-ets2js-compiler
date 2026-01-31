@@ -111,7 +111,7 @@ public class EtsCompiler {
 
     /**
      * Compiles multiple ETS source files in parallel.
-     * 使用多线程并行编译多个 ETS 文件
+     * Uses multithreading to compile multiple ETS files concurrently.
      *
      * @param sourceFiles list of source file paths
      * @param outputDir output directory
@@ -129,7 +129,7 @@ public class EtsCompiler {
 
     /**
      * Compiles multiple ETS source files in parallel with custom thread pool size.
-     * 使用指定线程池大小并行编译多个 ETS 文件
+     * Uses specified thread pool size to compile multiple ETS files concurrently.
      *
      * @param sourceFiles list of source file paths
      * @param outputDir output directory

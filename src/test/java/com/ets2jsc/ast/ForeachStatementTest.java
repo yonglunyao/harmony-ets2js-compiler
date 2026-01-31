@@ -6,13 +6,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 ForeachStatement 循环语句
+ * Test ForeachStatement LoopStatement
  */
-@DisplayName("ForEach 语句测试")
+@DisplayName("ForEach StatementTest")
 class ForeachStatementTest {
 
     @Test
-    @DisplayName("测试 ForEach 语句创建")
+    @DisplayName("Test ForEach StatementCreation")
     void testForeachStatementCreation() {
         ForeachStatement forEach = new ForeachStatement("this.items", "(item) => {}", null);
 
@@ -22,7 +22,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试获取数组表达式")
+    @DisplayName("TestGetArrayExpression")
     void testGetArrayExpression() {
         ForeachStatement forEach = new ForeachStatement("arr", "(item) => {}", null);
 
@@ -30,7 +30,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试获取项生成器")
+    @DisplayName("TestGet项Generate器")
     void testGetItemGenerator() {
         String itemGen = "(item, index) => { Text.create(item.name); }";
         ForeachStatement forEach = new ForeachStatement("items", itemGen, null);
@@ -39,7 +39,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试获取键生成器")
+    @DisplayName("TestGet键Generate器")
     void testGetKeyGenerator() {
         String keyGen = "(item) => item.id";
         ForeachStatement forEach = new ForeachStatement("items", "(item) => {}", keyGen);
@@ -48,7 +48,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试没有键生成器")
+    @DisplayName("Test没有键Generate器")
     void testNoKeyGenerator() {
         ForeachStatement forEach = new ForeachStatement("items", "(item) => {}", null);
 
@@ -56,7 +56,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试简单数组表达式")
+    @DisplayName("TestsimpleArrayExpression")
     void testSimpleArrayExpression() {
         ForeachStatement forEach1 = new ForeachStatement("arr", "(item) => {}", null);
         ForeachStatement forEach2 = new ForeachStatement("list", "(item) => {}", null);
@@ -68,7 +68,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试成员访问数组表达式")
+    @DisplayName("Test成员访问ArrayExpression")
     void testMemberAccessArrayExpression() {
         ForeachStatement forEach1 = new ForeachStatement("this.items", "(item) => {}", null);
         ForeachStatement forEach2 = new ForeachStatement("this.data.list", "(item) => {}", null);
@@ -80,7 +80,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试箭头函数项生成器")
+    @DisplayName("Test箭头Function项Generate器")
     void testArrowFunctionItemGenerator() {
         ForeachStatement forEach1 = new ForeachStatement("items", "(item) => {}", null);
         ForeachStatement forEach2 = new ForeachStatement("items", "(item, index) => {}", null);
@@ -92,7 +92,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试复杂项生成器")
+    @DisplayName("Test复杂项Generate器")
     void testComplexItemGenerator() {
         String complexGen = "(item, index) => { Text.create(item.name); Text.fontSize(16); Text.pop(); }";
         ForeachStatement forEach = new ForeachStatement("items", complexGen, null);
@@ -101,7 +101,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试各种键生成器")
+    @DisplayName("TestVarious键Generate器")
     void testVariousKeyGenerators() {
         ForeachStatement forEach1 = new ForeachStatement("items", "(item) => {}", "(item) => item.id");
         ForeachStatement forEach2 = new ForeachStatement("items", "(item) => {}", "(item) => item.key");
@@ -115,7 +115,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试空项生成器")
+    @DisplayName("TestEmpty项Generate器")
     void testEmptyItemGenerator() {
         ForeachStatement forEach = new ForeachStatement("items", "", null);
 
@@ -123,7 +123,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试空键生成器")
+    @DisplayName("TestEmpty键Generate器")
     void testEmptyKeyGenerator() {
         ForeachStatement forEach = new ForeachStatement("items", "(item) => {}", "");
 
@@ -131,7 +131,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试包含 this 的数组表达式")
+    @DisplayName("TestContains this  ofArrayExpression")
     void testThisArrayExpression() {
         ForeachStatement forEach1 = new ForeachStatement("this.list", "(item) => {}", null);
         ForeachStatement forEach2 = new ForeachStatement("this.state.items", "(item) => {}", null);
@@ -141,7 +141,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试方法调用数组表达式")
+    @DisplayName("TestMethodCallArrayExpression")
     void testMethodCallArrayExpression() {
         ForeachStatement forEach1 = new ForeachStatement("this.getItems()", "(item) => {}", null);
         ForeachStatement forEach2 = new ForeachStatement("data.filter(x => x.active)", "(item) => {}", null);
@@ -151,7 +151,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试 accept 方法")
+    @DisplayName("Test accept Method")
     void testAcceptMethod() {
         ForeachStatement forEach = new ForeachStatement("items", "(item) => {}", null);
 
@@ -160,7 +160,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试多参数箭头函数")
+    @DisplayName("Test多Parameter箭头Function")
     void testMultiParameterArrowFunction() {
         ForeachStatement forEach = new ForeachStatement("items",
             "(item, index, array) => { console.log(index, item); }", null);
@@ -171,7 +171,7 @@ class ForeachStatementTest {
     }
 
     @Test
-    @DisplayName("测试包含异步函数的项生成器")
+    @DisplayName("TestContains异步Function of项Generate器")
     void testAsyncItemGenerator() {
         String asyncGen = "async (item) => { await processItem(item); }";
         ForeachStatement forEach = new ForeachStatement("items", asyncGen, null);

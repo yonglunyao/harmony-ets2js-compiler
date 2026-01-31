@@ -1,5 +1,8 @@
 package com.ets2jsc.generator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.MalformedInputException;
@@ -11,6 +14,13 @@ import java.nio.file.Path;
  * Handles formatting and file output.
  */
 public class JsWriter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsWriter.class);
+
+    // Constants for character validation
+    private static final char UNICODE_REPLACEMENT_CHARACTER = '\uFFFD';
+    private static final int BMP_MAX_VALUE = 0xFFFF;
+    private static final int PAIR_SKIP_INCREMENT = 1;
 
     /**
      * Writes JavaScript code to a file.
@@ -35,14 +45,14 @@ public class JsWriter {
                     // Valid surrogate pair
                     sanitized.append(c);
                     sanitized.append(code.charAt(i + 1));
-                    i++; // Skip the low surrogate
-                } else if (!Character.isHighSurrogate(c) && !Character.isLowSurrogate(c) && c <= 0xFFFF) {
+                    i += PAIR_SKIP_INCREMENT;
+                } else if (!Character.isHighSurrogate(c) && !Character.isLowSurrogate(c) && c <= BMP_MAX_VALUE) {
                     // Valid BMP character
                     sanitized.append(c);
                 } else {
                     // Invalid character, replace with placeholder
-                    System.err.println("Warning: Replacing invalid character at index " + i + ": U+" + Integer.toHexString(c));
-                    sanitized.append('\uFFFD'); // Replacement character
+                    LOGGER.warn("Replacing invalid character at index {}: U+{}", i, Integer.toHexString(c));
+                    sanitized.append(UNICODE_REPLACEMENT_CHARACTER);
                 }
             }
             utf8Bytes = sanitized.toString().getBytes(StandardCharsets.UTF_8);

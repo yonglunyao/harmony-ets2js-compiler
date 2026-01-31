@@ -8,13 +8,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 ComponentStatement 组件语句
+ * Test ComponentStatement ComponentStatement
  */
-@DisplayName("Component 语句测试")
+@DisplayName("Component StatementTest")
 class ComponentStatementTest {
 
     @Test
-    @DisplayName("测试 Component 语句创建")
+    @DisplayName("Test Component StatementCreation")
     void testComponentStatementCreation() {
         ComponentStatement stmt = new ComponentStatement("Text");
 
@@ -25,7 +25,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试获取组件名称")
+    @DisplayName("TestGetComponentName")
     void testGetComponentName() {
         ComponentStatement stmt1 = new ComponentStatement("Text");
         ComponentStatement stmt2 = new ComponentStatement("Column");
@@ -37,7 +37,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试添加组件部分")
+    @DisplayName("TestAddComponent部分")
     void testAddPart() {
         ComponentStatement stmt = new ComponentStatement("Text");
 
@@ -49,7 +49,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试获取组件部分")
+    @DisplayName("TestGetComponent部分")
     void testGetParts() {
         ComponentStatement stmt = new ComponentStatement("Text");
 
@@ -64,7 +64,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试子节点初始为 null")
+    @DisplayName("Test子节点初始is null")
     void testChildrenInitiallyNull() {
         ComponentStatement stmt = new ComponentStatement("Column");
 
@@ -73,7 +73,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试设置子节点")
+    @DisplayName("TestSet子节点")
     void testSetChildren() {
         ComponentStatement stmt = new ComponentStatement("Column");
         Block children = new Block();
@@ -87,7 +87,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试有子节点")
+    @DisplayName("Test有子节点")
     void testHasChildren() {
         ComponentStatement stmt = new ComponentStatement("Column");
         Block children = new Block();
@@ -99,7 +99,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试没有子节点")
+    @DisplayName("Test没有子节点")
     void testNoChildren() {
         ComponentStatement stmt = new ComponentStatement("Text");
 
@@ -107,7 +107,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试 ComponentPart - CREATE 类型")
+    @DisplayName("Test ComponentPart - CREATE Class型")
     void testComponentPartCreate() {
         ComponentPart part = new ComponentPart(PartKind.CREATE, "'Hello'");
 
@@ -116,7 +116,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试 ComponentPart - METHOD 类型")
+    @DisplayName("Test ComponentPart - METHOD Class型")
     void testComponentPartMethod() {
         ComponentPart part = new ComponentPart(PartKind.METHOD, "fontSize(16)");
 
@@ -125,7 +125,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试 ComponentPart - POP 类型")
+    @DisplayName("Test ComponentPart - POP Class型")
     void testComponentPartPop() {
         ComponentPart part = new ComponentPart(PartKind.POP, "");
 
@@ -134,7 +134,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试多个 METHOD 部分")
+    @DisplayName("TestMultiple METHOD 部分")
     void testMultipleMethodParts() {
         ComponentStatement stmt = new ComponentStatement("Text");
 
@@ -151,7 +151,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试嵌套组件（子节点是 Block）")
+    @DisplayName("TestNestedComponent（子节点是 Block）")
     void testNestedComponents() {
         ComponentStatement parent = new ComponentStatement("Column");
 
@@ -174,7 +174,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试 accept 方法")
+    @DisplayName("Test accept Method")
     void testAcceptMethod() {
         ComponentStatement stmt = new ComponentStatement("Text");
 
@@ -183,7 +183,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试不同组件名称")
+    @DisplayName("TestdifferentComponentName")
     void testDifferentComponentNames() {
         ComponentStatement text = new ComponentStatement("Text");
         ComponentStatement button = new ComponentStatement("Button");
@@ -205,7 +205,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试组件部分代码内容")
+    @DisplayName("TestComponent部分代码内容")
     void testComponentPartCode() {
         ComponentStatement stmt = new ComponentStatement("Text");
 
@@ -223,7 +223,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试空子块")
+    @DisplayName("TestEmpty子Block")
     void testEmptyChildrenBlock() {
         ComponentStatement stmt = new ComponentStatement("Column");
         Block emptyChildren = new Block();
@@ -235,7 +235,7 @@ class ComponentStatementTest {
     }
 
     @Test
-    @DisplayName("测试 PartKind 枚举值")
+    @DisplayName("Test PartKind 枚举值")
     void testPartKindEnum() {
         assertEquals(PartKind.CREATE, PartKind.valueOf("CREATE"));
         assertEquals(PartKind.METHOD, PartKind.valueOf("METHOD"));

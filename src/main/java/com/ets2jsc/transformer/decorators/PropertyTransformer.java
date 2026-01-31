@@ -110,7 +110,13 @@ public abstract class PropertyTransformer {
                                                         PropertyDeclaration originalProp) {
         PropertyDeclaration privateProp = new PropertyDeclaration(privateName);
         privateProp.setTypeAnnotation(getObservedPropertyType() + "<" + propType + ">");
-        privateProp.setInitializer(getInitializer(originalProp));
+
+        // Only set initializer if getInitializer returns a non-null value
+        String initializer = getInitializer(originalProp);
+        if (initializer != null) {
+            privateProp.setInitializer(initializer);
+        }
+
         return privateProp;
     }
 

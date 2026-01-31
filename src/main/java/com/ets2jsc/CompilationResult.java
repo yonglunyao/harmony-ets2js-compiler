@@ -10,8 +10,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 结果类，用于记录多线程编译的结果。
- * Compilation result class for recording multi-threaded compilation results.
+ * Result class for recording multi-threaded compilation results.
  */
 public class CompilationResult {
 
@@ -52,7 +51,6 @@ public class CompilationResult {
     }
 
     /**
-     * 获取总耗时（毫秒）
      * Get total duration in milliseconds
      */
     public long getDurationMs() {
@@ -61,35 +59,35 @@ public class CompilationResult {
     }
 
     /**
-     * 获取成功数量
+     * Get success count
      */
     public int getSuccessCount() {
         return successCount.get();
     }
 
     /**
-     * 获取失败数量
+     * Get failure count
      */
     public int getFailureCount() {
         return failureCount.get();
     }
 
     /**
-     * 获取跳过数量
+     * Get skipped count
      */
     public int getSkippedCount() {
         return skippedCount.get();
     }
 
     /**
-     * 获取总文件数
+     * Get total file count
      */
     public int getTotalCount() {
         return fileResults.size();
     }
 
     /**
-     * 获取所有失败的文件
+     * Get all failed files
      */
     public List<FileResult> getFailures() {
         List<FileResult> failures = new ArrayList<>();
@@ -102,22 +100,22 @@ public class CompilationResult {
     }
 
     /**
-     * 是否全部成功
+     * Check if all compilations succeeded
      */
     public boolean isAllSuccess() {
         return failureCount.get() == 0 && getTotalCount() > 0;
     }
 
     /**
-     * 获取摘要信息
+     * Get summary information
      */
     public String getSummary() {
-        return String.format("编译完成 | 总计: %d | 成功: %d | 失败: %d | 跳过: %d | 耗时: %dms",
+        return String.format("Compilation completed | Total: %d | Success: %d | Failure: %d | Skipped: %d | Duration: %dms",
             getTotalCount(), getSuccessCount(), getFailureCount(), getSkippedCount(), getDurationMs());
     }
 
     /**
-     * 文件编译结果
+     * File compilation result
      */
     public static class FileResult {
         private final Path sourcePath;
@@ -137,7 +135,7 @@ public class CompilationResult {
         }
 
         public static FileResult success(Path sourcePath, Path outputPath, long durationMs) {
-            return new FileResult(sourcePath, outputPath, Status.SUCCESS, "编译成功", null, durationMs);
+            return new FileResult(sourcePath, outputPath, Status.SUCCESS, "Compilation succeeded", null, durationMs);
         }
 
         public static FileResult failure(Path sourcePath, Path outputPath, String message, Throwable error, long durationMs) {
@@ -174,11 +172,11 @@ public class CompilationResult {
     }
 
     /**
-     * 编译状态
+     * Compilation status
      */
     public enum Status {
-        SUCCESS,   // 成功
-        FAILURE,   // 失败
-        SKIPPED    // 跳过
+        SUCCESS,
+        FAILURE,
+        SKIPPED
     }
 }

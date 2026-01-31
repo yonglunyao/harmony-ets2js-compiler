@@ -7,13 +7,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 CompilerConfig 配置类
+ * Test class for CompilerConfig
  */
-@DisplayName("编译器配置测试")
+@DisplayName("Compiler Configuration Tests")
 class CompilerConfigTest {
 
     @Test
-    @DisplayName("测试默认配置")
+    @DisplayName("Test default configuration")
     void testDefaultConfig() {
         CompilerConfig config = CompilerConfig.createDefault();
 
@@ -30,7 +30,7 @@ class CompilerConfigTest {
     }
 
     @Test
-    @DisplayName("测试编译模式设置")
+    @DisplayName("Test compile mode setting")
     void testCompileMode() {
         CompilerConfig config = new CompilerConfig();
 
@@ -45,7 +45,7 @@ class CompilerConfigTest {
     }
 
     @Test
-    @DisplayName("测试部分更新模式")
+    @DisplayName("Test partial update mode")
     void testPartialUpdateMode() {
         CompilerConfig config = new CompilerConfig();
 
@@ -59,7 +59,7 @@ class CompilerConfigTest {
     }
 
     @Test
-    @DisplayName("测试纯 JavaScript 模式")
+    @DisplayName("Test pure JavaScript mode")
     void testPureJavaScriptMode() {
         CompilerConfig config = new CompilerConfig();
 
@@ -71,7 +71,7 @@ class CompilerConfigTest {
     }
 
     @Test
-    @DisplayName("测试 SourceMap 生成选项")
+    @DisplayName("Test source map generation option")
     void testGenerateSourceMap() {
         CompilerConfig config = new CompilerConfig();
 
@@ -83,7 +83,7 @@ class CompilerConfigTest {
     }
 
     @Test
-    @DisplayName("测试路径配置")
+    @DisplayName("Test path configuration")
     void testPathConfiguration() {
         CompilerConfig config = new CompilerConfig();
 
@@ -98,7 +98,7 @@ class CompilerConfigTest {
     }
 
     @Test
-    @DisplayName("测试入口点配置")
+    @DisplayName("Test entry point configuration")
     void testEntryConfiguration() {
         CompilerConfig config = new CompilerConfig();
 
@@ -111,7 +111,7 @@ class CompilerConfigTest {
     }
 
     @Test
-    @DisplayName("测试输出选项")
+    @DisplayName("Test output options")
     void testOutputOptions() {
         CompilerConfig config = new CompilerConfig();
 
@@ -126,7 +126,7 @@ class CompilerConfigTest {
     }
 
     @Test
-    @DisplayName("测试处理选项")
+    @DisplayName("Test process options")
     void testProcessOptions() {
         CompilerConfig config = new CompilerConfig();
 
@@ -141,7 +141,7 @@ class CompilerConfigTest {
     }
 
     @Test
-    @DisplayName("测试 render 方法名称")
+    @DisplayName("Test render method name")
     void testRenderMethodName() {
         CompilerConfig config = new CompilerConfig();
 
@@ -155,7 +155,7 @@ class CompilerConfigTest {
     }
 
     @Test
-    @DisplayName("测试多种配置组合")
+    @DisplayName("Test multiple configuration combinations")
     void testMultipleConfigurationCombinations() {
         CompilerConfig config = new CompilerConfig();
 

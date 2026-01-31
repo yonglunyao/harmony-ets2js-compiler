@@ -74,4 +74,9 @@ public interface AstVisitor<T> {
      * Visit an if statement node.
      */
     T visit(IfStatement node);
+
+    /**
+     * Visit an empty statement node.
+     */
+    T visit(EmptyStatement node);
 }

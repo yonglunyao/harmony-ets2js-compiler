@@ -4,6 +4,8 @@ import com.ets2jsc.CompilationResult;
 import com.ets2jsc.EtsCompiler;
 import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.util.SourceFileFinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,6 +17,8 @@ import java.util.List;
  * Handles argument parsing, validation, and execution orchestration.
  */
 public class EtsCompilerLauncher {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EtsCompilerLauncher.class);
 
     // Command line constants
     private static final String MODE_BATCH = "--batch";
@@ -63,14 +67,13 @@ public class EtsCompilerLauncher {
                 return executeSingleFileCompilation(compiler, inputPath, outputPath);
             }
         } catch (EtsCompiler.CompilationException e) {
-            System.err.println("编译失败: " + e.getMessage());
+            LOGGER.error("Compilation failed: {}", e.getMessage());
             if (e.getCause() != null) {
-                System.err.println("原因: " + e.getCause().getMessage());
+                LOGGER.error("Cause: {}", e.getCause().getMessage());
             }
             return EXIT_ERROR;
         } catch (Exception e) {
-            System.err.println("编译失败: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.error("Compilation failed: {}", e.getMessage(), e);
             return EXIT_ERROR;
         }
     }
@@ -89,24 +92,24 @@ public class EtsCompilerLauncher {
         String mode = args[ARG_INDEX_MODE];
 
         if (!MODE_BATCH.equals(mode) && !MODE_PARALLEL.equals(mode)) {
-            System.err.println("未知选项: " + mode);
+            LOGGER.error("Unknown option: {}", mode);
             printUsage();
             return EXIT_ERROR;
         }
 
         // Validate input is a directory
         if (!Files.isDirectory(inputPath)) {
-            System.err.println("错误: " + inputPath + " 不是目录");
+            LOGGER.error("Input path is not a directory: {}", inputPath);
             return EXIT_ERROR;
         }
 
         List<Path> sourceFiles = SourceFileFinder.findSourceFiles(inputPath);
         if (sourceFiles.isEmpty()) {
-            System.out.println("未找到 ETS/TS 文件");
+            System.out.println("No ETS/TS files found");
             return EXIT_SUCCESS;
         }
 
-        System.out.println("找到 " + sourceFiles.size() + " 个文件");
+        System.out.println("Found " + sourceFiles.size() + " files");
 
         if (MODE_PARALLEL.equals(mode)) {
             return executeParallelCompilation(compiler, sourceFiles, outputPath, args);
@@ -127,7 +130,7 @@ public class EtsCompilerLauncher {
     private static int executeParallelCompilation(EtsCompiler compiler, List<Path> sourceFiles,
             Path outputPath, String[] args) {
         int threads = parseThreadCount(args);
-        System.out.println("使用并行编译模式，线程数: " + threads);
+        System.out.println("Using parallel compilation mode, threads: " + threads);
 
         long startTime = System.currentTimeMillis();
         CompilationResult result = compiler.compileBatchParallel(sourceFiles, outputPath, threads);
@@ -152,7 +155,7 @@ public class EtsCompilerLauncher {
         long duration = System.currentTimeMillis() - startTime;
 
         System.out.println("Compiled " + sourceFiles.size() + " files to " + outputPath);
-        System.out.println("耗时: " + duration + "ms");
+        System.out.println("Duration: " + duration + "ms");
         return EXIT_SUCCESS;
     }
 
@@ -167,7 +170,7 @@ public class EtsCompilerLauncher {
     private static int executeSingleFileCompilation(EtsCompiler compiler,
             Path inputPath, Path outputPath) throws EtsCompiler.CompilationException {
         compiler.compile(inputPath, outputPath);
-        System.out.println("编译完成: " + inputPath + " -> " + outputPath);
+        System.out.println("Compilation completed: " + inputPath + " -> " + outputPath);
         return EXIT_SUCCESS;
     }
 
@@ -186,7 +189,7 @@ public class EtsCompilerLauncher {
                     return parsed;
                 }
             } catch (NumberFormatException e) {
-                System.err.println("无效的线程数: " + args[ARG_INDEX_THREADS] + "，使用默认值: " + defaultThreads);
+                LOGGER.warn("Invalid thread count: {}, using default: {}", args[ARG_INDEX_THREADS], defaultThreads);
             }
         }
         return defaultThreads;
@@ -200,16 +203,16 @@ public class EtsCompilerLauncher {
      */
     private static void printCompilationResults(CompilationResult result, long duration) {
         System.out.println();
-        System.out.println("=== 编译结果 ===");
+        System.out.println("=== Compilation Results ===");
         System.out.println(result.getSummary());
-        System.out.println("吞吐量: " + (result.getTotalCount() * 1000.0 / duration) + " 文件/秒");
+        System.out.println("Throughput: " + (result.getTotalCount() * 1000.0 / duration) + " files/sec");
 
         if (!result.isAllSuccess()) {
             System.out.println();
-            System.out.println("失败的文件:");
+            System.out.println("Failed files:");
             for (CompilationResult.FileResult failure : result.getFailures()) {
                 System.out.println("  - " + failure.getSourcePath());
-                System.out.println("    错误: " + failure.getMessage());
+                System.out.println("    Error: " + failure.getMessage());
             }
         }
     }
@@ -218,14 +221,14 @@ public class EtsCompilerLauncher {
      * Prints usage information.
      */
     private static void printUsage() {
-        System.err.println("用法: EtsCompiler <input> <output> [mode] [threads]");
+        System.err.println("Usage: EtsCompiler <input> <output> [mode] [threads]");
         System.err.println();
-        System.err.println("模式:");
-        System.err.println("  (无)        - 编译单个文件");
-        System.err.println("  " + MODE_BATCH + "   - 批量编译目录（顺序）");
-        System.err.println("  " + MODE_PARALLEL + " - 批量编译目录（并行）");
+        System.err.println("Modes:");
+        System.err.println("  (none)      - Compile single file");
+        System.err.println("  " + MODE_BATCH + "   - Batch compile directory (sequential)");
+        System.err.println("  " + MODE_PARALLEL + " - Batch compile directory (parallel)");
         System.err.println();
-        System.err.println("示例:");
+        System.err.println("Examples:");
         System.err.println("  EtsCompiler src/App.ets build/App.js");
         System.err.println("  EtsCompiler src/main/ets build/dist " + MODE_BATCH);
         System.err.println("  EtsCompiler src/main/ets build/dist " + MODE_PARALLEL);

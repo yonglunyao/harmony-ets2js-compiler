@@ -6,13 +6,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 MethodDeclaration 方法声明
+ * Test MethodDeclaration MethodDeclaration
  */
-@DisplayName("MethodDeclaration 测试")
+@DisplayName("Method Declaration Tests")
 class MethodDeclarationTest {
 
     @Test
-    @DisplayName("测试方法声明创建")
+    @DisplayName("TestMethodDeclarationCreation")
     void testMethodDeclarationCreation() {
         MethodDeclaration method = new MethodDeclaration("myMethod");
 
@@ -25,7 +25,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取方法名")
+    @DisplayName("TestGetMethodName")
     void testGetName() {
         MethodDeclaration method = new MethodDeclaration("testMethod");
 
@@ -33,7 +33,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试设置方法名")
+    @DisplayName("TestSetMethodName")
     void testSetName() {
         MethodDeclaration method = new MethodDeclaration("oldName");
         method.setName("newName");
@@ -42,7 +42,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取返回类型")
+    @DisplayName("TestGetReturnType")
     void testGetReturnType() {
         MethodDeclaration method = new MethodDeclaration("test");
         method.setReturnType("void");
@@ -51,7 +51,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试设置返回类型")
+    @DisplayName("TestSetReturnType")
     void testSetReturnType() {
         MethodDeclaration method = new MethodDeclaration("getValue");
         method.setReturnType("number");
@@ -60,7 +60,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试添加参数")
+    @DisplayName("TestAddParameter")
     void testAddParameter() {
         MethodDeclaration method = new MethodDeclaration("test");
         MethodDeclaration.Parameter param1 = new MethodDeclaration.Parameter("x");
@@ -73,7 +73,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取参数列表")
+    @DisplayName("TestGetParameterList")
     void testGetParameters() {
         MethodDeclaration method = new MethodDeclaration("test");
         MethodDeclaration.Parameter param = new MethodDeclaration.Parameter("value");
@@ -85,7 +85,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试添加装饰器")
+    @DisplayName("TestAddDecorator")
     void testAddDecorator() {
         MethodDeclaration method = new MethodDeclaration("build");
         Decorator decorator = new Decorator("Builder");
@@ -96,7 +96,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取装饰器列表")
+    @DisplayName("TestGetDecoratorList")
     void testGetDecorators() {
         MethodDeclaration method = new MethodDeclaration("test");
         Decorator decorator = new Decorator("Watch");
@@ -108,7 +108,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试获取和设置方法体")
+    @DisplayName("TestGetAndSetMethodBody")
     void testGetSetBody() {
         MethodDeclaration method = new MethodDeclaration("test");
         Block body = new Block();
@@ -120,7 +120,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 async 标记")
+    @DisplayName("TestAsyncMark")
     void testAsyncFlag() {
         MethodDeclaration method = new MethodDeclaration("test");
 
@@ -134,7 +134,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 static 标记")
+    @DisplayName("TestStaticMark")
     void testStaticFlag() {
         MethodDeclaration method = new MethodDeclaration("test");
 
@@ -148,7 +148,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 isBuildMethod")
+    @DisplayName("Test isBuildMethod")
     void testIsBuildMethod() {
         MethodDeclaration buildMethod = new MethodDeclaration("build");
         MethodDeclaration otherMethod = new MethodDeclaration("other");
@@ -158,7 +158,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 isBuilderMethod")
+    @DisplayName("Test isBuilderMethod")
     void testIsBuilderMethod() {
         MethodDeclaration method1 = new MethodDeclaration("build");
         method1.addDecorator(new Decorator("Builder"));
@@ -174,7 +174,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 Parameter - 创建")
+    @DisplayName("Test Parameter - Creation")
     void testParameterCreation() {
         MethodDeclaration.Parameter param1 = new MethodDeclaration.Parameter("x");
         MethodDeclaration.Parameter param2 = new MethodDeclaration.Parameter("y", "number");
@@ -185,7 +185,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 Parameter - getName")
+    @DisplayName("Test Parameter - getName")
     void testParameterGetName() {
         MethodDeclaration.Parameter param = new MethodDeclaration.Parameter("myParam");
 
@@ -193,7 +193,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 Parameter - setName")
+    @DisplayName("Test Parameter - setName")
     void testParameterSetName() {
         MethodDeclaration.Parameter param = new MethodDeclaration.Parameter("oldName");
         param.setName("newName");
@@ -202,7 +202,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 Parameter - getType")
+    @DisplayName("Test Parameter - getType")
     void testParameterGetType() {
         MethodDeclaration.Parameter param = new MethodDeclaration.Parameter("value", "string");
 
@@ -210,7 +210,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 Parameter - setType")
+    @DisplayName("Test Parameter - setType")
     void testParameterSetType() {
         MethodDeclaration.Parameter param = new MethodDeclaration.Parameter("value");
         param.setType("number");
@@ -219,7 +219,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 Parameter - hasDefault")
+    @DisplayName("Test Parameter - hasDefault")
     void testParameterHasDefault() {
         MethodDeclaration.Parameter param = new MethodDeclaration.Parameter("value");
 
@@ -230,7 +230,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 Parameter - getDefaultValue")
+    @DisplayName("Test Parameter - getDefaultValue")
     void testParameterGetDefaultValue() {
         MethodDeclaration.Parameter param = new MethodDeclaration.Parameter("value");
         param.setDefaultValue("0");
@@ -239,7 +239,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 Parameter - setDefaultValue")
+    @DisplayName("Test Parameter - setDefaultValue")
     void testParameterSetDefaultValue() {
         MethodDeclaration.Parameter param = new MethodDeclaration.Parameter("value");
         param.setDefaultValue("default");
@@ -250,7 +250,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试多个参数")
+    @DisplayName("TestMultipleParameter")
     void testMultipleParameters() {
         MethodDeclaration method = new MethodDeclaration("test");
 
@@ -262,7 +262,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试多个装饰器")
+    @DisplayName("TestMultipleDecorator")
     void testMultipleDecorators() {
         MethodDeclaration method = new MethodDeclaration("test");
 
@@ -274,7 +274,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试带类型的参数")
+    @DisplayName("TestParameterWithType")
     void testParameterWithTypes() {
         MethodDeclaration.Parameter stringParam = new MethodDeclaration.Parameter("str", "string");
         MethodDeclaration.Parameter numberParam = new MethodDeclaration.Parameter("num", "number");
@@ -288,7 +288,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试带默认值的参数")
+    @DisplayName("TestParameterWithDefaultValue")
     void testParameterWithDefault() {
         MethodDeclaration.Parameter param = new MethodDeclaration.Parameter("count");
         param.setDefaultValue("10");
@@ -299,7 +299,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试 accept 方法")
+    @DisplayName("Test accept Method")
     void testAcceptMethod() {
         MethodDeclaration method = new MethodDeclaration("test");
 
@@ -308,7 +308,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试异步静态方法")
+    @DisplayName("TestAsyncStaticMethod")
     void testAsyncStaticMethod() {
         MethodDeclaration method = new MethodDeclaration("helper");
         method.setAsync(true);
@@ -319,7 +319,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试方法体初始为 null")
+    @DisplayName("TestMethodBodyInitiallyIsNull")
     void testBodyInitiallyNull() {
         MethodDeclaration method = new MethodDeclaration("test");
 
@@ -327,7 +327,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试返回类型初始为 null")
+    @DisplayName("TestReturnTypeInitiallyIsNull")
     void testReturnTypeInitiallyNull() {
         MethodDeclaration method = new MethodDeclaration("test");
 
@@ -335,7 +335,7 @@ class MethodDeclarationTest {
     }
 
     @Test
-    @DisplayName("测试空参数和装饰器")
+    @DisplayName("TestEmptyParameterAndDecorator")
     void testEmptyParametersAndDecorators() {
         MethodDeclaration method = new MethodDeclaration("test");
 

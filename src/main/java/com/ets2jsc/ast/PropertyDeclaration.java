@@ -2,6 +2,7 @@ package com.ets2jsc.ast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Represents a property declaration in ETS.
@@ -73,11 +74,16 @@ public class PropertyDeclaration implements AstNode {
                 .anyMatch(d -> d.getName().equals(decoratorName));
     }
 
-    public Decorator getDecorator(String decoratorName) {
+    /**
+     * Returns the decorator with the specified name.
+     *
+     * @param decoratorName the decorator name to search for
+     * @return an Optional containing the decorator, or empty if not found
+     */
+    public Optional<Decorator> getDecorator(String decoratorName) {
         return decorators.stream()
                 .filter(d -> d.getName().equals(decoratorName))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public Visibility getVisibility() {

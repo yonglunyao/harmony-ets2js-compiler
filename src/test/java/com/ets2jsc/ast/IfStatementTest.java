@@ -9,13 +9,13 @@ import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 测试 IfStatement 条件语句
+ * Test IfStatement ConditionStatement
  */
-@DisplayName("If 语句测试")
+@DisplayName("If StatementTest")
 class IfStatementTest {
 
     @Test
-    @DisplayName("测试 If 语句创建")
+    @DisplayName("Test If StatementCreation")
     void testIfStatementCreation() {
         Block thenBlock = new Block();
         Block elseBlock = new Block();
@@ -28,7 +28,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试条件获取")
+    @DisplayName("TestConditionGet")
     void testGetCondition() {
         Block thenBlock = new Block();
         Block elseBlock = new Block();
@@ -38,7 +38,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试 then 块获取")
+    @DisplayName("Test then BlockGet")
     void testGetThenBlock() {
         Block thenBlock = new Block();
         thenBlock.addStatement(new ExpressionStatement("console.log('then');"));
@@ -52,7 +52,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试 else 块获取")
+    @DisplayName("Test else BlockGet")
     void testGetElseBlock() {
         Block thenBlock = new Block();
         Block elseBlock = new Block();
@@ -66,7 +66,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试有 else 分支")
+    @DisplayName("Test有 else Branch")
     void testHasElse() {
         Block thenBlock = new Block();
         Block elseBlock = new Block();
@@ -78,7 +78,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试没有 else 分支（null）")
+    @DisplayName("Test没有 else Branch（null）")
     void testNoElseWithNull() {
         Block thenBlock = new Block();
         IfStatement ifStmt = new IfStatement("condition", thenBlock, null);
@@ -88,7 +88,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试没有 else 分支（空块）")
+    @DisplayName("Test没有 else Branch（EmptyBlock）")
     void testNoElseWithEmptyBlock() {
         Block thenBlock = new Block();
         Block elseBlock = new Block();
@@ -99,7 +99,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试复杂条件表达式")
+    @DisplayName("Test复杂ConditionExpression")
     void testComplexCondition() {
         Block thenBlock = new Block();
         Block elseBlock = new Block();
@@ -111,7 +111,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试三元运算符风格条件")
+    @DisplayName("Test三元运算符风格Condition")
     void testTernaryStyleCondition() {
         Block thenBlock = new Block();
         Block elseBlock = new Block();
@@ -122,7 +122,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试空条件")
+    @DisplayName("TestEmptyCondition")
     void testEmptyCondition() {
         Block thenBlock = new Block();
         Block elseBlock = new Block();
@@ -133,7 +133,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试包含方法调用的条件")
+    @DisplayName("TestContainsMethodCall ofCondition")
     void testConditionWithMethodCall() {
         Block thenBlock = new Block();
         Block elseBlock = new Block();
@@ -144,7 +144,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试多个语句的 then 块")
+    @DisplayName("TestMultipleStatement of then Block")
     void testThenBlockWithMultipleStatements() {
         Block thenBlock = new Block();
         thenBlock.addStatement(new ExpressionStatement("const x = 1;"));
@@ -158,7 +158,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试嵌套 if 语句（通过块）")
+    @DisplayName("TestNested if Statement（通过Block）")
     void testNestedIfViaBlock() {
         Block innerThen = new Block();
         Block innerElse = new Block();
@@ -174,7 +174,7 @@ class IfStatementTest {
     }
 
     @Test
-    @DisplayName("测试 accept 方法")
+    @DisplayName("Test accept Method")
     void testAcceptMethod() {
         Block thenBlock = new Block();
         Block elseBlock = new Block();
