@@ -2,6 +2,7 @@ package com.ets2jsc.core.context;
 
 import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.constant.Symbols;
+import lombok.Getter;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,18 +19,22 @@ import java.util.Map;
  */
 public class CompilationContext {
 
+    @Getter
     private final CompilerConfig config;
+    @Getter
     private final Path sourcePath;
+    @Getter
     private final Path outputPath;
     private final Map<String, Object> attributes;
     private final List<String> warnings;
     private final List<String> errors;
+    @Getter
     private final long startTime;
 
     /**
      * Creates a new compilation context.
      *
-     * @param config the compiler configuration
+     * @param config     the compiler configuration
      * @param sourcePath the source file path
      * @param outputPath the output file path
      */
@@ -54,48 +59,22 @@ public class CompilationContext {
     }
 
     /**
-     * Gets the compiler configuration.
-     *
-     * @return the compiler configuration
-     */
-    public CompilerConfig getConfig() {
-        return config;
-    }
-
-    /**
-     * Gets the source file path.
-     *
-     * @return the source file path
-     */
-    public Path getSourcePath() {
-        return sourcePath;
-    }
-
-    /**
-     * Gets the output file path.
-     *
-     * @return the output file path
-     */
-    public Path getOutputPath() {
-        return outputPath;
-    }
-
-    /**
      * Gets the source file name.
      *
      * @return the source file name
      */
     public String getSourceFileName() {
-        if (sourcePath != null) {
-            String fileName = sourcePath.getFileName().toString();
-            // Remove extension
-            int dotIndex = fileName.lastIndexOf('.');
-            if (dotIndex > 0) {
-                return fileName.substring(0, dotIndex);
-            }
-            return fileName;
+        if (sourcePath == null) {
+            return Symbols.DEFAULT_KEYWORD;
         }
-        return Symbols.DEFAULT_KEYWORD;
+
+        String fileName = sourcePath.getFileName().toString();
+        // Remove extension
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            return fileName.substring(0, dotIndex);
+        }
+        return fileName;
     }
 
     /**
@@ -128,7 +107,7 @@ public class CompilationContext {
     /**
      * Sets an attribute value in the context.
      *
-     * @param key the attribute key
+     * @param key   the attribute key
      * @param value the attribute value
      */
     public void setAttribute(String key, Object value) {
@@ -148,7 +127,7 @@ public class CompilationContext {
     /**
      * Gets an attribute value from the context with a default value.
      *
-     * @param key the attribute key
+     * @param key          the attribute key
      * @param defaultValue the default value
      * @return the attribute value, or the default if not found
      */

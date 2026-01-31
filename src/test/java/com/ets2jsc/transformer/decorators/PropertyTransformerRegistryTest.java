@@ -43,7 +43,7 @@ public class PropertyTransformerRegistryTest {
         PropertyTransformer transformer = registry.findTransformer(prop);
 
         assertNotNull(transformer);
-        assertTrue(transformer instanceof PropPropertyTransformer);
+        assertInstanceOf(PropPropertyTransformer.class, transformer);
     }
 
     @Test
@@ -54,7 +54,7 @@ public class PropertyTransformerRegistryTest {
         PropertyTransformer transformer = registry.findTransformer(prop);
 
         assertNotNull(transformer);
-        assertTrue(transformer instanceof LinkPropertyTransformer);
+        assertInstanceOf(LinkPropertyTransformer.class, transformer);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class PropertyTransformerRegistryTest {
         PropertyTransformer transformer = registry.findTransformer(prop);
 
         assertNotNull(transformer);
-        assertTrue(transformer instanceof ProvidePropertyTransformer);
+        assertInstanceOf(ProvidePropertyTransformer.class, transformer);
     }
 
     @Test
@@ -76,7 +76,7 @@ public class PropertyTransformerRegistryTest {
         PropertyTransformer transformer = registry.findTransformer(prop);
 
         assertNotNull(transformer);
-        assertTrue(transformer instanceof ConsumePropertyTransformer);
+        assertInstanceOf(ConsumePropertyTransformer.class, transformer);
     }
 
     @Test
@@ -234,8 +234,7 @@ public class PropertyTransformerRegistryTest {
 
     private PropertyDeclaration findProperty(ClassDeclaration classDecl, String name) {
         for (Object member : classDecl.getMembers()) {
-            if (member instanceof PropertyDeclaration) {
-                PropertyDeclaration prop = (PropertyDeclaration) member;
+            if (member instanceof PropertyDeclaration prop) {
                 if (name.equals(prop.getName())) {
                     return prop;
                 }
@@ -246,8 +245,7 @@ public class PropertyTransformerRegistryTest {
 
     private MethodDeclaration findMethod(ClassDeclaration classDecl, String name) {
         for (Object member : classDecl.getMembers()) {
-            if (member instanceof MethodDeclaration) {
-                MethodDeclaration method = (MethodDeclaration) member;
+            if (member instanceof MethodDeclaration method) {
                 if (name.equals(method.getName())) {
                     return method;
                 }

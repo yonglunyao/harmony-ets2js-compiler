@@ -40,7 +40,6 @@ public class StatementConverterRegistry extends NodeConverterRegistry {
     /**
      * Converts a JSON statement to an AST node.
      */
-    @SuppressWarnings("unchecked")
     public AstNode convert(JsonObject json, ConversionContext context) {
         String kindName = json.has("kindName") ? json.get("kindName").getAsString() : "";
 

@@ -7,8 +7,8 @@ import java.util.List;
  * Represents a function/method call expression.
  */
 public class CallExpression implements AstNode {
+    private final List<AstNode> arguments;
     private String functionName;
-    private List<AstNode> arguments;
     private AstNode callee;
     private boolean isComponentCall;
 
@@ -65,7 +65,7 @@ public class CallExpression implements AstNode {
      */
     public boolean isControlFlow() {
         return "ForEach".equals(functionName) ||
-               "LazyForEach".equals(functionName) ||
-               "If".equals(functionName);
+                "LazyForEach".equals(functionName) ||
+                "If".equals(functionName);
     }
 }

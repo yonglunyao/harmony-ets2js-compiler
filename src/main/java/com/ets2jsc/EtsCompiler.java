@@ -1,7 +1,6 @@
 package com.ets2jsc;
 
 import com.ets2jsc.ast.AstNode;
-import com.ets2jsc.ast.ClassDeclaration;
 import com.ets2jsc.ast.SourceFile;
 import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.generator.CodeGenerator;
@@ -17,8 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Main entry point for the ETS to JS compiler.
- * Orchestrates the entire compilation process.
+ * Main compiler for ETS to JS compilation.
+ * Orchestrates the entire compilation process including parsing,
+ * transformation, code generation, and output writing.
  */
 public class EtsCompiler {
 
@@ -27,13 +27,17 @@ public class EtsCompiler {
     private final CodeGenerator codeGenerator;
     private final JsWriter jsWriter;
 
+    /**
+     * Creates a new ETS compiler with the given configuration.
+     *
+     * @param config the compiler configuration
+     */
     public EtsCompiler(CompilerConfig config) {
         this.config = config;
         this.transformers = new ArrayList<>();
         this.codeGenerator = new CodeGenerator(config);
         this.jsWriter = new JsWriter();
 
-        // Initialize transformers
         initializeTransformers();
     }
 
@@ -217,139 +221,5 @@ public class EtsCompiler {
         public CompilationException(String message, Throwable cause) {
             super(message, cause);
         }
-    }
-
-    /**
-     * Main method for command-line usage.
-     */
-    public static void main(String[] args) {
-        try {
-            if (args.length < 2) {
-                printUsage();
-                System.exit(1);
-            }
-
-            // Create default configuration
-            CompilerConfig config = CompilerConfig.createDefault();
-
-            // Create compiler
-            EtsCompiler compiler = new EtsCompiler(config);
-
-            Path inputPath = Path.of(args[0]);
-            Path outputPath = Path.of(args[1]);
-
-            // Check if batch mode or parallel mode
-            if (args.length > 2) {
-                String mode = args[2];
-
-                if ("--batch".equals(mode) || "--parallel".equals(mode)) {
-                    // Batch/Parallel compilation
-                    if (!Files.isDirectory(inputPath)) {
-                        System.err.println("错误: " + inputPath + " 不是目录");
-                        System.exit(1);
-                    }
-
-                    List<Path> sourceFiles = findSourceFiles(inputPath);
-
-                    if (sourceFiles.isEmpty()) {
-                        System.out.println("未找到 ETS/TS 文件");
-                        System.exit(0);
-                    }
-
-                    System.out.println("找到 " + sourceFiles.size() + " 个文件");
-
-                    if ("--parallel".equals(mode)) {
-                        // Parallel compilation
-                        int threads = Runtime.getRuntime().availableProcessors();
-                        if (args.length > 3) {
-                            try {
-                                threads = Integer.parseInt(args[3]);
-                            } catch (NumberFormatException e) {
-                                System.err.println("无效的线程数: " + args[3]);
-                                System.exit(1);
-                            }
-                        }
-
-                        System.out.println("使用并行编译模式，线程数: " + threads);
-                        long startTime = System.currentTimeMillis();
-
-                        CompilationResult result = compiler.compileBatchParallel(sourceFiles, outputPath, threads);
-
-                        long duration = System.currentTimeMillis() - startTime;
-
-                        // Print results
-                        System.out.println();
-                        System.out.println("=== 编译结果 ===");
-                        System.out.println(result.getSummary());
-                        System.out.println("吞吐量: " + (result.getTotalCount() * 1000.0 / duration) + " 文件/秒");
-
-                        if (!result.isAllSuccess()) {
-                            System.out.println();
-                            System.out.println("失败的文件:");
-                            for (CompilationResult.FileResult failure : result.getFailures()) {
-                                System.out.println("  - " + failure.getSourcePath());
-                                System.out.println("    错误: " + failure.getMessage());
-                            }
-                            System.exit(1);
-                        }
-                    } else {
-                        // Sequential batch compilation
-                        long startTime = System.currentTimeMillis();
-                        compiler.compileBatch(sourceFiles, outputPath);
-                        long duration = System.currentTimeMillis() - startTime;
-
-                        System.out.println("Compiled " + sourceFiles.size() + " files to " + outputPath);
-                        System.out.println("耗时: " + duration + "ms");
-                    }
-                } else {
-                    System.err.println("未知选项: " + mode);
-                    printUsage();
-                    System.exit(1);
-                }
-            } else {
-                // Single file compilation
-                compiler.compile(inputPath, outputPath);
-                System.out.println("编译完成: " + inputPath + " -> " + outputPath);
-            }
-
-        } catch (Exception e) {
-            System.err.println("编译失败: " + e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
-
-    /**
-     * Print usage information.
-     */
-    private static void printUsage() {
-        System.err.println("用法: EtsCompiler <input> <output> [mode] [threads]");
-        System.err.println();
-        System.err.println("模式:");
-        System.err.println("  (无)      - 编译单个文件");
-        System.err.println("  --batch   - 批量编译目录（顺序）");
-        System.err.println("  --parallel - 批量编译目录（并行）");
-        System.err.println();
-        System.err.println("示例:");
-        System.err.println("  EtsCompiler src/App.ets build/App.js");
-        System.err.println("  EtsCompiler src/main/ets build/dist --batch");
-        System.err.println("  EtsCompiler src/main/ets build/dist --parallel");
-        System.err.println("  EtsCompiler src/main/ets build/dist --parallel 8");
-    }
-
-    /**
-     * Finds all ETS/TypeScript source files in a directory.
-     */
-    private static List<Path> findSourceFiles(Path dir) throws IOException {
-        List<Path> sourceFiles = new ArrayList<>();
-
-        if (Files.isDirectory(dir)) {
-            Files.walk(dir)
-                .filter(path -> path.toString().endsWith(".ets") ||
-                               path.toString().endsWith(".ts"))
-                .forEach(sourceFiles::add);
-        }
-
-        return sourceFiles;
     }
 }

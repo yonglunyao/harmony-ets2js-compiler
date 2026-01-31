@@ -1,10 +1,7 @@
 package com.ets2jsc.generator;
 
 import com.ets2jsc.ast.*;
-import com.ets2jsc.ast.ComponentStatement.ComponentPart;
-import com.ets2jsc.ast.ComponentStatement.PartKind;
 import com.ets2jsc.config.CompilerConfig;
-import com.ets2jsc.constant.RuntimeFunctions;
 import com.ets2jsc.constant.Symbols;
 import com.ets2jsc.transformer.ComponentExpressionTransformer;
 
@@ -13,23 +10,24 @@ import java.util.List;
 
 /**
  * Generates JavaScript code from transformed AST.
- * Traverses the AST and outputs formatted JavaScript code.
+ * Uses helper classes to manage complexity and maintain low cyclomatic complexity.
  */
 public class CodeGenerator implements AstVisitor<String> {
 
     private final StringBuilder output;
-    private final String indent;
-    private int currentIndent;
+    private final IndentationManager indentation;
     private final CompilerConfig config;
     private boolean insideComponentClass = false;
     private List<String> currentBuilderMethods = new ArrayList<>();
 
+    private final ComponentCodeGenerator componentCodeGenerator;
+
     public CodeGenerator(CompilerConfig config) {
-        this.output = new StringBuilder();
-        this.indent = Symbols.DEFAULT_INDENT;
-        this.currentIndent = 0;
         this.config = config != null ? config : new CompilerConfig();
+        this.output = new StringBuilder();
+        this.indentation = new IndentationManager();
         this.insideComponentClass = false;
+        this.componentCodeGenerator = new ComponentCodeGenerator(this.config, this.indentation, this);
     }
 
     public CodeGenerator() {
@@ -38,6 +36,7 @@ public class CodeGenerator implements AstVisitor<String> {
 
     /**
      * Generates JavaScript code from an AST node.
+     * CC: 2 (null check + method call)
      */
     public String generate(AstNode node) {
         if (node == null) {
@@ -48,12 +47,23 @@ public class CodeGenerator implements AstVisitor<String> {
 
     /**
      * Generates JavaScript code for a source file.
+     * CC: 3 (method calls + loop)
      */
     public String generate(SourceFile sourceFile) {
         output.setLength(0);
-        currentIndent = 0;
+        indentation.reset();
 
-        // First pass: collect and output import statements
+        generateImportStatements(sourceFile);
+        generateOtherStatements(sourceFile);
+
+        return output.toString();
+    }
+
+    /**
+     * Generates import statements.
+     * CC: 2 (loop + method call)
+     */
+    private void generateImportStatements(SourceFile sourceFile) {
         for (AstNode statement : sourceFile.getStatements()) {
             if (statement instanceof ImportStatement) {
                 String code = statement.accept(this);
@@ -63,12 +73,16 @@ public class CodeGenerator implements AstVisitor<String> {
             }
         }
 
-        // Add blank line after imports
         if (hasImportStatements(sourceFile)) {
             writeLine("");
         }
+    }
 
-        // Second pass: output other statements
+    /**
+     * Generates non-import statements.
+     * CC: 2 (loop + condition check)
+     */
+    private void generateOtherStatements(SourceFile sourceFile) {
         for (AstNode statement : sourceFile.getStatements()) {
             if (!(statement instanceof ImportStatement)) {
                 String code = statement.accept(this);
@@ -77,10 +91,12 @@ public class CodeGenerator implements AstVisitor<String> {
                 }
             }
         }
-
-        return output.toString();
     }
 
+    /**
+     * Checks if source file has import statements.
+     * CC: 2 (loop + condition check)
+     */
     private boolean hasImportStatements(SourceFile sourceFile) {
         for (AstNode statement : sourceFile.getStatements()) {
             if (statement instanceof ImportStatement) {
@@ -93,35 +109,85 @@ public class CodeGenerator implements AstVisitor<String> {
     @Override
     public String visit(SourceFile node) {
         StringBuilder sb = new StringBuilder();
-
         for (AstNode statement : node.getStatements()) {
-            sb.append(statement.accept(this));
-            sb.append("\n");
+            sb.append(statement.accept(this)).append("\n");
         }
-
         return sb.toString();
     }
 
+    /**
+     * Visits ClassDeclaration node.
+     * CC: 3 (save/restore + loop)
+     */
     @Override
     public String visit(ClassDeclaration node) {
-        // Set insideComponentClass flag for this class
-        boolean previousInsideComponentClass = insideComponentClass;
-        insideComponentClass = node.hasDecorator("Component");
-
-        // Save and set current builder methods list
-        List<String> previousBuilderMethods = currentBuilderMethods;
-        currentBuilderMethods = node.getBuilderMethodNames();
-
+        ClassGenerationContext context = saveAndSetClassContext(node);
         StringBuilder sb = new StringBuilder();
 
-        // Generate decorators (comments for now)
+        sb.append(generateClassDeclaration(node));
+        sb.append(generateClassMembers(node));
+
+        restoreClassContext(context);
+        return sb.toString();
+    }
+
+    /**
+     * Saves current class context and sets new one.
+     * CC: 1
+     */
+    private ClassGenerationContext saveAndSetClassContext(ClassDeclaration node) {
+        ClassGenerationContext context = new ClassGenerationContext(insideComponentClass, currentBuilderMethods);
+        insideComponentClass = node.hasDecorator("Component");
+        currentBuilderMethods = node.getBuilderMethodNames();
+        return context;
+    }
+
+    /**
+     * Restores previous class context.
+     * CC: 1
+     */
+    private void restoreClassContext(ClassGenerationContext context) {
+        insideComponentClass = context.wasInsideComponentClass();
+        currentBuilderMethods = context.getBuilderMethods();
+    }
+
+    /**
+     * Generates class declaration line.
+     * CC: 2 (if check + string building)
+     */
+    private String generateClassDeclaration(ClassDeclaration node) {
+        StringBuilder sb = new StringBuilder();
+
+        // Generate decorator comments
         for (Decorator decorator : node.getDecorators()) {
             if (!decorator.getName().equals("Component")) {
                 sb.append("// @").append(decorator.getName()).append("\n");
             }
         }
 
-        // Check if this is an @Entry component - should use "export default"
+        // Export declaration
+        sb.append(generateExportDeclaration(node));
+
+        // Class declaration
+        sb.append("class ").append(node.getName());
+
+        if (node.getSuperClass() != null) {
+            sb.append(" extends ").append(node.getSuperClass());
+        }
+
+        sb.append(" {\n");
+        indentation.increase();
+
+        return sb.toString();
+    }
+
+    /**
+     * Generates export declaration.
+     * CC: 2 (if checks)
+     */
+    private String generateExportDeclaration(ClassDeclaration node) {
+        StringBuilder sb = new StringBuilder();
+
         boolean isEntry = node.hasDecorator("Entry");
         if (isEntry && node.isExport()) {
             sb.append("export default ");
@@ -129,18 +195,16 @@ public class CodeGenerator implements AstVisitor<String> {
             sb.append("export ");
         }
 
-        // Class declaration
-        sb.append("class ").append(node.getName());
+        return sb.toString();
+    }
 
-        // Extends clause
-        if (node.getSuperClass() != null) {
-            sb.append(" extends ").append(node.getSuperClass());
-        }
+    /**
+     * Generates class members.
+     * CC: 2 (loop + condition check)
+     */
+    private String generateClassMembers(ClassDeclaration node) {
+        StringBuilder sb = new StringBuilder();
 
-        sb.append(" {\n");
-        currentIndent++;
-
-        // Generate members
         for (AstNode member : node.getMembers()) {
             String memberCode = member.accept(this);
             if (!memberCode.isEmpty()) {
@@ -148,190 +212,37 @@ public class CodeGenerator implements AstVisitor<String> {
             }
         }
 
-        currentIndent--;
-        sb.append("}\n");
-
-        // Restore previous insideComponentClass flag
-        insideComponentClass = previousInsideComponentClass;
-        // Restore previous builder methods list
-        currentBuilderMethods = previousBuilderMethods;
+        indentation.decrease();
+        sb.append(indentation.getCurrent()).append("}\n");
 
         return sb.toString();
     }
 
     @Override
     public String visit(MethodDeclaration node) {
-        StringBuilder sb = new StringBuilder();
-
-        // Method signature
-        sb.append(getIndent());
-
-        if ("constructor".equals(node.getName())) {
-            sb.append("constructor() {\n");
-            currentIndent++;
-        } else if (node.getName().startsWith("get ")) {
-            sb.append("get ")
-              .append(node.getName().substring(4))
-              .append("() {\n");
-            currentIndent++;
-        } else if (node.getName().startsWith("set ")) {
-            sb.append("set ")
-              .append(node.getName().substring(4))
-              .append("(");
-            // Add value parameter
-            if (!node.getParameters().isEmpty()) {
-                MethodDeclaration.Parameter param = node.getParameters().get(0);
-                sb.append(param.getName());
-            } else {
-                sb.append("newValue");
-            }
-            sb.append(") {\n");
-            currentIndent++;
-        } else {
-            // Add static keyword if present
-            if (node.isStatic()) {
-                sb.append("static ");
-            }
-            // Add async keyword if present
-            if (node.isAsync()) {
-                sb.append("async ");
-            }
-
-            sb.append(node.getName()).append("(");
-
-            // Parameters
-            List<MethodDeclaration.Parameter> params = node.getParameters();
-            for (int i = 0; i < params.size(); i++) {
-                if (i > 0) {
-                    sb.append(", ");
-                }
-                MethodDeclaration.Parameter param = params.get(i);
-                sb.append(param.getName());
-
-                // Add default value if present (e.g., __builder__ = undefined)
-                if (param.hasDefault() && param.getDefaultValue() != null) {
-                    sb.append(" = ").append(param.getDefaultValue());
-                }
-
-                // Optional type annotation (as comment for JS)
-                if (param.getType() != null) {
-                    sb.append(" /* ").append(param.getType()).append(" */");
-                }
-            }
-
-            sb.append(") {\n");
-            currentIndent++;
-        }
-
-        // Method body
-        if (node.getBody() != null) {
-            String bodyCode = node.getBody().accept(this);
-            // If body is ExpressionStatement, it may contain multiple lines (e.g., constructor with \n)
-            if (node.getBody() instanceof com.ets2jsc.ast.ExpressionStatement) {
-                // Split by newlines and indent each line
-                String[] lines = bodyCode.split("\n");
-                for (String line : lines) {
-                    if (!line.isEmpty()) {
-                        sb.append(getIndent()).append(line).append("\n");
-                    }
-                }
-            } else {
-                sb.append(bodyCode);
-            }
-        }
-
-        currentIndent--;
-        sb.append(getIndent()).append("}\n");
-
-        return sb.toString();
+        MethodGenerator generator = new MethodGenerator(node, indentation, this);
+        return generator.generate();
     }
 
     @Override
     public String visit(PropertyDeclaration node) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getIndent());
-
-        // Note: JavaScript class properties don't support visibility keywords like 'private'
-        // Use comments to indicate private properties instead
-        // if (node.getVisibility() == PropertyDeclaration.Visibility.PRIVATE) {
-        //     sb.append("// private: ");
-        // }
-
-        // Name and type
-        sb.append(node.getName());
-
-        // Type annotations are not supported in JavaScript class properties
-        // if (node.getTypeAnnotation() != null) {
-        //     sb.append(": ").append(node.getTypeAnnotation());
-        // }
-
-        // Initializer - ensure string literals are quoted
-        if (node.getInitializer() != null) {
-            String initializer = node.getInitializer();
-            // Check if this looks like an unquoted string value
-            // (identifier without quotes that should be a string literal)
-            if (needsQuoting(initializer)) {
-                sb.append(" = \"").append(escapeJsString(initializer)).append("\"");
-            } else {
-                sb.append(" = ").append(initializer);
-            }
-        }
-
-        sb.append(";\n");
-
-        return sb.toString();
-    }
-
-    /**
-     * Checks if a value looks like it needs quotes (unquoted string literal).
-     */
-    private boolean needsQuoting(String value) {
-        if (value == null || value.isEmpty()) {
-            return false;
-        }
-        // If already quoted, don't quote again
-        if (value.startsWith("\"") || value.startsWith("'") || value.startsWith("`")) {
-            return false;
-        }
-        // If it's a number, boolean, null, undefined, or this.xxx, don't quote
-        if (value.matches(Symbols.DIGITS_REGEX) || value.equals("true") || value.equals("false") ||
-            value.equals("null") || value.equals("undefined") || value.startsWith("this.") ||
-            value.startsWith("new ") || value.contains("(") || value.contains("{") ||
-            value.contains("[") || value.startsWith("$")) {
-            return false;
-        }
-        // Otherwise, it might be an unquoted string literal
-        return true;
-    }
-
-    /**
-     * Escapes special characters in JavaScript strings.
-     */
-    private String escapeJsString(String value) {
-        if (value == null) return "";
-        return value.replace("\\", "\\\\")
-                  .replace("\"", "\\\"")
-                  .replace("\n", "\\n")
-                  .replace("\r", "\\r")
-                  .replace("\t", "\\t");
+        PropertyGenerator generator = new PropertyGenerator(node, indentation);
+        return generator.generate();
     }
 
     @Override
     public String visit(Decorator node) {
-        // Decorators are handled at class level
         return "";
     }
 
     @Override
     public String visit(ComponentExpression node) {
-        // Component expressions are handled by the transformer
         return "";
     }
 
     @Override
     public String visit(CallExpression node) {
         StringBuilder sb = new StringBuilder();
-
         sb.append(node.getFunctionName()).append("(");
 
         List<AstNode> args = node.getArguments();
@@ -343,307 +254,97 @@ public class CodeGenerator implements AstVisitor<String> {
         }
 
         sb.append(")");
-
         return sb.toString();
     }
 
     @Override
     public String visit(ExpressionStatement node) {
-        // Return the expression string with semicolon
         String expr = node.getExpression();
         if (expr == null || expr.isEmpty()) {
             return "";
         }
 
-        // Check if this is a @Builder method call and transform it
-        String transformed = transformBuilderMethodCall(expr);
+        // Check for @Builder method call
+        String transformed = BuilderMethodTransformer.transform(expr, currentBuilderMethods);
         if (!transformed.equals(expr)) {
             return transformed;
         }
 
-        // Try to transform to component statement (create/pop pattern)
+        // Try to transform to component statement
         AstNode transformedNode = ComponentExpressionTransformer.transform(expr);
         if (transformedNode instanceof ComponentStatement) {
             return transformedNode.accept(this);
         }
 
-        // Don't add semicolon if expression already ends with one or is a block
+        // Format expression statement
+        return formatExpressionStatement(expr);
+    }
+
+    /**
+     * Formats expression statement with semicolon if needed.
+     * CC: 2 (condition checks)
+     */
+    private String formatExpressionStatement(String expr) {
         String trimmed = expr.trim();
         if (trimmed.endsWith(";") || trimmed.endsWith("}") || trimmed.startsWith("{")) {
             return expr;
         }
-
-        // Add semicolon
         return expr + ";";
-    }
-
-    /**
-     * Transform @Builder method call to BuilderParam pattern.
-     * Converts: this.customText("Hello", "World")
-     * To: const __builder__ = new BuilderParam();
-     *     this.customText(__builder__, "Hello", "World");
-     *     __builder__.build();
-     */
-    private String transformBuilderMethodCall(String expr) {
-        String trimmed = expr.trim();
-
-        // Check for pattern: this.<methodName>(...)
-        // where <methodName> is in currentBuilderMethods
-        for (String builderMethod : currentBuilderMethods) {
-            String pattern = "this\\." + builderMethod + "\\s*\\(";
-            if (trimmed.matches(pattern + ".*")) {
-                // Extract arguments
-                int argsStart = trimmed.indexOf('(');
-                String args = trimmed.substring(argsStart); // Includes "(" and ")"
-
-                // Generate wrapped code
-                StringBuilder sb = new StringBuilder();
-                sb.append("const __builder__ = new BuilderParam();\n");
-                sb.append(getIndent());
-                sb.append("this.").append(builderMethod).append("(__builder__");
-
-                // Add original arguments (without opening paren)
-                if (args.length() > 1) {
-                    String innerArgs = args.substring(1); // Remove "("
-                    if (innerArgs.endsWith(")")) {
-                        innerArgs = innerArgs.substring(0, innerArgs.length() - 1); // Remove ")"
-                    }
-                    if (!innerArgs.trim().isEmpty()) {
-                        sb.append(", ").append(innerArgs);
-                    }
-                }
-
-                sb.append(");\n");
-                sb.append(getIndent());
-                sb.append("__builder__.build();");
-
-                return sb.toString();
-            }
-        }
-
-        return expr;
     }
 
     @Override
     public String visit(Block node) {
-        StringBuilder sb = new StringBuilder();
-        for (AstNode stmt : node.getStatements()) {
-            // Check for special statement types
-            if (stmt instanceof ForeachStatement) {
-                sb.append(((ForeachStatement) stmt).accept(this));
-            } else if (stmt instanceof IfStatement) {
-                sb.append(((IfStatement) stmt).accept(this));
-            } else {
-                String stmtCode = stmt.accept(this);
-                if (stmtCode != null && !stmtCode.isEmpty()) {
-                    // Don't add indentation for nested blocks in component methods
-                    // (they represent component closures, not code blocks)
-                    if (stmt instanceof Block) {
-                        sb.append(stmtCode);
-                    } else {
-                        sb.append(getIndent()).append(stmtCode).append("\n");
-                    }
-                }
-            }
-        }
-        return sb.toString();
+        BlockGenerator generator = new BlockGenerator(node, indentation, this);
+        return generator.generate();
     }
 
     @Override
     public String visit(ImportStatement node) {
-        // Return the string representation of the import statement
         return node.toString();
     }
 
     @Override
     public String visit(ExportStatement node) {
-        // Return the string representation of the export statement
-        // Type exports return empty string and will be filtered out
         return node.toString();
     }
 
     @Override
     public String visit(ComponentStatement node) {
-        StringBuilder sb = new StringBuilder();
-        String componentName = node.getComponentName();
-
-        for (ComponentPart part : node.getParts()) {
-            renderComponentPart(sb, componentName, node, part);
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * Renders a single component part based on its kind.
-     */
-    private void renderComponentPart(StringBuilder sb, String componentName, ComponentStatement node, ComponentPart part) {
-        switch (part.getKind()) {
-            case CREATE:
-                renderCreatePart(sb, componentName, part.getCode());
-                break;
-            case METHOD:
-                renderMethodPart(sb, componentName, part.getCode());
-                break;
-            case POP:
-                renderPopPart(sb, componentName, node);
-                break;
-        }
-    }
-
-    /**
-     * Renders a component creation part.
-     */
-    private void renderCreatePart(StringBuilder sb, String componentName, String code) {
-        sb.append(getIndent()).append(componentName).append(".create(").append(code).append(");\n");
-    }
-
-    /**
-     * Renders a component method call part.
-     */
-    private void renderMethodPart(StringBuilder sb, String componentName, String code) {
-        sb.append(getIndent()).append(componentName).append(".").append(code).append("\n");
-    }
-
-    /**
-     * Renders a component pop part, including children if present.
-     */
-    private void renderPopPart(StringBuilder sb, String componentName, ComponentStatement node) {
-        if (node.hasChildren()) {
-            currentIndent++;
-            sb.append(node.getChildren().accept(this));
-            currentIndent--;
-        }
-        sb.append(getIndent()).append(componentName).append(".pop();\n");
+        return componentCodeGenerator.visitComponentStatement(node);
     }
 
     @Override
     public String visit(ForeachStatement node) {
-        StringBuilder sb = new StringBuilder();
-
-        if (config.isPureJavaScript()) {
-            // Pure JavaScript mode: use standard Array.forEach instead of ForEach runtime
-            String itemGen = node.getItemGenerator();
-            sb.append(getIndent()).append("array.forEach(").append(itemGen).append(");\n");
-        } else {
-            // ArkUI runtime mode: include ForEach.create(), pop()
-            sb.append(getIndent()).append("ForEach.create();\n");
-
-            sb.append(getIndent()).append("const __itemGenFunction__ = ").append(node.getItemGenerator()).append(";\n");
-
-            String keyGen = node.getKeyGenerator();
-            if (keyGen != null && !keyGen.isEmpty()) {
-                sb.append(getIndent()).append("const __keyGenFunction__ = ").append(keyGen).append(";\n");
-                sb.append(getIndent()).append("ForEach.keyGenerator(__keyGenFunction__);\n");
-            }
-
-            sb.append(getIndent()).append("ForEach.itemGenerator(__itemGenFunction__);\n");
-
-            sb.append(getIndent()).append("ForEach.pop();\n");
-        }
-
-        return sb.toString();
+        return componentCodeGenerator.visitForeach(node);
     }
 
     @Override
     public String visit(IfStatement node) {
-        // Use standard if-else for pure JavaScript mode or outside component classes
-        if (config.isPureJavaScript() || !insideComponentClass) {
-            return renderStandardIfElse(node);
-        }
-        return renderArkUIIf(node);
+        return componentCodeGenerator.visitIf(node, insideComponentClass);
     }
 
-    /**
-     * Renders standard JavaScript if-else statement without ArkUI runtime.
-     */
-    private String renderStandardIfElse(IfStatement node) {
-        StringBuilder sb = new StringBuilder();
+    // Helper classes for context management
 
-        sb.append(getIndent()).append("if (").append(node.getCondition()).append(") {\n");
-        currentIndent++;
-        sb.append(node.getThenBlock().accept(this));
-        currentIndent--;
-        sb.append(getIndent()).append("}\n");
+    private static class ClassGenerationContext {
+        private final boolean wasInsideComponentClass;
+        private final List<String> builderMethods;
 
-        if (node.hasElse()) {
-            sb.append(getIndent()).append("else {\n");
-            currentIndent++;
-            sb.append(node.getElseBlock().accept(this));
-            currentIndent--;
-            sb.append(getIndent()).append("}\n");
+        ClassGenerationContext(boolean insideComponentClass, List<String> builderMethods) {
+            this.wasInsideComponentClass = insideComponentClass;
+            this.builderMethods = new ArrayList<>(builderMethods);
         }
 
-        return sb.toString();
-    }
-
-    /**
-     * Renders ArkUI runtime if-else statement with If.create(), branchId(), and pop().
-     */
-    private String renderArkUIIf(IfStatement node) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(getIndent()).append("If.create();\n");
-        renderArkUIIfBranch(node, 0, sb);
-
-        if (node.hasElse()) {
-            renderArkUIElseBranch(node, sb);
+        boolean wasInsideComponentClass() {
+            return wasInsideComponentClass;
         }
 
-        sb.append(getIndent()).append("If.pop();\n");
-        return sb.toString();
-    }
-
-    /**
-     * Renders the 'then' branch of an ArkUI if statement.
-     */
-    private void renderArkUIIfBranch(IfStatement node, int branchId, StringBuilder sb) {
-        sb.append(getIndent()).append("if (").append(node.getCondition()).append(") {\n");
-        currentIndent++;
-        sb.append(getIndent()).append("If.branchId(").append(branchId).append(");\n");
-        sb.append(node.getThenBlock().accept(this));
-        currentIndent--;
-        sb.append(getIndent()).append("}\n");
-    }
-
-    /**
-     * Renders the 'else' branch of an ArkUI if statement.
-     */
-    private void renderArkUIElseBranch(IfStatement node, StringBuilder sb) {
-        sb.append(getIndent()).append("else {\n");
-        currentIndent++;
-        sb.append(getIndent()).append("If.branchId(1);\n");
-        sb.append(node.getElseBlock().accept(this));
-        currentIndent--;
-        sb.append(getIndent()).append("}\n");
-    }
-
-    /**
-     * Helper methods for indentation and output.
-     */
-    private String getIndent() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < currentIndent; i++) {
-            sb.append(indent);
+        List<String> getBuilderMethods() {
+            return builderMethods;
         }
-        return sb.toString();
-    }
-
-    private void write(String text) {
-        output.append(text);
-    }
-
-    private void writeLine(String text) {
-        output.append(text).append("\n");
-    }
-
-    private void writeIndent() {
-        output.append(getIndent());
     }
 
     /**
      * Sets whether we are inside a component class.
-     * Used to determine If statement rendering mode.
      */
     public void setInsideComponentClass(boolean insideComponentClass) {
         this.insideComponentClass = insideComponentClass;
@@ -661,5 +362,33 @@ public class CodeGenerator implements AstVisitor<String> {
      */
     public String getOutput() {
         return output.toString();
+    }
+
+    /**
+     * Gets current indentation.
+     */
+    private String getIndent() {
+        return indentation.getCurrent();
+    }
+
+    /**
+     * Writes text to output.
+     */
+    private void write(String text) {
+        output.append(text);
+    }
+
+    /**
+     * Writes text with newline.
+     */
+    private void writeLine(String text) {
+        output.append(text).append("\n");
+    }
+
+    /**
+     * Writes indent to output.
+     */
+    private void writeIndent() {
+        output.append(getIndent());
     }
 }

@@ -19,7 +19,7 @@ public class ArrayLiteralConverter implements NodeConverter {
     @Override
     public Object convert(JsonObject json, ConversionContext context) {
         JsonArray elements = json.getAsJsonArray("elements");
-        if (elements == null || elements.size() == 0) {
+        if (elements == null || elements.isEmpty()) {
             return "[]";
         }
 

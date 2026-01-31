@@ -1,13 +1,9 @@
 package com.ets2jsc;
 
-import com.ets2jsc.ast.AstNode;
-import com.ets2jsc.ast.SourceFile;
 import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.constant.Symbols;
 import com.ets2jsc.generator.CodeGenerator;
 import com.ets2jsc.generator.JsWriter;
-import com.ets2jsc.generator.SourceMapGenerator;
-import com.ets2jsc.parser.AstBuilder;
 import com.ets2jsc.transformer.AstTransformer;
 import com.ets2jsc.transformer.*;
 import java.io.IOException;
@@ -19,15 +15,13 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Parallel ETS compiler supporting multi-threaded compilation of multiple ETS files.
+ * Parallel ETS compiler supporting multithreaded compilation of multiple ETS files.
  * Optimized version: Shared compiler instance, reduced resource creation overhead.
  */
 public class ParallelEtsCompiler {
 
     private final CompilerConfig config;
     private final List<AstTransformer> transformers;
-    private final CodeGenerator codeGenerator;
-    private final JsWriter jsWriter;
     private final ExecutorService executorService;
     private final int threadPoolSize;
     private final EtsCompiler sharedCompiler; // Shared compiler instance to avoid resource duplication
@@ -40,8 +34,6 @@ public class ParallelEtsCompiler {
     public ParallelEtsCompiler(CompilerConfig config, Integer threadPoolSize) {
         this.config = config;
         this.transformers = new ArrayList<>();
-        this.codeGenerator = new CodeGenerator(config);
-        this.jsWriter = new JsWriter();
 
         // Create shared compiler instance to avoid resource duplication
         this.sharedCompiler = new EtsCompiler(config);

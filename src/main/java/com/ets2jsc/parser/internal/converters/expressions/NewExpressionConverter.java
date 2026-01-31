@@ -26,7 +26,7 @@ public class NewExpressionConverter implements NodeConverter {
         StringBuilder sb = new StringBuilder();
         sb.append("new ").append(exprStr).append("(");
         JsonArray arguments = json.getAsJsonArray("arguments");
-        if (arguments != null && arguments.size() > 0) {
+        if (arguments != null && !arguments.isEmpty()) {
             List<String> argStrings = new ArrayList<>();
             for (int i = 0; i < arguments.size(); i++) {
                 String argStr = context.convertExpression(arguments.get(i).getAsJsonObject());

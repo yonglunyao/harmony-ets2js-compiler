@@ -16,11 +16,10 @@ import java.util.List;
 public class BuildMethodTransformer implements AstTransformer {
 
     private final boolean partialUpdateMode;
-    private final ComponentTransformer componentTransformer;
 
     public BuildMethodTransformer(boolean partialUpdateMode) {
         this.partialUpdateMode = partialUpdateMode;
-        this.componentTransformer = new ComponentTransformer();
+        ComponentTransformer componentTransformer = new ComponentTransformer();
     }
 
     @Override

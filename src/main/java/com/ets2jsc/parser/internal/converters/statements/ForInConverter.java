@@ -4,7 +4,7 @@ import com.ets2jsc.parser.internal.ConversionContext;
 import com.google.gson.JsonObject;
 
 /**
- * Converter for for...in loop statements.
+ * Converter for...in loop statements.
  * Handles: for (let key in object) { ... }
  */
 public class ForInConverter extends LoopConverter {
@@ -22,10 +22,7 @@ public class ForInConverter extends LoopConverter {
         String initStr = initializer != null ? context.convertExpression(initializer) : "";
         String exprStr = expression != null ? context.convertExpression(expression) : "";
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("for (").append(initStr).append(" in ").append(exprStr).append(") {\n");
-
-        return sb.toString();
+        return "for (" + initStr + " in " + exprStr + ") {\n";
     }
 
     @Override

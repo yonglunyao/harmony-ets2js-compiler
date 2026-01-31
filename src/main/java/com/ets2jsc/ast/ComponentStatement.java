@@ -52,24 +52,9 @@ public class ComponentStatement implements AstNode {
     }
 
     /**
-     * Represents a part of the component statement.
-     */
-    public static class ComponentPart {
-        private final PartKind kind;
-        private final String code;
-
-        public ComponentPart(PartKind kind, String code) {
-            this.kind = kind;
-            this.code = code;
-        }
-
-        public PartKind getKind() {
-            return kind;
-        }
-
-        public String getCode() {
-            return code;
-        }
+         * Represents a part of the component statement.
+         */
+        public record ComponentPart(PartKind kind, String code) {
     }
 
     public enum PartKind {

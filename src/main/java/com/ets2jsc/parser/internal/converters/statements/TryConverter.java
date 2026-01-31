@@ -15,6 +15,8 @@ import com.google.gson.JsonObject;
  */
 public class TryConverter implements NodeConverter {
 
+    private static final String INDENT = "  ";
+
     @Override
     public boolean canConvert(String kindName) {
         return "TryStatement".equals(kindName);
@@ -27,73 +29,88 @@ public class TryConverter implements NodeConverter {
             return new ExpressionStatement(json.get("text").getAsString());
         }
 
-        JsonObject tryBlock = json.getAsJsonObject("tryBlock");
-        JsonObject catchClause = json.getAsJsonObject("catchClause");
-        JsonObject finallyBlock = json.getAsJsonObject("finallyBlock");
-
         StringBuilder sb = new StringBuilder();
+
+        // Build try block
         sb.append("try {\n");
-
-        if (tryBlock != null) {
-            AstNode tryNode = context.convertStatement(tryBlock);
-            if (tryNode instanceof Block) {
-                Block block = (Block) tryNode;
-                for (AstNode blockStmt : block.getStatements()) {
-                    String stmtCode = blockStmt.accept(new CodeGenerator());
-                    sb.append("  ").append(stmtCode);
-                }
-            }
-        }
-
+        appendBlockContent(sb, json.getAsJsonObject("tryBlock"), context);
         sb.append("\n}");
 
+        // Build catch block
+        JsonObject catchClause = json.getAsJsonObject("catchClause");
         if (catchClause != null) {
-            JsonObject varDecl = catchClause.getAsJsonObject("variableDeclaration");
-            String varName = "";
-            if (varDecl != null) {
-                JsonArray declarations = varDecl.getAsJsonArray("declarations");
-                if (declarations != null && declarations.size() > 0) {
-                    JsonObject decl = declarations.get(0).getAsJsonObject();
-                    varName = decl.has("name") ? decl.get("name").getAsString() : "";
-                }
-            }
-
-            if (!varName.isEmpty()) {
-                sb.append(" catch (").append(varName).append(") {\n");
-            } else {
-                sb.append(" catch {\n");
-            }
-
-            JsonObject catchBlock = catchClause.getAsJsonObject("block");
-            if (catchBlock != null) {
-                AstNode catchNode = context.convertStatement(catchBlock);
-                if (catchNode instanceof Block) {
-                    Block block = (Block) catchNode;
-                    for (AstNode blockStmt : block.getStatements()) {
-                        String stmtCode = blockStmt.accept(new CodeGenerator());
-                        sb.append("  ").append(stmtCode);
-                    }
-                }
-            }
-
-            sb.append("\n}");
+            appendCatchClause(sb, catchClause, context);
         }
 
+        // Build finally block
+        JsonObject finallyBlock = json.getAsJsonObject("finallyBlock");
         if (finallyBlock != null) {
             sb.append(" finally {\n");
-
-            AstNode finallyNode = context.convertStatement(finallyBlock);
-            if (finallyNode instanceof Block) {
-                Block block = (Block) finallyNode;
-                for (AstNode blockStmt : block.getStatements()) {
-                    String stmtCode = blockStmt.accept(new CodeGenerator());
-                    sb.append("  ").append(stmtCode);
-                }
-            }
-
+            appendBlockContent(sb, finallyBlock, context);
             sb.append("\n}");
         }
 
         return new ExpressionStatement(sb.toString());
+    }
+
+    /**
+     * Appends catch clause to the output.
+     * CC: 3 (if-else for variable name check)
+     */
+    private void appendCatchClause(StringBuilder sb, JsonObject catchClause, ConversionContext context) {
+        String varName = extractVariableName(catchClause);
+
+        if (!varName.isEmpty()) {
+            sb.append(" catch (").append(varName).append(") {\n");
+        } else {
+            sb.append(" catch {\n");
+        }
+
+        JsonObject catchBlock = catchClause.getAsJsonObject("block");
+        appendBlockContent(sb, catchBlock, context);
+        sb.append("\n}");
+    }
+
+    /**
+     * Extracts variable name from catch clause.
+     * CC: 2 (null check + array size check)
+     */
+    private String extractVariableName(JsonObject catchClause) {
+        JsonObject varDecl = catchClause.getAsJsonObject("variableDeclaration");
+        if (varDecl == null) {
+            return "";
+        }
+
+        JsonArray declarations = varDecl.getAsJsonArray("declarations");
+        if (declarations == null || declarations.size() == 0) {
+            return "";
+        }
+
+        JsonObject decl = declarations.get(0).getAsJsonObject();
+        return decl.has("name") ? decl.get("name").getAsString() : "";
+    }
+
+    /**
+     * Appends block content with proper indentation.
+     * Eliminates duplicate code used for try/catch/finally blocks.
+     * CC: 2 (null check + instance check)
+     */
+    private void appendBlockContent(StringBuilder sb, JsonObject block, ConversionContext context) {
+        if (block == null) {
+            return;
+        }
+
+        AstNode node = context.convertStatement(block);
+        if (!(node instanceof Block)) {
+            return;
+        }
+
+        Block codeBlock = (Block) node;
+        CodeGenerator generator = new CodeGenerator();
+
+        for (AstNode stmt : codeBlock.getStatements()) {
+            String stmtCode = stmt.accept(generator);
+            sb.append(INDENT).append(stmtCode);
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.ets2jsc.ast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a class or struct declaration in ETS.
@@ -51,13 +52,23 @@ public class ClassDeclaration implements AstNode {
     }
 
     public boolean hasDecorator(String decoratorName) {
+        if (decorators == null || decoratorName == null) {
+            return false;
+        }
         return decorators.stream()
-                .anyMatch(d -> d.getName().equals(decoratorName));
+                .filter(Objects::nonNull)
+                .map(Decorator::getName)
+                .filter(Objects::nonNull)
+                .anyMatch(decoratorName::equals);
     }
 
     public Decorator getDecorator(String decoratorName) {
+        if (decorators == null || decoratorName == null) {
+            return null;
+        }
         return decorators.stream()
-                .filter(d -> d.getName().equals(decoratorName))
+                .filter(Objects::nonNull)
+                .filter(d -> decoratorName.equals(d.getName()))
                 .findFirst()
                 .orElse(null);
     }
@@ -135,8 +146,7 @@ public class ClassDeclaration implements AstNode {
     public List<String> getBuilderMethodNames() {
         List<String> builderMethodNames = new ArrayList<>();
         for (AstNode member : members) {
-            if (member instanceof MethodDeclaration) {
-                MethodDeclaration method = (MethodDeclaration) member;
+            if (member instanceof MethodDeclaration method) {
                 if (method.isBuilderMethod()) {
                     builderMethodNames.add(method.getName());
                 }

@@ -25,50 +25,115 @@ public class MethodDeclarationConverter implements NodeConverter {
         String name = json.get("name").getAsString();
         MethodDeclaration methodDecl = new MethodDeclaration(name);
 
-        // Convert decorators
-        JsonArray decoratorsArray = json.getAsJsonArray("decorators");
-        if (decoratorsArray != null) {
-            for (int i = 0; i < decoratorsArray.size(); i++) {
-                JsonObject decObj = decoratorsArray.get(i).getAsJsonObject();
-                String decName = decObj.get("name").getAsString();
-                methodDecl.addDecorator(new Decorator(decName));
-            }
-        }
-
-        // Convert modifiers (static, async, etc.)
-        JsonArray modifiersArray = json.getAsJsonArray("modifiers");
-        if (modifiersArray != null) {
-            for (int i = 0; i < modifiersArray.size(); i++) {
-                JsonObject modObj = modifiersArray.get(i).getAsJsonObject();
-                String modKindName = modObj.has("kindName") ? modObj.get("kindName").getAsString() : "";
-                if ("StaticKeyword".equals(modKindName) || "static".equals(modKindName)) {
-                    methodDecl.setStatic(true);
-                }
-                if ("AsyncKeyword".equals(modKindName) || "async".equals(modKindName)) {
-                    methodDecl.setAsync(true);
-                }
-            }
-        }
-
-        // Convert parameters
-        JsonArray paramsArray = json.getAsJsonArray("parameters");
-        if (paramsArray != null) {
-            for (int i = 0; i < paramsArray.size(); i++) {
-                JsonObject paramObj = paramsArray.get(i).getAsJsonObject();
-                String paramName = paramObj.get("name").getAsString();
-                String paramType = paramObj.get("type").getAsString();
-                MethodDeclaration.Parameter param = new MethodDeclaration.Parameter(paramName, paramType);
-                methodDecl.addParameter(param);
-            }
-        }
-
-        // Convert body
-        JsonElement bodyElem = json.get("body");
-        if (bodyElem != null && !bodyElem.isJsonNull()) {
-            AstNode body = context.convertStatement(bodyElem.getAsJsonObject());
-            methodDecl.setBody(body);
-        }
+        convertDecorators(methodDecl, json);
+        convertModifiers(methodDecl, json);
+        convertParameters(methodDecl, json);
+        convertBody(methodDecl, json, context);
 
         return methodDecl;
+    }
+
+    /**
+     * Converts decorators.
+     * CC: 2 (null check + loop)
+     */
+    private void convertDecorators(MethodDeclaration methodDecl, JsonObject json) {
+        JsonArray decoratorsArray = json.getAsJsonArray("decorators");
+        if (decoratorsArray == null) {
+            return;
+        }
+
+        for (int i = 0; i < decoratorsArray.size(); i++) {
+            JsonObject decObj = decoratorsArray.get(i).getAsJsonObject();
+            String decName = decObj.get("name").getAsString();
+            methodDecl.addDecorator(new Decorator(decName));
+        }
+    }
+
+    /**
+     * Converts modifiers (static, async, etc.).
+     * CC: 3 (null check + loop + multiple ifs)
+     */
+    private void convertModifiers(MethodDeclaration methodDecl, JsonObject json) {
+        JsonArray modifiersArray = json.getAsJsonArray("modifiers");
+        if (modifiersArray == null) {
+            return;
+        }
+
+        for (int i = 0; i < modifiersArray.size(); i++) {
+            JsonObject modObj = modifiersArray.get(i).getAsJsonObject();
+            String modKindName = getKindName(modObj);
+            applyModifier(methodDecl, modKindName);
+        }
+    }
+
+    /**
+     * Applies a single modifier to method declaration.
+     * CC: 2 (if checks)
+     */
+    private void applyModifier(MethodDeclaration methodDecl, String modKindName) {
+        if (isStaticKeyword(modKindName)) {
+            methodDecl.setStatic(true);
+        }
+        if (isAsyncKeyword(modKindName)) {
+            methodDecl.setAsync(true);
+        }
+    }
+
+    /**
+     * Converts parameters.
+     * CC: 2 (null check + loop)
+     */
+    private void convertParameters(MethodDeclaration methodDecl, JsonObject json) {
+        JsonArray paramsArray = json.getAsJsonArray("parameters");
+        if (paramsArray == null) {
+            return;
+        }
+
+        for (int i = 0; i < paramsArray.size(); i++) {
+            JsonObject paramObj = paramsArray.get(i).getAsJsonObject();
+            String paramName = paramObj.get("name").getAsString();
+            String paramType = paramObj.get("type").getAsString();
+            MethodDeclaration.Parameter param = new MethodDeclaration.Parameter(paramName, paramType);
+            methodDecl.addParameter(param);
+        }
+    }
+
+    /**
+     * Converts method body.
+     * CC: 2 (null checks)
+     */
+    private void convertBody(MethodDeclaration methodDecl, JsonObject json, ConversionContext context) {
+        JsonElement bodyElem = json.get("body");
+        if (bodyElem == null || bodyElem.isJsonNull()) {
+            return;
+        }
+
+        AstNode body = context.convertStatement(bodyElem.getAsJsonObject());
+        methodDecl.setBody(body);
+    }
+
+    /**
+     * Gets kind name safely.
+     * CC: 1
+     */
+    private String getKindName(JsonObject obj) {
+        return obj.has("kindName") ? obj.get("kindName").getAsString() : "";
+    }
+
+    /**
+     * Checks if kind name represents static keyword.
+     * CC: 2 (equals checks)
+     */
+    private boolean isStaticKeyword(String kindName) {
+        return "StaticKeyword".equals(kindName) || "static".equals(kindName);
+    }
+
+    /**
+     * Checks if kind name represents async keyword.
+     * CC: 2 (equals checks)
+     */
+    private boolean isAsyncKeyword(String kindName) {
+        return "AsyncKeyword".equals(kindName) || "async".equals(kindName);
     }
 }

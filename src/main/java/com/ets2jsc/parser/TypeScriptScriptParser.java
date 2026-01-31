@@ -13,6 +13,7 @@ import com.google.gson.JsonObject;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -145,24 +146,39 @@ public class TypeScriptScriptParser {
         pb.redirectErrorStream(true);
 
         Process process = pb.start();
+        BufferedReader reader = null;
+        try {
+            // Read output (for debugging)
+            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder errorOutput = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                errorOutput.append(line).append("\n");
+            }
 
-        // Read output (for debugging)
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        StringBuilder errorOutput = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            errorOutput.append(line).append("\n");
+            int exitCode = process.waitFor();
+
+            if (exitCode != 0) {
+                throw new RuntimeException("TypeScript parser failed:\n" + errorOutput.toString());
+            }
+
+            // Read and parse JSON output
+            String jsonContent = Files.readString(outputFile);
+            return gson.fromJson(jsonContent, JsonObject.class);
+        } finally {
+            // Close the reader if it was opened
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignored) {
+                    // Ignore close exception
+                }
+            }
+            // Ensure the process is destroyed to prevent resource leaks
+            if (process != null) {
+                process.destroyForcibly();
+            }
         }
-
-        int exitCode = process.waitFor();
-
-        if (exitCode != 0) {
-            throw new RuntimeException("TypeScript parser failed:\n" + errorOutput.toString());
-        }
-
-        // Read and parse JSON output
-        String jsonContent = Files.readString(outputFile);
-        return gson.fromJson(jsonContent, JsonObject.class);
     }
 
     /**

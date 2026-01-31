@@ -2,11 +2,17 @@ package com.ets2jsc.config;
 
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 /**
  * Compiler configuration for the ETS to JS compiler.
  * Contains all settings needed for the compilation process.
  */
+@Getter
+@Setter
+@NoArgsConstructor
 public class CompilerConfig {
     // Path configuration
     private String projectPath;
@@ -14,23 +20,23 @@ public class CompilerConfig {
     private String sourcePath;
 
     // Compilation mode
-    private CompileMode compileMode;
-    private boolean partialUpdateMode;
-    private boolean isPreview;
+    private CompileMode compileMode = CompileMode.MODULE_JSON;
+    private boolean partialUpdateMode = true;
+    private boolean isPreview = false;
 
     // Output configuration
-    private boolean generateSourceMap;
-    private boolean generateDeclarations;
-    private boolean minifyOutput;
+    private boolean generateSourceMap = true;
+    private boolean generateDeclarations = false;
+    private boolean minifyOutput = false;
 
     // Feature flags
-    private boolean processTs;
-    private boolean enableLazyImport;
-    private boolean validateApi;
+    private boolean processTs = true;
+    private boolean enableLazyImport = false;
+    private boolean validateApi = true;
     private boolean pureJavaScript;  // Generate pure JS without ArkUI runtime dependencies
 
     // Entry points
-    private Map<String, String> entryObj;
+    private Map<String, String> entryObj = new HashMap<>();
 
     public enum CompileMode {
         JSBUNDLE,    // Traditional bundle mode
@@ -38,135 +44,14 @@ public class CompilerConfig {
         ES_MODULE    // ES Module mode
     }
 
-    public CompilerConfig() {
-        this.compileMode = CompileMode.MODULE_JSON;
-        this.partialUpdateMode = true;
-        this.isPreview = false;
-        this.generateSourceMap = true;
-        this.generateDeclarations = false;
-        this.minifyOutput = false;
-        this.processTs = true;
-        this.enableLazyImport = false;
-        this.validateApi = true;
-        this.entryObj = new HashMap<>();
-    }
-
-    // Getters and Setters
-
-    public String getProjectPath() {
-        return projectPath;
-    }
-
-    public void setProjectPath(String projectPath) {
-        this.projectPath = projectPath;
-    }
-
-    public String getBuildPath() {
-        return buildPath;
-    }
-
-    public void setBuildPath(String buildPath) {
-        this.buildPath = buildPath;
-    }
-
-    public String getSourcePath() {
-        return sourcePath;
-    }
-
-    public void setSourcePath(String sourcePath) {
-        this.sourcePath = sourcePath;
-    }
-
-    public CompileMode getCompileMode() {
-        return compileMode;
-    }
-
-    public void setCompileMode(CompileMode compileMode) {
-        this.compileMode = compileMode;
-    }
-
-    public boolean isPartialUpdateMode() {
-        return partialUpdateMode;
-    }
-
-    public void setPartialUpdateMode(boolean partialUpdateMode) {
-        this.partialUpdateMode = partialUpdateMode;
-    }
-
-    public boolean isPreview() {
-        return isPreview;
-    }
-
-    public void setPreview(boolean preview) {
-        isPreview = preview;
-    }
-
-    public boolean isGenerateSourceMap() {
-        return generateSourceMap;
-    }
-
-    public void setGenerateSourceMap(boolean generateSourceMap) {
-        this.generateSourceMap = generateSourceMap;
-    }
-
-    public boolean isGenerateDeclarations() {
-        return generateDeclarations;
-    }
-
-    public void setGenerateDeclarations(boolean generateDeclarations) {
-        this.generateDeclarations = generateDeclarations;
-    }
-
-    public boolean isMinifyOutput() {
-        return minifyOutput;
-    }
-
-    public void setMinifyOutput(boolean minifyOutput) {
-        this.minifyOutput = minifyOutput;
-    }
-
-    public boolean isProcessTs() {
-        return processTs;
-    }
-
-    public void setProcessTs(boolean processTs) {
-        this.processTs = processTs;
-    }
-
-    public boolean isEnableLazyImport() {
-        return enableLazyImport;
-    }
-
-    public void setEnableLazyImport(boolean enableLazyImport) {
-        this.enableLazyImport = enableLazyImport;
-    }
-
-    public boolean isValidateApi() {
-        return validateApi;
-    }
-
-    public void setValidateApi(boolean validateApi) {
-        this.validateApi = validateApi;
-    }
-
-    public Map<String, String> getEntryObj() {
-        return entryObj;
-    }
-
-    public void setEntryObj(Map<String, String> entryObj) {
-        this.entryObj = entryObj;
-    }
-
+    /**
+     * Adds an entry point to the configuration.
+     */
     public void addEntry(String key, String value) {
+        if (this.entryObj == null) {
+            this.entryObj = new HashMap<>();
+        }
         this.entryObj.put(key, value);
-    }
-
-    public boolean isPureJavaScript() {
-        return pureJavaScript;
-    }
-
-    public void setPureJavaScript(boolean pureJavaScript) {
-        this.pureJavaScript = pureJavaScript;
     }
 
     /**
@@ -193,7 +78,11 @@ public class CompilerConfig {
      */
     public static CompilerConfig createDefault() {
         CompilerConfig config = new CompilerConfig();
-        config.setProjectPath(System.getProperty("user.dir"));
+        String userDir = System.getProperty("user.dir");
+        if (userDir == null || userDir.isEmpty()) {
+            userDir = "."; // Fallback to current directory
+        }
+        config.setProjectPath(userDir);
         config.setBuildPath("build");
         config.setSourcePath("src/main/ets");
         return config;

@@ -21,19 +21,14 @@ public class StatePropertyTransformer extends PropertyTransformer {
 
     @Override
     protected String getInitializer(PropertyDeclaration prop) {
-        // State properties use the original initializer as the default value
-        return prop.getInitializer();
+        // State properties are initialized in constructor, not at declaration
+        return null;
     }
 
     @Override
     protected boolean needsConstructorInit() {
         // State properties need to be initialized in the constructor
         return true;
-    }
-
-    @Override
-    protected String getCreateMethodName() {
-        return RuntimeFunctions.CREATE_STATE;
     }
 
     @Override

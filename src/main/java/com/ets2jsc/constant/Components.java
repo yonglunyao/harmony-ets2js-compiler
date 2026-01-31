@@ -1,5 +1,6 @@
 package com.ets2jsc.constant;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -52,56 +53,66 @@ public final class Components {
     public static final String RELATIVE_CONTAINER = "RelativeContainer";
     public static final String ABSOLUTE_CONTAINER = "AbsoluteContainer";
 
-    // All built-in component names
-    public static final Set<String> ALL_COMPONENTS = new HashSet<>();
+    // All built-in component names (immutable)
+    public static final Set<String> ALL_COMPONENTS;
 
-    // Container component names
-    public static final Set<String> CONTAINER_COMPONENTS = new HashSet<>();
+    // Container component names (immutable)
+    public static final Set<String> CONTAINER_COMPONENTS;
 
-    // Atomic component names
-    public static final Set<String> ATOMIC_COMPONENTS = new HashSet<>();
+    // Atomic component names (immutable)
+    public static final Set<String> ATOMIC_COMPONENTS;
 
     static {
+        // Initialize mutable sets
+        Set<String> allComponents = new HashSet<>();
+        Set<String> containerComponents = new HashSet<>();
+        Set<String> atomicComponents = new HashSet<>();
+
         // Container components
-        CONTAINER_COMPONENTS.add(COLUMN);
-        CONTAINER_COMPONENTS.add(ROW);
-        CONTAINER_COMPONENTS.add(STACK);
-        CONTAINER_COMPONENTS.add(FLEX);
-        CONTAINER_COMPONENTS.add(GRID);
-        CONTAINER_COMPONENTS.add(LIST);
-        CONTAINER_COMPONENTS.add(SCROLL);
-        CONTAINER_COMPONENTS.add(SWIPER);
-        CONTAINER_COMPONENTS.add(TABS);
-        CONTAINER_COMPONENTS.add(NAVIGATOR);
-        CONTAINER_COMPONENTS.add(FOR_EACH);
-        CONTAINER_COMPONENTS.add(LAZY_FOR_EACH);
-        CONTAINER_COMPONENTS.add(IF);
-        CONTAINER_COMPONENTS.add(GRID_ROW);
-        CONTAINER_COMPONENTS.add(GRID_COL);
-        CONTAINER_COMPONENTS.add(RELATIVE_CONTAINER);
-        CONTAINER_COMPONENTS.add(ABSOLUTE_CONTAINER);
+        containerComponents.add(COLUMN);
+        containerComponents.add(ROW);
+        containerComponents.add(STACK);
+        containerComponents.add(FLEX);
+        containerComponents.add(GRID);
+        containerComponents.add(LIST);
+        containerComponents.add(SCROLL);
+        containerComponents.add(SWIPER);
+        containerComponents.add(TABS);
+        containerComponents.add(NAVIGATOR);
+        containerComponents.add(FOR_EACH);
+        containerComponents.add(LAZY_FOR_EACH);
+        containerComponents.add(IF);
+        containerComponents.add(GRID_ROW);
+        containerComponents.add(GRID_COL);
+        containerComponents.add(RELATIVE_CONTAINER);
+        containerComponents.add(ABSOLUTE_CONTAINER);
 
         // Atomic components
-        ATOMIC_COMPONENTS.add(TEXT);
-        ATOMIC_COMPONENTS.add(IMAGE);
-        ATOMIC_COMPONENTS.add(TEXT_INPUT);
-        ATOMIC_COMPONENTS.add(TEXT_AREA);
-        ATOMIC_COMPONENTS.add(BUTTON);
-        ATOMIC_COMPONENTS.add(TOGGLE);
-        ATOMIC_COMPONENTS.add(CHECK_BOX);
-        ATOMIC_COMPONENTS.add(RADIO);
-        ATOMIC_COMPONENTS.add(SLIDER);
-        ATOMIC_COMPONENTS.add(PROGRESS);
-        ATOMIC_COMPONENTS.add(DIVIDER);
-        ATOMIC_COMPONENTS.add(BLANK);
-        ATOMIC_COMPONENTS.add(SPAN);
-        ATOMIC_COMPONENTS.add(SELECT);
-        ATOMIC_COMPONENTS.add(PICKER);
-        ATOMIC_COMPONENTS.add(DATA_PICKER);
-        ATOMIC_COMPONENTS.add(TIME_PICKER);
+        atomicComponents.add(TEXT);
+        atomicComponents.add(IMAGE);
+        atomicComponents.add(TEXT_INPUT);
+        atomicComponents.add(TEXT_AREA);
+        atomicComponents.add(BUTTON);
+        atomicComponents.add(TOGGLE);
+        atomicComponents.add(CHECK_BOX);
+        atomicComponents.add(RADIO);
+        atomicComponents.add(SLIDER);
+        atomicComponents.add(PROGRESS);
+        atomicComponents.add(DIVIDER);
+        atomicComponents.add(BLANK);
+        atomicComponents.add(SPAN);
+        atomicComponents.add(SELECT);
+        atomicComponents.add(PICKER);
+        atomicComponents.add(DATA_PICKER);
+        atomicComponents.add(TIME_PICKER);
 
-        ALL_COMPONENTS.addAll(CONTAINER_COMPONENTS);
-        ALL_COMPONENTS.addAll(ATOMIC_COMPONENTS);
+        allComponents.addAll(containerComponents);
+        allComponents.addAll(atomicComponents);
+
+        // Make sets immutable to prevent runtime modification
+        ALL_COMPONENTS = Collections.unmodifiableSet(allComponents);
+        CONTAINER_COMPONENTS = Collections.unmodifiableSet(containerComponents);
+        ATOMIC_COMPONENTS = Collections.unmodifiableSet(atomicComponents);
     }
 
     /**

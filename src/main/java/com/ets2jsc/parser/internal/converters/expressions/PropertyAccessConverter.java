@@ -24,7 +24,7 @@ public class PropertyAccessConverter implements NodeConverter {
 
         // Check if this is a chained call (expression is CallExpression with arguments)
         JsonArray argsArray = json.getAsJsonArray("arguments");
-        if (argsArray != null && argsArray.size() > 0) {
+        if (argsArray != null && !argsArray.isEmpty()) {
             StringBuilder args = new StringBuilder();
             for (int i = 0; i < argsArray.size(); i++) {
                 if (i > 0) args.append(", ");

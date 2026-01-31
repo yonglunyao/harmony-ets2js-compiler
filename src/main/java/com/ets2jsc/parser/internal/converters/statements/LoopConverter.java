@@ -69,8 +69,7 @@ public abstract class LoopConverter implements NodeConverter {
      */
     protected String formatBody(AstNode stmt) {
         StringBuilder sb = new StringBuilder();
-        if (stmt instanceof Block) {
-            Block block = (Block) stmt;
+        if (stmt instanceof Block block) {
             for (AstNode blockStmt : block.getStatements()) {
                 String stmtCode = blockStmt.accept(new CodeGenerator());
                 sb.append("  ").append(stmtCode);

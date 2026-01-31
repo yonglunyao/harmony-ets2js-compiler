@@ -8,10 +8,10 @@ import java.util.List;
  * Used for build() method transformation and other methods.
  */
 public class MethodDeclaration implements AstNode {
+    private final List<Parameter> parameters;
+    private final List<Decorator> decorators;
     private String name;
     private String returnType;
-    private List<Parameter> parameters;
-    private List<Decorator> decorators;
     private AstNode body;
     private boolean isAsync;
     private boolean isStatic;

@@ -19,10 +19,7 @@ public class WhileConverter extends LoopConverter {
         JsonObject expression = json.getAsJsonObject("expression");
         String condition = expression != null ? context.convertExpression(expression) : "";
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("while (").append(condition).append(") {\n");
-
-        return sb.toString();
+        return "while (" + condition + ") {\n";
     }
 
     @Override

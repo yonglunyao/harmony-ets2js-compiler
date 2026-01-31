@@ -61,17 +61,23 @@ public class ProcessExecutor {
         pb.redirectErrorStream(true);
 
         Process process = pb.start();
+        try {
+            // Read output (for debugging)
+            String output = readProcessOutput(process.getInputStream());
+            int exitCode = process.waitFor();
 
-        // Read output (for debugging)
-        String output = readProcessOutput(process.getInputStream());
-        int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new IOException("TypeScript parser failed with exit code " + exitCode
+                        + ":\n" + output);
+            }
 
-        if (exitCode != 0) {
-            throw new IOException("TypeScript parser failed with exit code " + exitCode
-                    + ":\n" + output);
+            return new ProcessResult(exitCode, output, "");
+        } finally {
+            // Ensure the process is destroyed to prevent resource leaks
+            if (process != null) {
+                process.destroyForcibly();
+            }
         }
-
-        return new ProcessResult(exitCode, output, "");
     }
 
     /**
@@ -84,10 +90,41 @@ public class ProcessExecutor {
     private List<String> buildCommand(Path sourceFile, Path outputFile) {
         List<String> command = new ArrayList<>();
         command.add("node");
-        command.add(scriptPath);
+        command.add(validateScriptPath(scriptPath).toString());
         command.add(sourceFile.toAbsolutePath().toString());
         command.add(outputFile.toAbsolutePath().toString());
         return command;
+    }
+
+    /**
+     * Validates the script path to ensure it is safe and exists.
+     *
+     * @param path the script path to validate
+     * @return the validated normalized path
+     * @throws SecurityException if the path is invalid
+     */
+    private Path validateScriptPath(String path) {
+        if (path == null || path.isEmpty()) {
+            throw new SecurityException("Script path cannot be null or empty");
+        }
+
+        Path scriptPath = Path.of(path).toAbsolutePath().normalize();
+
+        // Validate the file exists and is a regular file
+        if (!Files.exists(scriptPath)) {
+            throw new SecurityException("Script path does not exist: " + path);
+        }
+        if (!Files.isRegularFile(scriptPath)) {
+            throw new SecurityException("Script path is not a regular file: " + path);
+        }
+
+        // Validate the file extension
+        String fileName = scriptPath.getFileName().toString();
+        if (!fileName.endsWith(".js")) {
+            throw new SecurityException("Script path must be a .js file: " + path);
+        }
+
+        return scriptPath;
     }
 
     /**

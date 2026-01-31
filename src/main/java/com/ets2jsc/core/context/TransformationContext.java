@@ -3,6 +3,7 @@ package com.ets2jsc.core.context;
 import com.ets2jsc.ast.AstNode;
 import com.ets2jsc.ast.ClassDeclaration;
 import com.ets2jsc.ast.MethodDeclaration;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,10 +17,13 @@ import java.util.Map;
  */
 public class TransformationContext {
 
+    @Getter
     private final CompilationContext compilationContext;
     private final Map<String, Object> attributes;
     private final Map<String, Integer> counters;
+    @Getter
     private ClassDeclaration currentClass;
+    @Getter
     private MethodDeclaration currentMethod;
     private int insideComponentClassDepth;
 
@@ -33,15 +37,6 @@ public class TransformationContext {
         this.attributes = new HashMap<>();
         this.counters = new HashMap<>();
         this.insideComponentClassDepth = 0;
-    }
-
-    /**
-     * Gets the parent compilation context.
-     *
-     * @return the compilation context
-     */
-    public CompilationContext getCompilationContext() {
-        return compilationContext;
     }
 
     /**
@@ -72,15 +67,6 @@ public class TransformationContext {
     }
 
     /**
-     * Gets the currently being transformed class.
-     *
-     * @return the current class, or null if not inside a class
-     */
-    public ClassDeclaration getCurrentClass() {
-        return currentClass;
-    }
-
-    /**
      * Sets the currently being transformed class.
      *
      * @param currentClass the current class
@@ -96,15 +82,6 @@ public class TransformationContext {
      */
     public boolean isInsideClass() {
         return currentClass != null;
-    }
-
-    /**
-     * Gets the currently being transformed method.
-     *
-     * @return the current method, or null if not inside a method
-     */
-    public MethodDeclaration getCurrentMethod() {
-        return currentMethod;
     }
 
     /**
@@ -173,7 +150,7 @@ public class TransformationContext {
     /**
      * Gets an attribute value from the context with a default value.
      *
-     * @param key the attribute key
+     * @param key          the attribute key
      * @param defaultValue the default value
      * @return the attribute value, or the default if not found
      */

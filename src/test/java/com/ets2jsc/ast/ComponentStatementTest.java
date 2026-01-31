@@ -1,10 +1,7 @@
 package com.ets2jsc.ast;
 
-import com.ets2jsc.ast.Block;
-import com.ets2jsc.ast.ComponentStatement;
 import com.ets2jsc.ast.ComponentStatement.ComponentPart;
 import com.ets2jsc.ast.ComponentStatement.PartKind;
-import com.ets2jsc.ast.ExpressionStatement;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
@@ -114,8 +111,8 @@ class ComponentStatementTest {
     void testComponentPartCreate() {
         ComponentPart part = new ComponentPart(PartKind.CREATE, "'Hello'");
 
-        assertEquals(PartKind.CREATE, part.getKind());
-        assertEquals("'Hello'", part.getCode());
+        assertEquals(PartKind.CREATE, part.kind());
+        assertEquals("'Hello'", part.code());
     }
 
     @Test
@@ -123,8 +120,8 @@ class ComponentStatementTest {
     void testComponentPartMethod() {
         ComponentPart part = new ComponentPart(PartKind.METHOD, "fontSize(16)");
 
-        assertEquals(PartKind.METHOD, part.getKind());
-        assertEquals("fontSize(16)", part.getCode());
+        assertEquals(PartKind.METHOD, part.kind());
+        assertEquals("fontSize(16)", part.code());
     }
 
     @Test
@@ -132,8 +129,8 @@ class ComponentStatementTest {
     void testComponentPartPop() {
         ComponentPart part = new ComponentPart(PartKind.POP, "");
 
-        assertEquals(PartKind.POP, part.getKind());
-        assertEquals("", part.getCode());
+        assertEquals(PartKind.POP, part.kind());
+        assertEquals("", part.code());
     }
 
     @Test
@@ -148,9 +145,9 @@ class ComponentStatementTest {
         stmt.addPart(new ComponentPart(PartKind.POP, ""));
 
         assertEquals(5, stmt.getParts().size());
-        assertEquals(PartKind.METHOD, stmt.getParts().get(1).getKind());
-        assertEquals(PartKind.METHOD, stmt.getParts().get(2).getKind());
-        assertEquals(PartKind.METHOD, stmt.getParts().get(3).getKind());
+        assertEquals(PartKind.METHOD, stmt.getParts().get(1).kind());
+        assertEquals(PartKind.METHOD, stmt.getParts().get(2).kind());
+        assertEquals(PartKind.METHOD, stmt.getParts().get(3).kind());
     }
 
     @Test
@@ -218,11 +215,11 @@ class ComponentStatementTest {
         stmt.addPart(new ComponentPart(PartKind.METHOD, "textAlign(TextAlign.Center)"));
         stmt.addPart(new ComponentPart(PartKind.POP, ""));
 
-        assertEquals("'Hello World'", stmt.getParts().get(0).getCode());
-        assertEquals("width('100%')", stmt.getParts().get(1).getCode());
-        assertEquals("height(50)", stmt.getParts().get(2).getCode());
-        assertEquals("textAlign(TextAlign.Center)", stmt.getParts().get(3).getCode());
-        assertEquals("", stmt.getParts().get(4).getCode());
+        assertEquals("'Hello World'", stmt.getParts().get(0).code());
+        assertEquals("width('100%')", stmt.getParts().get(1).code());
+        assertEquals("height(50)", stmt.getParts().get(2).code());
+        assertEquals("textAlign(TextAlign.Center)", stmt.getParts().get(3).code());
+        assertEquals("", stmt.getParts().get(4).code());
     }
 
     @Test

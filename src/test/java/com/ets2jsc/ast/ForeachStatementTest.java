@@ -1,6 +1,5 @@
 package com.ets2jsc.ast;
 
-import com.ets2jsc.ast.ForeachStatement;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
@@ -18,8 +17,8 @@ class ForeachStatementTest {
         ForeachStatement forEach = new ForeachStatement("this.items", "(item) => {}", null);
 
         assertEquals("ForeachStatement", forEach.getType());
-        assertEquals("this.items", forEach.getArrayExpression());
-        assertEquals("(item) => {}", forEach.getItemGenerator());
+        assertEquals("this.items", forEach.arrayExpression());
+        assertEquals("(item) => {}", forEach.itemGenerator());
     }
 
     @Test
@@ -27,7 +26,7 @@ class ForeachStatementTest {
     void testGetArrayExpression() {
         ForeachStatement forEach = new ForeachStatement("arr", "(item) => {}", null);
 
-        assertEquals("arr", forEach.getArrayExpression());
+        assertEquals("arr", forEach.arrayExpression());
     }
 
     @Test
@@ -36,7 +35,7 @@ class ForeachStatementTest {
         String itemGen = "(item, index) => { Text.create(item.name); }";
         ForeachStatement forEach = new ForeachStatement("items", itemGen, null);
 
-        assertEquals(itemGen, forEach.getItemGenerator());
+        assertEquals(itemGen, forEach.itemGenerator());
     }
 
     @Test
@@ -45,7 +44,7 @@ class ForeachStatementTest {
         String keyGen = "(item) => item.id";
         ForeachStatement forEach = new ForeachStatement("items", "(item) => {}", keyGen);
 
-        assertEquals(keyGen, forEach.getKeyGenerator());
+        assertEquals(keyGen, forEach.keyGenerator());
     }
 
     @Test
@@ -53,7 +52,7 @@ class ForeachStatementTest {
     void testNoKeyGenerator() {
         ForeachStatement forEach = new ForeachStatement("items", "(item) => {}", null);
 
-        assertNull(forEach.getKeyGenerator());
+        assertNull(forEach.keyGenerator());
     }
 
     @Test
@@ -63,9 +62,9 @@ class ForeachStatementTest {
         ForeachStatement forEach2 = new ForeachStatement("list", "(item) => {}", null);
         ForeachStatement forEach3 = new ForeachStatement("data", "(item) => {}", null);
 
-        assertEquals("arr", forEach1.getArrayExpression());
-        assertEquals("list", forEach2.getArrayExpression());
-        assertEquals("data", forEach3.getArrayExpression());
+        assertEquals("arr", forEach1.arrayExpression());
+        assertEquals("list", forEach2.arrayExpression());
+        assertEquals("data", forEach3.arrayExpression());
     }
 
     @Test
@@ -75,9 +74,9 @@ class ForeachStatementTest {
         ForeachStatement forEach2 = new ForeachStatement("this.data.list", "(item) => {}", null);
         ForeachStatement forEach3 = new ForeachStatement("obj.items", "(item) => {}", null);
 
-        assertEquals("this.items", forEach1.getArrayExpression());
-        assertEquals("this.data.list", forEach2.getArrayExpression());
-        assertEquals("obj.items", forEach3.getArrayExpression());
+        assertEquals("this.items", forEach1.arrayExpression());
+        assertEquals("this.data.list", forEach2.arrayExpression());
+        assertEquals("obj.items", forEach3.arrayExpression());
     }
 
     @Test
@@ -87,9 +86,9 @@ class ForeachStatementTest {
         ForeachStatement forEach2 = new ForeachStatement("items", "(item, index) => {}", null);
         ForeachStatement forEach3 = new ForeachStatement("items", "() => {}", null);
 
-        assertTrue(forEach1.getItemGenerator().contains("=>"));
-        assertTrue(forEach2.getItemGenerator().contains("=>"));
-        assertTrue(forEach3.getItemGenerator().contains("=>"));
+        assertTrue(forEach1.itemGenerator().contains("=>"));
+        assertTrue(forEach2.itemGenerator().contains("=>"));
+        assertTrue(forEach3.itemGenerator().contains("=>"));
     }
 
     @Test
@@ -98,7 +97,7 @@ class ForeachStatementTest {
         String complexGen = "(item, index) => { Text.create(item.name); Text.fontSize(16); Text.pop(); }";
         ForeachStatement forEach = new ForeachStatement("items", complexGen, null);
 
-        assertEquals(complexGen, forEach.getItemGenerator());
+        assertEquals(complexGen, forEach.itemGenerator());
     }
 
     @Test
@@ -109,10 +108,10 @@ class ForeachStatementTest {
         ForeachStatement forEach3 = new ForeachStatement("items", "(item) => {}", "(item, index) => index");
         ForeachStatement forEach4 = new ForeachStatement("items", "(item) => {}", "(item) => JSON.stringify(item)");
 
-        assertEquals("(item) => item.id", forEach1.getKeyGenerator());
-        assertEquals("(item) => item.key", forEach2.getKeyGenerator());
-        assertEquals("(item, index) => index", forEach3.getKeyGenerator());
-        assertEquals("(item) => JSON.stringify(item)", forEach4.getKeyGenerator());
+        assertEquals("(item) => item.id", forEach1.keyGenerator());
+        assertEquals("(item) => item.key", forEach2.keyGenerator());
+        assertEquals("(item, index) => index", forEach3.keyGenerator());
+        assertEquals("(item) => JSON.stringify(item)", forEach4.keyGenerator());
     }
 
     @Test
@@ -120,7 +119,7 @@ class ForeachStatementTest {
     void testEmptyItemGenerator() {
         ForeachStatement forEach = new ForeachStatement("items", "", null);
 
-        assertEquals("", forEach.getItemGenerator());
+        assertEquals("", forEach.itemGenerator());
     }
 
     @Test
@@ -128,7 +127,7 @@ class ForeachStatementTest {
     void testEmptyKeyGenerator() {
         ForeachStatement forEach = new ForeachStatement("items", "(item) => {}", "");
 
-        assertEquals("", forEach.getKeyGenerator());
+        assertEquals("", forEach.keyGenerator());
     }
 
     @Test
@@ -137,8 +136,8 @@ class ForeachStatementTest {
         ForeachStatement forEach1 = new ForeachStatement("this.list", "(item) => {}", null);
         ForeachStatement forEach2 = new ForeachStatement("this.state.items", "(item) => {}", null);
 
-        assertEquals("this.list", forEach1.getArrayExpression());
-        assertEquals("this.state.items", forEach2.getArrayExpression());
+        assertEquals("this.list", forEach1.arrayExpression());
+        assertEquals("this.state.items", forEach2.arrayExpression());
     }
 
     @Test
@@ -147,8 +146,8 @@ class ForeachStatementTest {
         ForeachStatement forEach1 = new ForeachStatement("this.getItems()", "(item) => {}", null);
         ForeachStatement forEach2 = new ForeachStatement("data.filter(x => x.active)", "(item) => {}", null);
 
-        assertEquals("this.getItems()", forEach1.getArrayExpression());
-        assertEquals("data.filter(x => x.active)", forEach2.getArrayExpression());
+        assertEquals("this.getItems()", forEach1.arrayExpression());
+        assertEquals("data.filter(x => x.active)", forEach2.arrayExpression());
     }
 
     @Test
@@ -166,9 +165,9 @@ class ForeachStatementTest {
         ForeachStatement forEach = new ForeachStatement("items",
             "(item, index, array) => { console.log(index, item); }", null);
 
-        assertTrue(forEach.getItemGenerator().contains("item"));
-        assertTrue(forEach.getItemGenerator().contains("index"));
-        assertTrue(forEach.getItemGenerator().contains("array"));
+        assertTrue(forEach.itemGenerator().contains("item"));
+        assertTrue(forEach.itemGenerator().contains("index"));
+        assertTrue(forEach.itemGenerator().contains("array"));
     }
 
     @Test
@@ -177,8 +176,8 @@ class ForeachStatementTest {
         String asyncGen = "async (item) => { await processItem(item); }";
         ForeachStatement forEach = new ForeachStatement("items", asyncGen, null);
 
-        assertEquals(asyncGen, forEach.getItemGenerator());
-        assertTrue(forEach.getItemGenerator().contains("async"));
-        assertTrue(forEach.getItemGenerator().contains("await"));
+        assertEquals(asyncGen, forEach.itemGenerator());
+        assertTrue(forEach.itemGenerator().contains("async"));
+        assertTrue(forEach.itemGenerator().contains("await"));
     }
 }

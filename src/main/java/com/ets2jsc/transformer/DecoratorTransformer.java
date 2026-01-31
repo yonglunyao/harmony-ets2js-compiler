@@ -4,66 +4,36 @@ import com.ets2jsc.ast.*;
 import com.ets2jsc.constant.Decorators;
 import com.ets2jsc.constant.RuntimeFunctions;
 import com.ets2jsc.constant.Symbols;
+import com.ets2jsc.transformer.decorators.PropertyTransformer;
+import com.ets2jsc.transformer.decorators.impl.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Transforms decorators in ETS code.
- * Handles @Component, @State, @Prop, @Link, etc.
+ * Handles @Component, @State, @Prop, @Link, @Provide, @Consume.
  */
 public class DecoratorTransformer implements AstTransformer {
 
-    private final boolean partialUpdateMode;
-
-    /**
-     * Property type configuration for transformation.
-     */
-    private static class PropertyTypeConfig {
-        final String observedPropertyType;
-        final String runtimeCreateMethod;
-        final boolean useInitializer;
-
-        PropertyTypeConfig(String observedPropertyType, String runtimeCreateMethod, boolean useInitializer) {
-            this.observedPropertyType = observedPropertyType;
-            this.runtimeCreateMethod = runtimeCreateMethod;
-            this.useInitializer = useInitializer;
-        }
-    }
-
-    // Property type configurations
-    private static final PropertyTypeConfig STATE_CONFIG = new PropertyTypeConfig(
-        RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE,
-        RuntimeFunctions.CREATE_STATE,
-        false  // State properties are initialized in constructor via createState()
-    );
-
-    private static final PropertyTypeConfig PROP_CONFIG = new PropertyTypeConfig(
-        RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE_ONE_WAY,
-        RuntimeFunctions.CREATE_PROP,
-        false
-    );
-
-    private static final PropertyTypeConfig LINK_CONFIG = new PropertyTypeConfig(
-        RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE_TWO_WAY,
-        RuntimeFunctions.CREATE_LINK,
-        false
-    );
-
-    private static final PropertyTypeConfig PROVIDE_CONFIG = new PropertyTypeConfig(
-        RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE,
-        RuntimeFunctions.CREATE_STATE,
-        true
-    );
-
-    private static final PropertyTypeConfig CONSUME_CONFIG = new PropertyTypeConfig(
-        RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE,
-        RuntimeFunctions.CREATE_STATE,
-        true
-    );
+    private final List<PropertyTransformer> propertyTransformers;
 
     public DecoratorTransformer(boolean partialUpdateMode) {
-        this.partialUpdateMode = partialUpdateMode;
+        this.propertyTransformers = createPropertyTransformers();
+    }
+
+    /**
+     * Creates property transformers for each decorator type.
+     * CC: 1 (just list creation)
+     */
+    private List<PropertyTransformer> createPropertyTransformers() {
+        List<PropertyTransformer> transformers = new ArrayList<>();
+        transformers.add(new StatePropertyTransformer());
+        transformers.add(new PropPropertyTransformer());
+        transformers.add(new LinkPropertyTransformer());
+        transformers.add(new ProvidePropertyTransformer());
+        transformers.add(new ConsumePropertyTransformer());
+        return transformers;
     }
 
     @Override
@@ -81,251 +51,211 @@ public class DecoratorTransformer implements AstTransformer {
     @Override
     public boolean canTransform(AstNode node) {
         if (node instanceof ClassDeclaration) {
-            ClassDeclaration classDecl = (ClassDeclaration) node;
-            return classDecl.getDecorators().stream()
-                    .anyMatch(d -> d.isComponentDecorator());
+            return hasComponentDecorator((ClassDeclaration) node);
         }
         if (node instanceof PropertyDeclaration) {
-            PropertyDeclaration prop = (PropertyDeclaration) node;
-            return prop.getDecorators().stream()
-                    .anyMatch(d -> d.isStateDecorator() || d.isPropDecorator() || d.isLinkDecorator());
+            return hasStateDecorator((PropertyDeclaration) node);
         }
         return false;
     }
 
     /**
+     * Checks if class has component decorator.
+     * CC: 1
+     */
+    private boolean hasComponentDecorator(ClassDeclaration classDecl) {
+        return classDecl.getDecorators().stream()
+                .anyMatch(Decorator::isComponentDecorator);
+    }
+
+    /**
+     * Checks if property has state decorator.
+     * CC: 1
+     */
+    private boolean hasStateDecorator(PropertyDeclaration prop) {
+        return prop.getDecorators().stream()
+                .anyMatch(d -> d.isStateDecorator() || d.isPropDecorator() || d.isLinkDecorator());
+    }
+
+    /**
      * Transforms a class declaration with decorators.
-     * Handles @Component struct → class View transformation.
-     * Handles @Entry decorator validation and export.
+     * CC: 3 (if checks + method calls)
      */
     private ClassDeclaration transformClassDeclaration(ClassDeclaration classDecl) {
-        // Check if this is a @Component struct or @Entry component
         boolean isComponent = classDecl.hasDecorator(Decorators.COMPONENT);
         boolean isEntry = classDecl.hasDecorator(Decorators.ENTRY);
 
         if (isEntry) {
-            // Validate @Entry usage
             validateEntryDecorator(classDecl);
-            // Mark for default export
             classDecl.setExport(true);
         }
 
         if (isComponent || isEntry) {
-            // Transform struct to class extending View
-            classDecl.setStruct(false);
-            classDecl.setSuperClass(RuntimeFunctions.VIEW);
-
-            // Add private properties for state/prop/link/provide/consume variables
-            List<PropertyDeclaration> properties = classDecl.getProperties();
-            List<PropertyDeclaration> stateProperties = new ArrayList<>();
-            List<PropertyDeclaration> propProperties = new ArrayList<>();
-            List<PropertyDeclaration> linkProperties = new ArrayList<>();
-            List<PropertyDeclaration> provideProperties = new ArrayList<>();
-            List<PropertyDeclaration> consumeProperties = new ArrayList<>();
-
-            for (PropertyDeclaration prop : properties) {
-                if (prop.hasDecorator(Decorators.STATE)) {
-                    stateProperties.add(prop);
-                } else if (prop.hasDecorator(Decorators.PROP)) {
-                    propProperties.add(prop);
-                } else if (prop.hasDecorator(Decorators.LINK)) {
-                    linkProperties.add(prop);
-                } else if (prop.hasDecorator(Decorators.PROVIDE)) {
-                    provideProperties.add(prop);
-                } else if (prop.hasDecorator(Decorators.CONSUME)) {
-                    consumeProperties.add(prop);
-                }
-            }
-
-            // Transform State properties
-            for (PropertyDeclaration stateProp : stateProperties) {
-                transformStateProperty(classDecl, stateProp);
-            }
-
-            // Transform Prop properties
-            for (PropertyDeclaration propProp : propProperties) {
-                transformPropProperty(classDecl, propProp);
-            }
-
-            // Transform Link properties
-            for (PropertyDeclaration linkProp : linkProperties) {
-                transformLinkProperty(classDecl, linkProp);
-            }
-
-            // Transform Provide properties
-            for (PropertyDeclaration provideProp : provideProperties) {
-                transformProvideProperty(classDecl, provideProp);
-            }
-
-            // Transform Consume properties
-            for (PropertyDeclaration consumeProp : consumeProperties) {
-                transformConsumeProperty(classDecl, consumeProp);
-            }
-
-            // Add constructor if needed (only for State properties)
-            if (!stateProperties.isEmpty()) {
-                addConstructor(classDecl, stateProperties);
-            }
+            transformToViewClass(classDecl);
         }
 
         return classDecl;
     }
 
     /**
-     * Transforms a property declaration with decorators.
-     * Creates the private property and getter/setter.
+     * Transforms struct to View class.
+     * CC: 2 (method calls)
+     */
+    private void transformToViewClass(ClassDeclaration classDecl) {
+        classDecl.setStruct(false);
+        classDecl.setSuperClass(RuntimeFunctions.VIEW);
+
+        // First collect state properties before transformation
+        List<PropertyDeclaration> stateProperties = findStateProperties(classDecl);
+
+        transformProperties(classDecl);
+
+        // Add constructor if there are state properties
+        if (!stateProperties.isEmpty()) {
+            addConstructor(classDecl, stateProperties);
+        }
+    }
+
+    /**
+     * Transforms all decorated properties.
+     * CC: 2 (loop + method call)
+     */
+    private void transformProperties(ClassDeclaration classDecl) {
+        List<PropertyDeclaration> properties = classDecl.getProperties();
+
+        for (PropertyDeclaration prop : properties) {
+            transformProperty(classDecl, prop);
+        }
+    }
+
+    /**
+     * Transforms a single property using appropriate transformer.
+     * CC: 2 (loop + early continue)
+     */
+    private void transformProperty(ClassDeclaration classDecl, PropertyDeclaration prop) {
+        for (PropertyTransformer transformer : propertyTransformers) {
+            if (transformer.canHandle(prop)) {
+                transformer.transform(classDecl, prop);
+                return;
+            }
+        }
+    }
+
+    // Removed - now handled in transformToViewClass to avoid timing issues
+
+    /**
+     * Finds all State properties in class.
+     * CC: 2 (loop + condition)
+     */
+    private List<PropertyDeclaration> findStateProperties(ClassDeclaration classDecl) {
+        List<PropertyDeclaration> stateProperties = new ArrayList<>();
+
+        for (PropertyDeclaration prop : classDecl.getProperties()) {
+            if (prop.hasDecorator(Decorators.STATE)) {
+                stateProperties.add(prop);
+            }
+        }
+
+        return stateProperties;
+    }
+
+    /**
+     * Adds constructor with State property initialization.
+     * CC: 2 (loop + string building)
+     */
+    private void addConstructor(ClassDeclaration classDecl, List<PropertyDeclaration> stateProps) {
+        MethodDeclaration constructor = new MethodDeclaration("constructor");
+        constructor.setBody(new com.ets2jsc.ast.ExpressionStatement(buildConstructorBody(stateProps)));
+        classDecl.getMembers().add(0, constructor);
+    }
+
+    /**
+     * Builds constructor body with State property initialization.
+     * CC: 2 (loop + string building)
+     */
+    private String buildConstructorBody(List<PropertyDeclaration> stateProps) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("super();\n");
+
+        for (PropertyDeclaration stateProp : stateProps) {
+            String propName = stateProp.getName();
+            String privateName = propName + Symbols.PRIVATE_PROPERTY_SUFFIX;
+            String initValue = getInitializerValue(stateProp);
+
+            sb.append(buildStateInit(propName, privateName, initValue));
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Gets initializer value for property.
+     * CC: 2 (null check + ternary)
+     */
+    private String getInitializerValue(PropertyDeclaration stateProp) {
+        String initializer = stateProp.getInitializer();
+        if (initializer != null && !initializer.isEmpty()) {
+            return initializer;
+        }
+        return Symbols.UNDEFINED_LITERAL;
+    }
+
+    /**
+     * Builds State property initialization statement.
+     * CC: 1
+     */
+    private String buildStateInit(String propName, String privateName, String initValue) {
+        return Symbols.THIS_KEYWORD_FULL + "." + privateName + " = "
+                + Symbols.THIS_KEYWORD_FULL + "." + RuntimeFunctions.CREATE_STATE + "("
+                + "'" + propName + "', "
+                + "() => " + initValue
+                + ");\n";
+    }
+
+    /**
+     * Transforms a property declaration (no-op, handled at class level).
+     * CC: 1
      */
     private PropertyDeclaration transformPropertyDeclaration(PropertyDeclaration prop) {
-        if (prop.hasDecorator(Decorators.STATE)) {
-            // State properties are handled at class level
-            return prop;
-        }
+        // State properties are handled at class level
         return prop;
     }
 
     /**
      * Transforms a method declaration with decorators.
+     * CC: 1
      */
     private MethodDeclaration transformMethodDeclaration(MethodDeclaration method) {
         if (method.isBuilderMethod()) {
-            // Add BuilderParam parameter
-            MethodDeclaration.Parameter builderParam = new MethodDeclaration.Parameter(Symbols.BUILDER_PARAM_NAME);
-            builderParam.setType(RuntimeFunctions.BUILDER_PARAM);
-            method.addParameter(builderParam);
+            addBuilderParameter(method);
         }
         return method;
     }
 
     /**
-     * Generic property transformation method.
-     * Handles State, Prop, Link, Provide, Consume properties.
+     * Adds BuilderParam parameter to builder method.
+     * CC: 1
      */
-    private void transformProperty(ClassDeclaration classDecl, PropertyDeclaration prop, PropertyTypeConfig config) {
-        String propName = prop.getName();
-        String privateName = Symbols.privatePropertyName(propName);
-        String propType = prop.getTypeAnnotation();
-
-        // Create private property declaration
-        PropertyDeclaration privateProp = new PropertyDeclaration(privateName);
-        privateProp.setTypeAnnotation(config.observedPropertyType + Symbols.LEFT_ANGLE + propType + Symbols.RIGHT_ANGLE);
-        privateProp.setVisibility(PropertyDeclaration.Visibility.PRIVATE);
-        if (config.useInitializer) {
-            privateProp.setInitializer(prop.getInitializer());
-        }
-
-        // Create getter
-        MethodDeclaration getter = new MethodDeclaration(Symbols.getterName(propName));
-        getter.setReturnType(propType);
-        getter.setBody(new ExpressionStatement("return this." + privateName + ".get()"));
-
-        // Create setter
-        MethodDeclaration setter = new MethodDeclaration(Symbols.setterName(propName));
-        MethodDeclaration.Parameter valueParam = new MethodDeclaration.Parameter("newValue", propType);
-        setter.addParameter(valueParam);
-        setter.setReturnType("void");
-        setter.setBody(new ExpressionStatement("this." + privateName + ".set(newValue)"));
-
-        // Find and remove original property from class
-        classDecl.getMembers().remove(prop);
-
-        // Add new members: private property, getter, setter
-        classDecl.addMember(privateProp);
-        classDecl.addMember(getter);
-        classDecl.addMember(setter);
-    }
-
-    /**
-     * Transforms a state property.
-     * Creates the private variable with __ suffix and getter/setter.
-     */
-    private void transformStateProperty(ClassDeclaration classDecl, PropertyDeclaration stateProp) {
-        transformProperty(classDecl, stateProp, STATE_CONFIG);
-    }
-
-    /**
-     * Adds a constructor that initializes state properties.
-     */
-    private void addConstructor(ClassDeclaration classDecl, List<PropertyDeclaration> stateProps) {
-        MethodDeclaration constructor = new MethodDeclaration("constructor");
-
-        StringBuilder initCode = new StringBuilder();
-        initCode.append("super();\n");
-
-        for (PropertyDeclaration stateProp : stateProps) {
-            String propName = stateProp.getName();
-            String privateName = propName + "__";
-            String initializer = stateProp.getInitializer();
-
-            // Initialize state property with its initial value
-            // Use the initializer value directly, or undefined if not provided
-            String initValue = (initializer != null && !initializer.isEmpty()) ? initializer : "undefined";
-
-            initCode.append("this.").append(privateName).append(" = ")
-                   .append("this.").append(RuntimeFunctions.CREATE_STATE).append("(")
-                   .append("'").append(propName).append("', ")
-                   .append("() => ").append(initValue)
-                   .append(");\n");
-        }
-
-        constructor.setBody(new ExpressionStatement(initCode.toString()));
-
-        // Add constructor at the beginning of the class
-        classDecl.getMembers().add(0, constructor);
-    }
-
-    /**
-     * Transforms a Prop property.
-     * Creates a private variable with ObservedPropertySimpleOneWay and getter/setter.
-     * Prop properties are passed from parent component (one-way data flow).
-     * They use createProp() instead of createState().
-     */
-    private void transformPropProperty(ClassDeclaration classDecl, PropertyDeclaration propProp) {
-        transformProperty(classDecl, propProp, PROP_CONFIG);
-    }
-
-    /**
-     * Transforms a Link property.
-     * Creates a private variable with ObservedPropertySimpleTwoWay and getter/setter.
-     * Link properties allow two-way data flow between parent and child.
-     * They use createLink() instead of createProp().
-     */
-    private void transformLinkProperty(ClassDeclaration classDecl, PropertyDeclaration linkProp) {
-        transformProperty(classDecl, linkProp, LINK_CONFIG);
-    }
-
-    /**
-     * Transforms a Provide property.
-     * Creates a private variable with ObservedPropertySimple and getter/setter.
-     * Provide properties provide data to descendant components.
-     */
-    private void transformProvideProperty(ClassDeclaration classDecl, PropertyDeclaration provideProp) {
-        transformProperty(classDecl, provideProp, PROVIDE_CONFIG);
-    }
-
-    /**
-     * Transforms a Consume property.
-     * Creates a private variable with ObservedPropertySimple and getter/setter.
-     * Consume properties consume data from ancestor components.
-     */
-    private void transformConsumeProperty(ClassDeclaration classDecl, PropertyDeclaration consumeProp) {
-        transformProperty(classDecl, consumeProp, CONSUME_CONFIG);
+    private void addBuilderParameter(MethodDeclaration method) {
+        MethodDeclaration.Parameter builderParam = new MethodDeclaration.Parameter(
+                Symbols.BUILDER_PARAM_NAME);
+        builderParam.setType(RuntimeFunctions.BUILDER_PARAM);
+        method.addParameter(builderParam);
     }
 
     /**
      * Validates @Entry decorator usage.
-     * @Entry should only be used on class components (struct).
+     * CC: 2 (if checks)
      */
     private void validateEntryDecorator(ClassDeclaration classDecl) {
-        // @Entry must be used on a struct (component)
         if (!classDecl.isStruct()) {
-            System.err.println("Warning: @Entry decorator should only be used on struct components. " +
-                "Found on class: " + classDecl.getName());
+            System.err.println("Warning: @Entry decorator should only be used on struct components. "
+                + "Found on class: " + classDecl.getName());
         }
 
-        // @Entry typically requires @Component as well
         if (!classDecl.hasDecorator(Decorators.COMPONENT)) {
-            System.err.println("Warning: @Entry decorator should be used together with @Component. " +
-                "Found on class: " + classDecl.getName());
+            System.err.println("Warning: @Entry decorator should be used together with @Component. "
+                + "Found on class: " + classDecl.getName());
         }
     }
 }

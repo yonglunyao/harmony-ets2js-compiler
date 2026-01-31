@@ -21,35 +21,68 @@ public class IfStatementConverter implements NodeConverter {
 
     @Override
     public Object convert(JsonObject json, ConversionContext context) {
-        JsonObject exprObj = json.getAsJsonObject("expression");
-        String condition = context.convertExpression(exprObj);
-
-        // Convert then block
-        JsonElement thenElem = json.get("thenStatement");
-        Block thenBlock = new Block();
-        if (thenElem != null && !thenElem.isJsonNull()) {
-            AstNode thenNode = context.convertStatement(thenElem.getAsJsonObject());
-            if (thenNode instanceof Block) {
-                thenBlock = (Block) thenNode;
-            } else if (thenNode != null) {
-                thenBlock = new Block();
-                thenBlock.addStatement(thenNode);
-            }
-        }
-
-        // Convert else block (if exists)
-        JsonElement elseElem = json.get("elseStatement");
-        Block elseBlock = null;
-        if (elseElem != null && !elseElem.isJsonNull()) {
-            AstNode elseNode = context.convertStatement(elseElem.getAsJsonObject());
-            if (elseNode instanceof Block) {
-                elseBlock = (Block) elseNode;
-            } else if (elseNode != null) {
-                elseBlock = new Block();
-                elseBlock.addStatement(elseNode);
-            }
-        }
+        String condition = convertCondition(json, context);
+        Block thenBlock = convertThenBlock(json, context);
+        Block elseBlock = convertElseBlock(json, context);
 
         return new IfStatement(condition, thenBlock, elseBlock);
+    }
+
+    /**
+     * Converts the condition expression.
+     * CC: 2 (null checks)
+     */
+    private String convertCondition(JsonObject json, ConversionContext context) {
+        JsonObject exprObj = json.getAsJsonObject("expression");
+        if (exprObj == null) {
+            return "true";
+        }
+        return context.convertExpression(exprObj);
+    }
+
+    /**
+     * Converts the then block.
+     * CC: 3 (null checks + instance check)
+     */
+    private Block convertThenBlock(JsonObject json, ConversionContext context) {
+        JsonElement thenElem = json.get("thenStatement");
+        if (thenElem == null || thenElem.isJsonNull()) {
+            return new Block();
+        }
+
+        return convertToBlock(thenElem.getAsJsonObject(), context);
+    }
+
+    /**
+     * Converts the else block (if exists).
+     * CC: 3 (null checks + instance check)
+     */
+    private Block convertElseBlock(JsonObject json, ConversionContext context) {
+        JsonElement elseElem = json.get("elseStatement");
+        if (elseElem == null || elseElem.isJsonNull()) {
+            return null;
+        }
+
+        return convertToBlock(elseElem.getAsJsonObject(), context);
+    }
+
+    /**
+     * Converts a JsonElement to a Block.
+     * CC: 2 (instance checks)
+     */
+    private Block convertToBlock(JsonObject elem, ConversionContext context) {
+        AstNode node = context.convertStatement(elem);
+
+        if (node instanceof Block) {
+            return (Block) node;
+        }
+
+        if (node != null) {
+            Block block = new Block();
+            block.addStatement(node);
+            return block;
+        }
+
+        return new Block();
     }
 }

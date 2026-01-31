@@ -1,6 +1,7 @@
 package com.ets2jsc.parser.internal.converters.statements;
 
 import com.ets2jsc.ast.AstNode;
+import com.ets2jsc.ast.Block;
 import com.ets2jsc.ast.ExpressionStatement;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.google.gson.JsonObject;
@@ -34,8 +35,7 @@ public class DoConverter extends LoopConverter {
     @Override
     protected String formatBody(com.ets2jsc.ast.AstNode stmt) {
         StringBuilder sb = new StringBuilder();
-        if (stmt instanceof com.ets2jsc.ast.Block) {
-            com.ets2jsc.ast.Block block = (com.ets2jsc.ast.Block) stmt;
+        if (stmt instanceof Block block) {
             for (com.ets2jsc.ast.AstNode blockStmt : block.getStatements()) {
                 String stmtCode = blockStmt.accept(new com.ets2jsc.generator.CodeGenerator());
                 sb.append("  ").append(stmtCode);
