@@ -4,6 +4,25 @@ const ts = require('typescript');
 const fs = require('fs');
 
 /**
+ * Resource type ID mapping for $r() function calls.
+ * Maps resource type names to their numeric IDs.
+ */
+const RESOURCE_TYPE_IDS = {
+    'color': 10001,
+    'float': 10002,
+    'string': 10003,
+    'plural': 10004,
+    'boolean': 10005,
+    'intarray': 10006,
+    'integer': 10007,
+    'pattern': 10008,
+    'strarray': 10009,
+    'media': 10010,
+    'font': 10011,
+    'profile': 10012
+};
+
+/**
  * Parse ETS/TypeScript source code and output AST as JSON.
  * Handles ETS-specific syntax like struct by preprocessing.
  */
@@ -174,10 +193,28 @@ function convertAstToJson(node, extractedDecorators = []) {
             result.modifiers = [];
             if (node.modifiers) {
                 for (const mod of node.modifiers) {
-                    result.modifiers.push({
+                    const modInfo = {
                         kind: mod.kind,
                         kindName: getSyntaxKindName(mod.kind)
-                    });
+                    };
+                    result.modifiers.push(modInfo);
+
+                    // ETS workaround: check if modifier is a decorator and extract name from getText()
+                    // This handles @Builder and other ETS method decorators
+                    if (modInfo.kindName === 'Decorator' && result.decorators.length === 0) {
+                        // Try to get decorator name from the modifier's text
+                        try {
+                            const modText = mod.getText();
+                            const decoratorMatch = modText.match(/@(\w+)/);
+                            if (decoratorMatch) {
+                                result.decorators.push({
+                                    name: decoratorMatch[1]
+                                });
+                            }
+                        } catch (e) {
+                            // Ignore if getText() fails
+                        }
+                    }
                 }
             }
             result.parameters = [];
@@ -328,14 +365,37 @@ function convertAstToJson(node, extractedDecorators = []) {
             result.expression = convertAstToJson(node.expression);
             result.arguments = [];
 
+            // Check if this is a resource reference call ($r or $rawfile)
+            const isResourceCall = result.expression && result.expression.kindName === 'Identifier' &&
+                                 (result.expression.name === '$r' || result.expression.name === '$rawfile');
+
             // Check if this is a special component (ForEach) that needs JSON objects as arguments
             const isForEach = result.expression && result.expression.kindName === 'Identifier' &&
                             result.expression.name === 'ForEach';
+
+            if (isResourceCall) {
+                // Handle resource reference conversion
+                const funcName = result.expression.name;
+                if (funcName === '$r') {
+                    // Convert $r('app.string.name') to __getResourceId__(type, bundle, module, name)
+                    result.resourceRefType = 'r';
+                    result.kindName = 'ResourceReferenceExpression';
+                } else if (funcName === '$rawfile') {
+                    // Convert $rawfile('icon.png') to __getRawFileId__('icon.png')
+                    result.resourceRefType = 'rawfile';
+                    result.kindName = 'ResourceReferenceExpression';
+                }
+            }
 
             for (const arg of (node.arguments || [])) {
                 if (isForEach) {
                     // ForEach needs JSON objects for proper argument processing
                     result.arguments.push(convertAstToJson(arg));
+                } else if (isResourceCall) {
+                    // For resource calls, we need the raw argument string to preserve the resource path
+                    // e.g., $r('sys.color.ohos_id_color_primary') -> we need 'sys.color.ohos_id_color_primary'
+                    const argText = arg.getText();
+                    result.arguments.push(argText);
                 } else {
                     // For regular calls, always convert to JSON to strip TypeScript syntax
                     const argJson = convertAstToJson(arg);
@@ -399,21 +459,11 @@ function convertAstToJson(node, extractedDecorators = []) {
             result.name = node.escapedText;
             result.text = node.getText();
 
-            // Check for resource references: $r() and $rawfile()
-            if (result.name.startsWith('$r(') || result.name.startsWith('$rawfile(')) {
-                // Convert to resource function call
-                const match = result.name.match(/^\$(r|rawfile)\(([^)]+)\)$/);
-                if (match) {
-                    const resourceType = match[1]; // 'r' or 'rawfile'
-                    const resourceId = match[2];
-                    if (resourceType === 'r') {
-                        result.name = RuntimeFunctions.GET_RESOURCE_ID;
-                        result.text = `this.${RuntimeFunctions.GET_RESOURCE_ID}('${resourceId}')`;
-                    } else if (resourceType === 'rawfile') {
-                        result.name = RuntimeFunctions.GET_RAW_FILE_ID;
-                        result.text = `this.${RuntimeFunctions.GET_RAW_FILE_ID}('${resourceId}')`;
-                    }
-                }
+            // Preserve resource reference functions ($r, $rawfile) as-is
+            // These are runtime functions that should not be transformed
+            if (result.name === '$r' || result.name === '$rawfile') {
+                // Keep the original text for resource functions
+                result.text = result.name;
             }
 
             break;
@@ -444,6 +494,8 @@ function convertAstToJson(node, extractedDecorators = []) {
         case ts.SyntaxKind.ElementAccessExpression:
             result.expression = convertAstToJson(node.expression);
             result.argumentExpression = convertAstToJson(node.argumentExpression);
+            // Check for optional chaining in element access
+            result.questionDotToken = node.questionDotToken ? true : false;
             break;
 
         case ts.SyntaxKind.ParenthesizedExpression:
@@ -1042,7 +1094,16 @@ function generateArrowFunctionText(node) {
         return name;
     }).join(', ');
 
-    let result = '(' + params + ') => ';
+    // Check if the arrow function has async modifier
+    const hasAsync = node.modifiers && node.modifiers.some(m =>
+        m.kind === ts.SyntaxKind.AsyncKeyword
+    );
+
+    let result = '';
+    if (hasAsync) {
+        result += 'async ';
+    }
+    result += '(' + params + ') => ';
 
     // Handle body - convert to JSON and use jsonToCodeString to strip TypeScript syntax
     if (node.body) {
@@ -1050,10 +1111,9 @@ function generateArrowFunctionText(node) {
         const bodyCode = jsonToCodeString(bodyJson);
 
         if (node.body.kind === ts.SyntaxKind.Block) {
-            // Block body: () => { ... }
-            // jsonToCodeString returns statements with newlines, we need to format them
-            const statements = bodyCode.trim().split('\n').map(s => '    ' + s.trim()).join('\n');
-            result += '{\n' + statements + '\n  }';
+            // Block body: () => { statements }
+            // jsonToCodeString already handles Block with proper indentation
+            result += '{\n' + bodyCode + '\n}';
         } else {
             // Expression body: () => expression
             result += bodyCode;
@@ -1072,12 +1132,14 @@ function generateThrowStatementText(node) {
 }
 
 /**
- * Generate text representation for property access expression (handles non-null assertion)
+ * Generate text representation for property access expression (handles non-null assertion and optional chaining)
  */
 function generatePropertyAccessExpressionText(node) {
     const expr = node.expression ? convertAstToJson(node.expression) : null;
     const name = node.name ? node.name.escapedText : '';
-    return expr ? jsonToCodeString(expr) + '.' + name : name;
+    // Check for optional chaining (?.)
+    const dotOperator = node.questionDotToken ? '?.' : '.';
+    return expr ? jsonToCodeString(expr) + dotOperator + name : name;
 }
 
 /**
@@ -1206,9 +1268,14 @@ function jsonToCodeString(json) {
                     const decl = decls[0];
                     const name = decl.name;
                     const init = decl.initializer;
-                    let result = 'const ' + name;
+                    // Use the declarationKind (const/let/var) from the VariableDeclarationList
+                    const declKind = declList.declarationKind || 'const';
+                    let result = declKind + ' ' + name;
                     if (init) {
                         result += ' = ' + jsonToCodeString(init);
+                    } else if (declKind === 'const') {
+                        // const declarations require an initializer in JavaScript
+                        result += ' = undefined';
                     }
                     return result + ';';
                 }
@@ -1260,7 +1327,9 @@ function jsonToCodeString(json) {
             const elemExpr = json.expression;
             // The argument can be named 'argument' or 'argumentExpression'
             const arg = json.argument || json.argumentExpression;
-            return jsonToCodeString(elemExpr) + '[' + jsonToCodeString(arg) + ']';
+            // Check for optional chaining (?.[)
+            const accessor = json.questionDotToken ? '?.' : '';
+            return jsonToCodeString(elemExpr) + accessor + '[' + jsonToCodeString(arg) + ']';
         }
 
         case 'BinaryExpression': {
@@ -1418,6 +1487,38 @@ function jsonToCodeString(json) {
             // Use pre-generated text
             if (json.text) return json.text;
             return '/* try statement */';
+        }
+
+        case 'ResourceReferenceExpression': {
+            // Handle resource reference conversion ($r and $rawfile)
+            if (json.resourceRefType === 'r') {
+                // Convert $r('app.string.name') to __getResourceId__(type, bundle, module, name)
+                if (json.arguments && json.arguments.length > 0) {
+                    const resourcePath = json.arguments[0];
+                    // Remove quotes from string literal
+                    const pathStr = resourcePath.replace(/^['"]|['"]$/g, '');
+                    // Parse format: 'app.type.name' or 'module.type.name'
+                    const parts = pathStr.split('.');
+                    if (parts.length >= 3) {
+                        const module = parts[0];
+                        const type = parts[parts.length - 2];
+                        const name = parts[parts.length - 1];
+                        const typeId = RESOURCE_TYPE_IDS[type] || 10003; // Default to string
+                        return `__getResourceId__(${typeId}, undefined, "${module}", "${name}")`;
+                    }
+                }
+                return '__getResourceId__(10003, undefined, "", "")';
+            } else if (json.resourceRefType === 'rawfile') {
+                // Convert $rawfile('icon.png') to __getRawFileId__('icon.png')
+                if (json.arguments && json.arguments.length > 0) {
+                    const filename = json.arguments[0];
+                    // Remove quotes if present
+                    const filenameStr = filename.replace(/^['"]|['"]$/g, '');
+                    return `__getRawFileId__("${filenameStr}")`;
+                }
+                return '__getRawFileId__("")';
+            }
+            return json.text || '';
         }
 
         default:

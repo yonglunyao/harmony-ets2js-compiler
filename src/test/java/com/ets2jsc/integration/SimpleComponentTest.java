@@ -28,7 +28,7 @@ public class SimpleComponentTest {
     public void testParseSimpleComponent() throws Exception {
         // Load test fixture
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/simple-component.ets")
+            Paths.get("src/test/resources/fixtures/basic/simple-component.ets")
         );
 
         // Parse source
@@ -50,7 +50,7 @@ public class SimpleComponentTest {
     @DisplayName("Should transform struct to class")
     public void testTransformStructToClass() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/simple-component.ets")
+            Paths.get("src/test/resources/fixtures/basic/simple-component.ets")
         );
 
         // Parse and transform
@@ -74,7 +74,7 @@ public class SimpleComponentTest {
     @DisplayName("Should transform build method to render")
     public void testTransformBuildMethod() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/simple-component.ets")
+            Paths.get("src/test/resources/fixtures/basic/simple-component.ets")
         );
 
         // Parse and transform
@@ -100,7 +100,7 @@ public class SimpleComponentTest {
     @DisplayName("Should generate JavaScript code")
     public void testGenerateJavaScript() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/simple-component.ets")
+            Paths.get("src/test/resources/fixtures/basic/simple-component.ets")
         );
 
         // Full compilation pipeline

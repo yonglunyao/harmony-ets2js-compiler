@@ -114,7 +114,7 @@ public class EtsCompiler {
      * @return compilation result with statistics
      */
     public CompilationResult compileBatchParallel(List<Path> sourceFiles, Path outputDir) {
-        ParallelEtsCompiler parallelCompiler = new ParallelEtsCompiler(config);
+        ParallelEtsCompiler parallelCompiler = new ParallelEtsCompiler(config, null);
         try {
             CompilationResult result = parallelCompiler.compileParallel(sourceFiles, outputDir);
             return result;
@@ -298,7 +298,7 @@ public class EtsCompiler {
                         compiler.compileBatch(sourceFiles, outputPath);
                         long duration = System.currentTimeMillis() - startTime;
 
-                        System.out.println("编译完成 " + sourceFiles.size() + " 个文件到 " + outputPath);
+                        System.out.println("Compiled " + sourceFiles.size() + " files to " + outputPath);
                         System.out.println("耗时: " + duration + "ms");
                     }
                 } else {

@@ -53,3 +53,18 @@ test-import-output.js
 test-import-output.js.map
 test.abc
 debug-import.js
+
+# Test fixtures build artifacts (dist/ directories, compiled JS files)
+# Source files (.ets, .ts, .json5, etc.) are kept, but compiled outputs are excluded
+src/test/resources/fixtures/**/dist/
+src/test/resources/fixtures/**/*.js
+src/test/resources/fixtures/**/*.js.map
+!src/test/resources/fixtures/**/hvigorfile.ts
+!src/test/resources/fixtures/**/build-profile.json5
+!src/test/resources/fixtures/**/oh-package.json5
+!src/test/resources/fixtures/**/oh-package-lock.json5
+!src/test/resources/fixtures/**/module.json5
+!src/test/resources/fixtures/**/module.json
+
+# Test output directory
+target/test-output/

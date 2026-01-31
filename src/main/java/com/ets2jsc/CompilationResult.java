@@ -31,7 +31,6 @@ public class CompilationResult {
     }
 
     /**
-     * 添加文件编译结果
      * Add file compilation result
      */
     public void addFileResult(Path sourcePath, FileResult result) {
@@ -46,7 +45,6 @@ public class CompilationResult {
     }
 
     /**
-     * 标记编译完成
      * Mark compilation as completed
      */
     public void markCompleted() {

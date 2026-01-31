@@ -35,7 +35,7 @@ public class DecoratorTransformer implements AstTransformer {
     private static final PropertyTypeConfig STATE_CONFIG = new PropertyTypeConfig(
         RuntimeFunctions.OBSERVED_PROPERTY_SIMPLE,
         RuntimeFunctions.CREATE_STATE,
-        true
+        false  // State properties are initialized in constructor via createState()
     );
 
     private static final PropertyTypeConfig PROP_CONFIG = new PropertyTypeConfig(
@@ -96,12 +96,21 @@ public class DecoratorTransformer implements AstTransformer {
     /**
      * Transforms a class declaration with decorators.
      * Handles @Component struct → class View transformation.
+     * Handles @Entry decorator validation and export.
      */
     private ClassDeclaration transformClassDeclaration(ClassDeclaration classDecl) {
-        // Check if this is a @Component struct
+        // Check if this is a @Component struct or @Entry component
         boolean isComponent = classDecl.hasDecorator(Decorators.COMPONENT);
+        boolean isEntry = classDecl.hasDecorator(Decorators.ENTRY);
 
-        if (isComponent) {
+        if (isEntry) {
+            // Validate @Entry usage
+            validateEntryDecorator(classDecl);
+            // Mark for default export
+            classDecl.setExport(true);
+        }
+
+        if (isComponent || isEntry) {
             // Transform struct to class extending View
             classDecl.setStruct(false);
             classDecl.setSuperClass(RuntimeFunctions.VIEW);
@@ -245,12 +254,16 @@ public class DecoratorTransformer implements AstTransformer {
         for (PropertyDeclaration stateProp : stateProps) {
             String propName = stateProp.getName();
             String privateName = propName + "__";
+            String initializer = stateProp.getInitializer();
 
-            // Initialize state property
+            // Initialize state property with its initial value
+            // Use the initializer value directly, or undefined if not provided
+            String initValue = (initializer != null && !initializer.isEmpty()) ? initializer : "undefined";
+
             initCode.append("this.").append(privateName).append(" = ")
                    .append("this.").append(RuntimeFunctions.CREATE_STATE).append("(")
                    .append("'").append(propName).append("', ")
-                   .append("() => this.").append(propName)
+                   .append("() => ").append(initValue)
                    .append(");\n");
         }
 
@@ -296,5 +309,23 @@ public class DecoratorTransformer implements AstTransformer {
      */
     private void transformConsumeProperty(ClassDeclaration classDecl, PropertyDeclaration consumeProp) {
         transformProperty(classDecl, consumeProp, CONSUME_CONFIG);
+    }
+
+    /**
+     * Validates @Entry decorator usage.
+     * @Entry should only be used on class components (struct).
+     */
+    private void validateEntryDecorator(ClassDeclaration classDecl) {
+        // @Entry must be used on a struct (component)
+        if (!classDecl.isStruct()) {
+            System.err.println("Warning: @Entry decorator should only be used on struct components. " +
+                "Found on class: " + classDecl.getName());
+        }
+
+        // @Entry typically requires @Component as well
+        if (!classDecl.hasDecorator(Decorators.COMPONENT)) {
+            System.err.println("Warning: @Entry decorator should be used together with @Component. " +
+                "Found on class: " + classDecl.getName());
+        }
     }
 }

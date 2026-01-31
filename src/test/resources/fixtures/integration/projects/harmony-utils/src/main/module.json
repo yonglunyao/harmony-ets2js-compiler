@@ -1,0 +1,32 @@
+{
+	"app": {
+		"bundleName": "com.tongyuyan.utils",
+		"debug": true,
+		"versionCode": 1000001,
+		"versionName": "1.0.1",
+		"minAPIVersion": 50000012,
+		"targetAPIVersion": 50101019,
+		"apiReleaseType": "Release",
+		"targetMinorAPIVersion": 0,
+		"targetPatchAPIVersion": 0,
+		"compileSdkVersion": "6.0.0.47",
+		"compileSdkType": "HarmonyOS",
+		"appEnvironments": [],
+		"bundleType": "app",
+		"buildMode": "debug"
+	},
+	"module": {
+		"name": "harmony_utils",
+		"type": "har",
+		"deviceTypes": [
+			"default",
+			"tablet",
+			"2in1"
+		],
+		"packageName": "@pura/harmony-utils",
+		"installationFree": false,
+		"virtualMachine": "ark12.0.2.0",
+		"compileMode": "esmodule",
+		"dependencies": []
+	}
+}

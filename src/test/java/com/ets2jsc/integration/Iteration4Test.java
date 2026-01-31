@@ -23,7 +23,7 @@ public class Iteration4Test {
     @DisplayName("Should parse object literals correctly")
     public void testObjectLiterals() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-iteration4.ets")
+            Paths.get("src/test/resources/fixtures/integration/test-iteration4.ets")
         );
 
         AstBuilder parser = new AstBuilder();
@@ -47,7 +47,7 @@ public class Iteration4Test {
     @DisplayName("Should parse new expressions correctly")
     public void testNewExpression() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-iteration4.ets")
+            Paths.get("src/test/resources/fixtures/integration/test-iteration4.ets")
         );
 
         AstBuilder parser = new AstBuilder();
@@ -67,7 +67,7 @@ public class Iteration4Test {
     @DisplayName("Should parse template strings correctly")
     public void testTemplateStrings() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-iteration4.ets")
+            Paths.get("src/test/resources/fixtures/integration/test-iteration4.ets")
         );
 
         AstBuilder parser = new AstBuilder();
@@ -85,7 +85,7 @@ public class Iteration4Test {
     @DisplayName("Should handle @Entry decorator")
     public void testEntryDecorator() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-iteration4.ets")
+            Paths.get("src/test/resources/fixtures/integration/test-iteration4.ets")
         );
 
         AstBuilder parser = new AstBuilder();
@@ -103,7 +103,7 @@ public class Iteration4Test {
     @DisplayName("Should remove type annotations from variables")
     public void testTypeAnnotations() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-iteration4.ets")
+            Paths.get("src/test/resources/fixtures/integration/test-iteration4.ets")
         );
 
         AstBuilder parser = new AstBuilder();
@@ -123,7 +123,7 @@ public class Iteration4Test {
     @DisplayName("Should convert octal literals to decimal")
     public void testOctalLiterals() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-iteration4.ets")
+            Paths.get("src/test/resources/fixtures/integration/test-iteration4.ets")
         );
 
         AstBuilder parser = new AstBuilder();
@@ -142,7 +142,7 @@ public class Iteration4Test {
     @DisplayName("Should handle dynamic import")
     public void testDynamicImport() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-iteration4.ets")
+            Paths.get("src/test/resources/fixtures/integration/test-iteration4.ets")
         );
 
         AstBuilder parser = new AstBuilder();
@@ -160,7 +160,7 @@ public class Iteration4Test {
     @DisplayName("Should ignore interface declarations")
     public void testInterfaceDeclaration() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-iteration4.ets")
+            Paths.get("src/test/resources/fixtures/integration/test-iteration4.ets")
         );
 
         AstBuilder parser = new AstBuilder();
@@ -178,7 +178,7 @@ public class Iteration4Test {
     @DisplayName("Should remove type assertions")
     public void testTypeAssertion() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-iteration4.ets")
+            Paths.get("src/test/resources/fixtures/integration/test-iteration4.ets")
         );
 
         AstBuilder parser = new AstBuilder();
@@ -197,7 +197,7 @@ public class Iteration4Test {
     @DisplayName("Full compilation test for iteration 4")
     public void testFullCompilation() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-iteration4.ets")
+            Paths.get("src/test/resources/fixtures/integration/test-iteration4.ets")
         );
 
         // Full compilation pipeline

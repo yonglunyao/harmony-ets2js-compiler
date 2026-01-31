@@ -17,7 +17,7 @@ public class ForEachTest {
     @DisplayName("Should parse ForEach component")
     public void testParseForEach() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/foreach.ets")
+            Paths.get("src/test/resources/fixtures/statements/foreach.ets")
         );
 
         AstBuilder parser = new AstBuilder();
@@ -32,7 +32,7 @@ public class ForEachTest {
     @DisplayName("Should identify ForEach in source")
     public void testIdentifyForEach() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/foreach.ets")
+            Paths.get("src/test/resources/fixtures/statements/foreach.ets")
         );
 
         assertTrue(sourceCode.contains("ForEach"));

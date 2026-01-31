@@ -64,6 +64,14 @@ public class Decorator implements AstNode {
     }
 
     /**
+     * Returns true if this is an Entry decorator.
+     * Entry decorator marks a component as a page entry point.
+     */
+    public boolean isEntryDecorator() {
+        return "Entry".equals(name);
+    }
+
+    /**
      * Returns true if this is a state decorator.
      */
     public boolean isStateDecorator() {

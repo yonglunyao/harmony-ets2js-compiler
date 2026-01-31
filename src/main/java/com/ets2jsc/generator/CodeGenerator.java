@@ -8,6 +8,7 @@ import com.ets2jsc.constant.RuntimeFunctions;
 import com.ets2jsc.constant.Symbols;
 import com.ets2jsc.transformer.ComponentExpressionTransformer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,6 +22,7 @@ public class CodeGenerator implements AstVisitor<String> {
     private int currentIndent;
     private final CompilerConfig config;
     private boolean insideComponentClass = false;
+    private List<String> currentBuilderMethods = new ArrayList<>();
 
     public CodeGenerator(CompilerConfig config) {
         this.output = new StringBuilder();
@@ -106,6 +108,10 @@ public class CodeGenerator implements AstVisitor<String> {
         boolean previousInsideComponentClass = insideComponentClass;
         insideComponentClass = node.hasDecorator("Component");
 
+        // Save and set current builder methods list
+        List<String> previousBuilderMethods = currentBuilderMethods;
+        currentBuilderMethods = node.getBuilderMethodNames();
+
         StringBuilder sb = new StringBuilder();
 
         // Generate decorators (comments for now)
@@ -115,8 +121,11 @@ public class CodeGenerator implements AstVisitor<String> {
             }
         }
 
-        // Add export keyword if present
-        if (node.isExport()) {
+        // Check if this is an @Entry component - should use "export default"
+        boolean isEntry = node.hasDecorator("Entry");
+        if (isEntry && node.isExport()) {
+            sb.append("export default ");
+        } else if (node.isExport()) {
             sb.append("export ");
         }
 
@@ -144,6 +153,8 @@ public class CodeGenerator implements AstVisitor<String> {
 
         // Restore previous insideComponentClass flag
         insideComponentClass = previousInsideComponentClass;
+        // Restore previous builder methods list
+        currentBuilderMethods = previousBuilderMethods;
 
         return sb.toString();
     }
@@ -196,6 +207,12 @@ public class CodeGenerator implements AstVisitor<String> {
                 }
                 MethodDeclaration.Parameter param = params.get(i);
                 sb.append(param.getName());
+
+                // Add default value if present (e.g., __builder__ = undefined)
+                if (param.hasDefault() && param.getDefaultValue() != null) {
+                    sb.append(" = ").append(param.getDefaultValue());
+                }
+
                 // Optional type annotation (as comment for JS)
                 if (param.getType() != null) {
                     sb.append(" /* ").append(param.getType()).append(" */");
@@ -338,10 +355,16 @@ public class CodeGenerator implements AstVisitor<String> {
             return "";
         }
 
+        // Check if this is a @Builder method call and transform it
+        String transformed = transformBuilderMethodCall(expr);
+        if (!transformed.equals(expr)) {
+            return transformed;
+        }
+
         // Try to transform to component statement (create/pop pattern)
-        AstNode transformed = ComponentExpressionTransformer.transform(expr);
-        if (transformed instanceof ComponentStatement) {
-            return transformed.accept(this);
+        AstNode transformedNode = ComponentExpressionTransformer.transform(expr);
+        if (transformedNode instanceof ComponentStatement) {
+            return transformedNode.accept(this);
         }
 
         // Don't add semicolon if expression already ends with one or is a block
@@ -352,6 +375,53 @@ public class CodeGenerator implements AstVisitor<String> {
 
         // Add semicolon
         return expr + ";";
+    }
+
+    /**
+     * Transform @Builder method call to BuilderParam pattern.
+     * Converts: this.customText("Hello", "World")
+     * To: const __builder__ = new BuilderParam();
+     *     this.customText(__builder__, "Hello", "World");
+     *     __builder__.build();
+     */
+    private String transformBuilderMethodCall(String expr) {
+        String trimmed = expr.trim();
+
+        // Check for pattern: this.<methodName>(...)
+        // where <methodName> is in currentBuilderMethods
+        for (String builderMethod : currentBuilderMethods) {
+            String pattern = "this\\." + builderMethod + "\\s*\\(";
+            if (trimmed.matches(pattern + ".*")) {
+                // Extract arguments
+                int argsStart = trimmed.indexOf('(');
+                String args = trimmed.substring(argsStart); // Includes "(" and ")"
+
+                // Generate wrapped code
+                StringBuilder sb = new StringBuilder();
+                sb.append("const __builder__ = new BuilderParam();\n");
+                sb.append(getIndent());
+                sb.append("this.").append(builderMethod).append("(__builder__");
+
+                // Add original arguments (without opening paren)
+                if (args.length() > 1) {
+                    String innerArgs = args.substring(1); // Remove "("
+                    if (innerArgs.endsWith(")")) {
+                        innerArgs = innerArgs.substring(0, innerArgs.length() - 1); // Remove ")"
+                    }
+                    if (!innerArgs.trim().isEmpty()) {
+                        sb.append(", ").append(innerArgs);
+                    }
+                }
+
+                sb.append(");\n");
+                sb.append(getIndent());
+                sb.append("__builder__.build();");
+
+                return sb.toString();
+            }
+        }
+
+        return expr;
     }
 
     @Override

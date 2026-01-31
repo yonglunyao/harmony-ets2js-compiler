@@ -127,4 +127,21 @@ public class ClassDeclaration implements AstNode {
         }
         return methods;
     }
+
+    /**
+     * Returns all @Builder method names from this class declaration.
+     * Used for transforming @Builder method call sites.
+     */
+    public List<String> getBuilderMethodNames() {
+        List<String> builderMethodNames = new ArrayList<>();
+        for (AstNode member : members) {
+            if (member instanceof MethodDeclaration) {
+                MethodDeclaration method = (MethodDeclaration) member;
+                if (method.isBuilderMethod()) {
+                    builderMethodNames.add(method.getName());
+                }
+            }
+        }
+        return builderMethodNames;
+    }
 }

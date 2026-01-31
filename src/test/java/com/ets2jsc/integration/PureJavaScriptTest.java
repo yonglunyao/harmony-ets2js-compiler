@@ -28,7 +28,7 @@ public class PureJavaScriptTest {
     @DisplayName("Should generate standard if-else without ArkUI runtime")
     public void testPureJavaScriptIfStatement() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-if.ets")
+            Paths.get("src/test/resources/fixtures/statements/test-if.ets")
         );
 
         // Parse source
@@ -69,7 +69,7 @@ public class PureJavaScriptTest {
     @DisplayName("Should generate ArkUI runtime when pureJavaScript is false")
     public void testArkUIRuntimeIfStatement() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/test-if.ets")
+            Paths.get("src/test/resources/fixtures/statements/test-if.ets")
         );
 
         // Parse source
@@ -112,7 +112,7 @@ public class PureJavaScriptTest {
     @DisplayName("Should use Array.forEach in pure JavaScript mode")
     public void testPureJavaScriptForEach() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/foreach.ets")
+            Paths.get("src/test/resources/fixtures/statements/foreach.ets")
         );
 
         // Parse source

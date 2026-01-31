@@ -178,6 +178,17 @@ public class CompilerConfig {
     }
 
     /**
+     * Gets the source root directory as a Path.
+     * Returns null if sourcePath is not configured.
+     */
+    public java.nio.file.Path getSourceRootDir() {
+        if (sourcePath == null || sourcePath.isEmpty()) {
+            return null;
+        }
+        return java.nio.file.Path.of(sourcePath);
+    }
+
+    /**
      * Creates a default configuration for development.
      */
     public static CompilerConfig createDefault() {

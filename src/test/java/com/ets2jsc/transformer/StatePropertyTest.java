@@ -24,7 +24,7 @@ public class StatePropertyTest {
     @DisplayName("Should identify state properties")
     public void testIdentifyStateProperties() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/state-property.ets")
+            Paths.get("src/test/resources/fixtures/basic/state-property.ets")
         );
 
         // Parse
@@ -47,7 +47,7 @@ public class StatePropertyTest {
     @DisplayName("Should create private variables for state")
     public void testCreatePrivateVariables() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/state-property.ets")
+            Paths.get("src/test/resources/fixtures/basic/state-property.ets")
         );
 
         // Parse and transform
@@ -74,7 +74,7 @@ public class StatePropertyTest {
     @DisplayName("Should create getter/setter for state")
     public void testCreateGetterSetter() throws Exception {
         String sourceCode = Files.readString(
-            Paths.get("src/test/resources/fixtures/state-property.ets")
+            Paths.get("src/test/resources/fixtures/basic/state-property.ets")
         );
 
         // Parse and transform

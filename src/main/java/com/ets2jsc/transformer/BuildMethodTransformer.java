@@ -4,6 +4,7 @@ import com.ets2jsc.ast.*;
 import com.ets2jsc.constant.Components;
 import com.ets2jsc.constant.Decorators;
 import com.ets2jsc.constant.RuntimeFunctions;
+import com.ets2jsc.constant.Symbols;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,13 +40,14 @@ public class BuildMethodTransformer implements AstTransformer {
         }
         if (node instanceof MethodDeclaration) {
             MethodDeclaration method = (MethodDeclaration) node;
-            return method.isBuildMethod();
+            return method.isBuildMethod() || method.isBuilderMethod();
         }
         return false;
     }
 
     /**
-     * Transforms a class declaration, converting build() to render()/initialRender().
+     * Transforms a class declaration, converting build() to render()/initialRender()
+     * and transforming @Builder methods.
      */
     private ClassDeclaration transformClassDeclaration(ClassDeclaration classDecl) {
         List<MethodDeclaration> methods = classDecl.getMethods();
@@ -53,6 +55,8 @@ public class BuildMethodTransformer implements AstTransformer {
         for (MethodDeclaration method : methods) {
             if (method.isBuildMethod()) {
                 transformBuildMethod(classDecl, method);
+            } else if (method.isBuilderMethod()) {
+                transformBuilderMethod(classDecl, method);
             }
         }
 
@@ -187,5 +191,27 @@ public class BuildMethodTransformer implements AstTransformer {
      */
     public String getRenderMethodName() {
         return partialUpdateMode ? "initialRender" : "render";
+    }
+
+    /**
+     * Transforms a @Builder method.
+     * Adds __builder__ parameter and converts component expressions to create/pop pattern.
+     */
+    private void transformBuilderMethod(ClassDeclaration classDecl, MethodDeclaration builderMethod) {
+        // Add __builder__ parameter as first parameter
+        MethodDeclaration.Parameter builderParam = new MethodDeclaration.Parameter(
+            Symbols.BUILDER_PARAM_NAME,
+            RuntimeFunctions.BUILDER_PARAM
+        );
+        builderParam.setHasDefault(true);
+        builderParam.setDefaultValue("undefined");
+        builderMethod.getParameters().add(0, builderParam);
+
+        // Transform method body (component expressions)
+        AstNode body = builderMethod.getBody();
+        if (body != null) {
+            AstNode transformedBody = transformMethodBody(body);
+            builderMethod.setBody(transformedBody);
+        }
     }
 }
