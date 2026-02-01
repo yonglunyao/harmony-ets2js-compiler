@@ -49,6 +49,7 @@ public final class Symbols {
     public static final String VAR_KEYWORD = "var";
     public static final String LET_KEYWORD = "let";
     public static final String CONST_KEYWORD = "const";
+    public static final String DEFAULT_DECLARATION_KIND = CONST_KEYWORD;
 
     // Import/Export keywords
     public static final String IMPORT_KEYWORD = "import";

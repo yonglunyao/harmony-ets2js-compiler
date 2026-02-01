@@ -2,6 +2,7 @@ package com.ets2jsc.parser.internal.converters.statements;
 
 import com.ets2jsc.ast.AstNode;
 import com.ets2jsc.ast.ExpressionStatement;
+import com.ets2jsc.constant.Symbols;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,8 +13,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
  * Handles: let x = value;, const y = value;
  */
 public class VariableConverter implements NodeConverter {
-
-    private static final String DEFAULT_DECLARATION_KIND = "const";
 
     @Override
     public boolean canConvert(String kindName) {
@@ -105,11 +104,12 @@ public class VariableConverter implements NodeConverter {
 
     /**
      * Extracts declaration kind (let, const, var).
+     * Uses Symbols.DEFAULT_DECLARATION_KIND as fallback.
      * CC: 2 (has check + ternary)
      */
     private String extractDeclarationKind(JsonNode declarationList) {
         if (!declarationList.has("declarationKind")) {
-            return DEFAULT_DECLARATION_KIND;
+            return Symbols.DEFAULT_DECLARATION_KIND;
         }
         return declarationList.get("declarationKind").asText();
     }

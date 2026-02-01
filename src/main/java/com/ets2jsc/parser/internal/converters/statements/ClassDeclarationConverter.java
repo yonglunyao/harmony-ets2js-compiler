@@ -44,7 +44,8 @@ public class ClassDeclarationConverter implements NodeConverter {
     }
 
     /**
-     * Converts decorators and returns if @Entry was found.
+     * Converts decorators and adds them to class declaration.
+     * Uses Guard Clause for null checks.
      * CC: 3 (null check + loop + early continue)
      */
     private void convertDecorators(ClassDeclaration classDecl, JsonNode json) {
@@ -55,13 +56,12 @@ public class ClassDeclarationConverter implements NodeConverter {
 
         ArrayNode decoratorsArray = (ArrayNode) decoratorsNode;
         for (int i = 0; i < decoratorsArray.size(); i++) {
-            // Check if decorator is not null before converting
+            // Guard Clause: skip null decorators
             JsonNode decNode = decoratorsArray.get(i);
             if (decNode == null || decNode.isNull()) {
                 continue;
             }
-            JsonNode decObj = decoratorsArray.get(i);
-            String decName = decObj.get("name").asText();
+            String decName = decNode.get("name").asText();
             classDecl.addDecorator(new Decorator(decName));
         }
     }

@@ -43,6 +43,21 @@ public final class RuntimeFunctions {
     public static final String GET_RESOURCE_ID = "__getResourceId__";
     public static final String GET_RAW_FILE_ID = "__getRawFileId__";
 
+    // Resource type IDs (from HarmonyOS resource system)
+    public static final int RESOURCE_TYPE_COLOR = 10001;
+    public static final int RESOURCE_TYPE_FLOAT = 10002;
+    public static final int RESOURCE_TYPE_STRING = 10003;
+    public static final int RESOURCE_TYPE_PLURAL = 10004;
+    public static final int RESOURCE_TYPE_BOOLEAN = 10005;
+    public static final int RESOURCE_TYPE_INTARRAY = 10006;
+    public static final int RESOURCE_TYPE_INTEGER = 10007;
+    public static final int RESOURCE_TYPE_PATTERN = 10008;
+    public static final int RESOURCE_TYPE_STRARRAY = 10009;
+    public static final int RESOURCE_TYPE_MEDIA = 10010;
+    public static final int RESOURCE_TYPE_FONT = 10011;
+    public static final int RESOURCE_TYPE_PROFILE = 10012;
+    public static final int RESOURCE_TYPE_DEFAULT = RESOURCE_TYPE_STRING;
+
     // Type names
     public static final String OBSERVED_PROPERTY_SIMPLE = "ObservedPropertySimple";
     public static final String OBSERVED_PROPERTY_SIMPLE_ONE_WAY = "ObservedPropertySimpleOneWay";

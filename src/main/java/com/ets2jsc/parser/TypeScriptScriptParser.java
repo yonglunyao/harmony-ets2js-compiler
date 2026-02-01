@@ -148,6 +148,8 @@ public class TypeScriptScriptParser {
 
     /**
      * Run the Node.js TypeScript parser script.
+     * Uses try-with-resources for automatic resource management.
+     * CC: 4 (null check + exit code check + try-with-resources + process cleanup)
      */
     private JsonNode runTypeScriptParser(Path sourceFile, Path outputFile) throws Exception {
         List<String> command = new ArrayList<>();
@@ -160,10 +162,9 @@ public class TypeScriptScriptParser {
         pb.redirectErrorStream(true);
 
         Process process = pb.start();
-        BufferedReader reader = null;
-        try {
-            // Read output (for debugging)
-            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+        // Use try-with-resources for automatic BufferedReader closure
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             StringBuilder errorOutput = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
@@ -180,18 +181,8 @@ public class TypeScriptScriptParser {
             String jsonContent = Files.readString(outputFile);
             return objectMapper.readTree(jsonContent);
         } finally {
-            // Close the reader if it was opened
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException ignored) {
-                    // Ignore close exception
-                }
-            }
             // Ensure the process is destroyed to prevent resource leaks
-            if (process != null) {
-                process.destroyForcibly();
-            }
+            process.destroyForcibly();
         }
     }
 
@@ -217,9 +208,15 @@ public class TypeScriptScriptParser {
 
     /**
      * Convert JSON node to AST node using the new converter architecture.
+     * CC: 2 (switch + try-catch)
      */
     private AstNode convertJsonNode(JsonNode json) {
-        String kindName = json.get("kindName").asText();
+        // Guard Clause: validate kindName exists
+        JsonNode kindNameNode = json.get("kindName");
+        if (kindNameNode == null || kindNameNode.isNull()) {
+            throw new ParserException("JSON node missing required 'kindName' field");
+        }
+        String kindName = kindNameNode.asText();
 
         // Special cases that don't go through converters
         switch (kindName) {

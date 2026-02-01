@@ -1,5 +1,6 @@
 package com.ets2jsc.parser.internal.converters.expressions;
 
+import com.ets2jsc.constant.RuntimeFunctions;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -161,9 +162,9 @@ public class CallExpressionConverter implements NodeConverter {
         if (argsArrayNode != null && argsArrayNode.isArray() && argsArrayNode.size() > 0) {
             ArrayNode argsArray = (ArrayNode) argsArrayNode;
             String filename = extractAndCleanArgument(argsArray.get(0));
-            return "__getRawFileId__(\"" + filename + "\")";
+            return RuntimeFunctions.GET_RAW_FILE_ID + "(\"" + filename + "\")";
         }
-        return "__getRawFileId__(\"\")";
+        return RuntimeFunctions.GET_RAW_FILE_ID + "(\"\")";
     }
 
     /**
@@ -172,12 +173,12 @@ public class CallExpressionConverter implements NodeConverter {
      */
     private String convertRResourceReference(JsonNode argsArrayNode) {
         if (argsArrayNode == null || !argsArrayNode.isArray()) {
-            return "__getResourceId__(10003, undefined, \"\", \"\")";
+            return RuntimeFunctions.GET_RESOURCE_ID + "(" + RuntimeFunctions.RESOURCE_TYPE_DEFAULT + ", undefined, \"\", \"\")";
         }
 
         ArrayNode argsArray = (ArrayNode) argsArrayNode;
         if (argsArray.size() == 0) {
-            return "__getResourceId__(10003, undefined, \"\", \"\")";
+            return RuntimeFunctions.GET_RESOURCE_ID + "(" + RuntimeFunctions.RESOURCE_TYPE_DEFAULT + ", undefined, \"\", \"\")";
         }
 
         String resourcePath = extractAndCleanArgument(argsArray.get(0));
@@ -185,10 +186,10 @@ public class CallExpressionConverter implements NodeConverter {
 
         if (path.isValid()) {
             int typeId = ResourceTypeIdMapper.getTypeId(path.type);
-            return "__getResourceId__(" + typeId + ", undefined, \"" + path.module + "\", \"" + path.name + "\")";
+            return RuntimeFunctions.GET_RESOURCE_ID + "(" + typeId + ", undefined, \"" + path.module + "\", \"" + path.name + "\")";
         }
 
-        return "__getResourceId__(10003, undefined, \"\", \"\")";
+        return RuntimeFunctions.GET_RESOURCE_ID + "(" + RuntimeFunctions.RESOURCE_TYPE_DEFAULT + ", undefined, \"\", \"\")";
     }
 
     /**
@@ -247,37 +248,25 @@ public class CallExpressionConverter implements NodeConverter {
 
     /**
      * Mapper for resource type IDs.
+     * Delegates to RuntimeFunctions constants.
      * CC: 1 (switch with default)
      */
     private static class ResourceTypeIdMapper {
-        private static final int COLOR = 10001;
-        private static final int FLOAT = 10002;
-        private static final int STRING = 10003;
-        private static final int PLURAL = 10004;
-        private static final int BOOLEAN = 10005;
-        private static final int INTARRAY = 10006;
-        private static final int INTEGER = 10007;
-        private static final int PATTERN = 10008;
-        private static final int STRARRAY = 10009;
-        private static final int MEDIA = 10010;
-        private static final int FONT = 10011;
-        private static final int PROFILE = 10012;
-
         static int getTypeId(String typeName) {
             switch (typeName) {
-                case "color": return COLOR;
-                case "float": return FLOAT;
-                case "string": return STRING;
-                case "plural": return PLURAL;
-                case "boolean": return BOOLEAN;
-                case "intarray": return INTARRAY;
-                case "integer": return INTEGER;
-                case "pattern": return PATTERN;
-                case "strarray": return STRARRAY;
-                case "media": return MEDIA;
-                case "font": return FONT;
-                case "profile": return PROFILE;
-                default: return STRING;
+                case "color": return RuntimeFunctions.RESOURCE_TYPE_COLOR;
+                case "float": return RuntimeFunctions.RESOURCE_TYPE_FLOAT;
+                case "string": return RuntimeFunctions.RESOURCE_TYPE_STRING;
+                case "plural": return RuntimeFunctions.RESOURCE_TYPE_PLURAL;
+                case "boolean": return RuntimeFunctions.RESOURCE_TYPE_BOOLEAN;
+                case "intarray": return RuntimeFunctions.RESOURCE_TYPE_INTARRAY;
+                case "integer": return RuntimeFunctions.RESOURCE_TYPE_INTEGER;
+                case "pattern": return RuntimeFunctions.RESOURCE_TYPE_PATTERN;
+                case "strarray": return RuntimeFunctions.RESOURCE_TYPE_STRARRAY;
+                case "media": return RuntimeFunctions.RESOURCE_TYPE_MEDIA;
+                case "font": return RuntimeFunctions.RESOURCE_TYPE_FONT;
+                case "profile": return RuntimeFunctions.RESOURCE_TYPE_PROFILE;
+                default: return RuntimeFunctions.RESOURCE_TYPE_STRING;
             }
         }
     }
