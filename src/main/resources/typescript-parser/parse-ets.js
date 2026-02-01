@@ -620,6 +620,8 @@ function convertAstToJson(node, extractedDecorators = []) {
         case ts.SyntaxKind.PropertyAccessExpression:
             result.expression = convertAstToJson(node.expression);
             result.name = node.name.escapedText;
+            // Check for optional chaining (?.)
+            result.questionDotToken = node.questionDotToken ? true : false;
             // Add text representation for code generation
             result.text = generatePropertyAccessExpressionText(node);
             break;
@@ -1747,7 +1749,9 @@ function jsonToCodeString(json) {
         case 'PropertyAccessExpression': {
             const expr = json.expression;
             const name = json.name;
-            return jsonToCodeString(expr) + '.' + name;
+            // Check for optional chaining (?.)
+            const dotOperator = json.questionDotToken ? '?.' : '.';
+            return jsonToCodeString(expr) + dotOperator + name;
         }
 
         case 'ElementAccessExpression': {

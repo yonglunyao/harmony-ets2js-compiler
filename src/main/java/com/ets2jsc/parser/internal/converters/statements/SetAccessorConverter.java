@@ -1,5 +1,7 @@
 package com.ets2jsc.parser.internal.converters.statements;
 
+import com.ets2jsc.ast.AstNode;
+import com.ets2jsc.ast.ExpressionStatement;
 import com.ets2jsc.ast.MethodDeclaration;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
@@ -18,7 +20,8 @@ public class SetAccessorConverter implements NodeConverter {
 
     @Override
     public Object convert(JsonNode json, ConversionContext context) {
-        String name = json.get("name").asText();
+        JsonNode nameNode = json.get("name");
+        String name = (nameNode != null && !nameNode.isNull()) ? nameNode.asText() : "";
 
         // Create a method declaration for the setter
         MethodDeclaration setter = new MethodDeclaration("set " + name);
@@ -29,15 +32,25 @@ public class SetAccessorConverter implements NodeConverter {
         JsonNode paramsNode = json.get("parameters");
         if (paramsNode != null && paramsNode.isArray() && paramsNode.size() > 0) {
             JsonNode firstParam = paramsNode.get(0);
-            String paramName = firstParam.get("name").asText();
+            JsonNode paramNameNode = firstParam.get("name");
+            String paramName = (paramNameNode != null && !paramNameNode.isNull()) ? paramNameNode.asText() : "value";
             MethodDeclaration.Parameter param = new MethodDeclaration.Parameter(paramName);
             setter.addParameter(param);
         }
 
-        // Get the body if present
+        // Check if there's a pre-generated text representation
+        JsonNode textNode = json.get("text");
+        if (textNode != null && !textNode.isNull()) {
+            String text = textNode.asText();
+            // Store the text as an expression statement
+            setter.setBody(new ExpressionStatement(text));
+        }
+
+        // Convert body if present
         JsonNode bodyNode = json.get("body");
-        if (bodyNode != null && bodyNode.isObject()) {
-            // Body would be processed in code generation
+        if (bodyNode != null && bodyNode.isObject() && setter.getBody() == null) {
+            AstNode body = context.convertStatement(bodyNode);
+            setter.setBody(body);
         }
 
         return setter;

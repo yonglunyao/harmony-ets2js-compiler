@@ -1,5 +1,7 @@
 package com.ets2jsc.parser.internal.converters.statements;
 
+import com.ets2jsc.ast.AstNode;
+import com.ets2jsc.ast.ExpressionStatement;
 import com.ets2jsc.ast.MethodDeclaration;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
@@ -18,18 +20,27 @@ public class GetAccessorConverter implements NodeConverter {
 
     @Override
     public Object convert(JsonNode json, ConversionContext context) {
-        String name = json.get("name").asText();
+        JsonNode nameNode = json.get("name");
+        String name = (nameNode != null && !nameNode.isNull()) ? nameNode.asText() : "";
 
         // Create a method declaration for the getter
         MethodDeclaration getter = new MethodDeclaration("get " + name);
         getter.setStatic(false);
         getter.setAsync(false);
 
-        // Get the body if present - we'll store it as an expression statement
+        // Check if there's a pre-generated text representation
+        JsonNode textNode = json.get("text");
+        if (textNode != null && !textNode.isNull()) {
+            String text = textNode.asText();
+            // Store the text as an expression statement
+            getter.setBody(new ExpressionStatement(text));
+        }
+
+        // Convert body if present
         JsonNode bodyNode = json.get("body");
-        if (bodyNode != null && bodyNode.isObject()) {
-            // For now, just indicate there's a body
-            // The actual body statements would be processed in code generation
+        if (bodyNode != null && bodyNode.isObject() && getter.getBody() == null) {
+            AstNode body = context.convertStatement(bodyNode);
+            getter.setBody(body);
         }
 
         return getter;
