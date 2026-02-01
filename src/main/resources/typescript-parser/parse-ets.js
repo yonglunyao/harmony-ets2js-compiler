@@ -301,6 +301,28 @@ function convertAstToJson(node, extractedDecorators = []) {
             result.asteriskToken = node.asteriskToken ? true : false;
             break;
 
+        case ts.SyntaxKind.GetAccessor:
+            result.name = node.name?.escapedText || '';
+            result.body = node.body ? convertAstToJson(node.body) : null;
+            // Generate text for getter
+            result.text = generateGetAccessorText(node);
+            break;
+
+        case ts.SyntaxKind.SetAccessor:
+            result.name = node.name?.escapedText || '';
+            result.parameters = [];
+            for (const param of (node.parameters || [])) {
+                const paramJson = {
+                    name: param.name?.escapedText || '',
+                    type: param.type?.getText() || ''
+                };
+                result.parameters.push(paramJson);
+            }
+            result.body = node.body ? convertAstToJson(node.body) : null;
+            // Generate text for setter
+            result.text = generateSetAccessorText(node);
+            break;
+
         case ts.SyntaxKind.FunctionDeclaration:
             result.name = node.name?.escapedText || '';
             result.modifiers = [];
@@ -1000,6 +1022,8 @@ function getSyntaxKindName(kind) {
         [ts.SyntaxKind.ClassDeclaration]: 'ClassDeclaration',
         [ts.SyntaxKind.ClassExpression]: 'ClassExpression',
         [ts.SyntaxKind.MethodDeclaration]: 'MethodDeclaration',
+        [ts.SyntaxKind.GetAccessor]: 'GetAccessor',
+        [ts.SyntaxKind.SetAccessor]: 'SetAccessor',
         [ts.SyntaxKind.PropertyDeclaration]: 'PropertyDeclaration',
         [ts.SyntaxKind.Decorator]: 'Decorator',
         [ts.SyntaxKind.Block]: 'Block',
@@ -1383,6 +1407,39 @@ function generateFunctionExpressionText(node) {
         }
     }
 
+    return result;
+}
+
+/**
+ * Generate text representation for get accessor (without type annotations)
+ */
+function generateGetAccessorText(node) {
+    const name = node.name ? node.name.getText() : '';
+    let result = 'get ' + name + '() ';
+    if (node.body) {
+        const bodyJson = convertAstToJson(node.body);
+        const bodyCode = bodyJson ? jsonToCodeString(bodyJson) : '{}';
+        result += '{ ' + bodyCode + ' }';
+    } else {
+        result += '{}';
+    }
+    return result;
+}
+
+/**
+ * Generate text representation for set accessor (without type annotations)
+ */
+function generateSetAccessorText(node) {
+    const name = node.name ? node.name.getText() : '';
+    const params = (node.parameters || []).map(p => p.name?.getText() || '').join(', ');
+    let result = 'set ' + name + '(' + params + ') ';
+    if (node.body) {
+        const bodyJson = convertAstToJson(node.body);
+        const bodyCode = bodyJson ? jsonToCodeString(bodyJson) : '{}';
+        result += '{ ' + bodyCode + ' }';
+    } else {
+        result += '{}';
+    }
     return result;
 }
 
@@ -1864,6 +1921,25 @@ function jsonToCodeString(json) {
             if (json.text) return json.text;
             // Fallback to class placeholder
             return 'class {}';
+        }
+
+        case 'GetAccessor': {
+            // Use pre-generated text if available
+            if (json.text) return json.text;
+            // Otherwise generate from name and body
+            const name = json.name || '';
+            const body = json.body ? jsonToCodeString(json.body) : '{}';
+            return 'get ' + name + '() { ' + body + ' }';
+        }
+
+        case 'SetAccessor': {
+            // Use pre-generated text if available
+            if (json.text) return json.text;
+            // Otherwise generate from name, parameters and body
+            const name = json.name || '';
+            const params = (json.parameters || []).map(p => p.name || '').join(', ');
+            const body = json.body ? jsonToCodeString(json.body) : '{}';
+            return 'set ' + name + '(' + params + ') { ' + body + ' }';
         }
 
         case 'SpreadElement': {
