@@ -6,7 +6,7 @@ import com.ets2jsc.ast.ExpressionStatement;
 import com.ets2jsc.generator.CodeGenerator;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Abstract base class for loop statement converters.
@@ -15,10 +15,10 @@ import com.google.gson.JsonObject;
 public abstract class LoopConverter implements NodeConverter {
 
     @Override
-    public final Object convert(JsonObject json, ConversionContext context) {
+    public final Object convert(JsonNode json, ConversionContext context) {
         // Priority 1: Check for pre-generated text (TypeScript parser already generated)
         if (json.has("text")) {
-            String text = json.get("text").getAsString();
+            String text = json.get("text").asText();
             if (!text.isEmpty()) {
                 return new ExpressionStatement(text);
             }
@@ -33,12 +33,12 @@ public abstract class LoopConverter implements NodeConverter {
      * Subclasses only need to implement the specific parts.
      * Can be overridden for special cases like do...while loops.
      */
-    protected AstNode convertLoop(JsonObject json, ConversionContext context) {
+    protected AstNode convertLoop(JsonNode json, ConversionContext context) {
         StringBuilder sb = new StringBuilder();
         sb.append(getLoopHeader(json, context));
 
-        JsonObject body = getLoopBody(json);
-        if (body != null) {
+        JsonNode body = getLoopBody(json);
+        if (body != null && body.isObject()) {
             AstNode stmt = context.convertStatement(body);
             sb.append(formatBody(stmt));
         }
@@ -50,12 +50,12 @@ public abstract class LoopConverter implements NodeConverter {
     /**
      * Hook method: Gets the loop header (e.g., "for (let x of array) {\n").
      */
-    protected abstract String getLoopHeader(JsonObject json, ConversionContext context);
+    protected abstract String getLoopHeader(JsonNode json, ConversionContext context);
 
     /**
-     * Hook method: Gets the loop body JSON object.
+     * Hook method: Gets the loop body JSON node.
      */
-    protected abstract JsonObject getLoopBody(JsonObject json);
+    protected abstract JsonNode getLoopBody(JsonNode json);
 
     /**
      * Hook method: Gets the loop footer (e.g., "}").

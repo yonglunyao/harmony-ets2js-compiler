@@ -3,7 +3,7 @@ package com.ets2jsc.parser.internal;
 import com.ets2jsc.ast.AstNode;
 import com.ets2jsc.ast.EmptyStatement;
 import com.ets2jsc.parser.internal.converters.statements.*;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Registry for statement converters.
@@ -33,18 +33,28 @@ public class StatementConverterRegistry extends NodeConverterRegistry {
         register(new SwitchConverter());
         register(new TryConverter());
         register(new ReturnConverter());
+        register(new ThrowConverter());
         register(new VariableConverter());
         register(new ImportConverter());
         register(new ExportConverter());
         register(new ExpressionConverter());
         register(new EmptyStatementConverter());
+        register(new GetAccessorConverter());
+        register(new SetAccessorConverter());
+        register(new TypeAliasConverter());
+        register(new InterfaceDeclarationConverter());
+        register(new LabeledStatementConverter());
+        register(new YieldExpressionConverter());
+        register(new VoidExpressionConverter());
+        register(new RegularExpressionLiteralConverter());
+        register(new TaggedTemplateExpressionConverter());
     }
 
     /**
      * Converts a JSON statement to an AST node.
      */
-    public AstNode convert(JsonObject json, ConversionContext context) {
-        String kindName = json.has("kindName") ? json.get("kindName").getAsString() : "";
+    public AstNode convert(JsonNode json, ConversionContext context) {
+        String kindName = json.has("kindName") ? json.get("kindName").asText() : "";
 
         NodeConverter converter = findConverter(kindName);
         Object result = converter.convert(json, context);

@@ -1,7 +1,7 @@
 package com.ets2jsc.parser.internal.converters.statements;
 
 import com.ets2jsc.parser.internal.ConversionContext;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for while loop statements.
@@ -15,15 +15,15 @@ public class WhileConverter extends LoopConverter {
     }
 
     @Override
-    protected String getLoopHeader(JsonObject json, ConversionContext context) {
-        JsonObject expression = json.getAsJsonObject("expression");
-        String condition = expression != null ? context.convertExpression(expression) : "";
+    protected String getLoopHeader(JsonNode json, ConversionContext context) {
+        JsonNode expressionNode = json.get("expression");
+        String condition = (expressionNode != null && expressionNode.isObject()) ? context.convertExpression(expressionNode) : "";
 
         return "while (" + condition + ") {\n";
     }
 
     @Override
-    protected JsonObject getLoopBody(JsonObject json) {
-        return json.getAsJsonObject("statement");
+    protected JsonNode getLoopBody(JsonNode json) {
+        return json.get("statement");
     }
 }

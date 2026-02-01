@@ -2,7 +2,7 @@ package com.ets2jsc.parser.internal.converters.expressions;
 
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for dynamic import expressions.
@@ -16,11 +16,11 @@ public class ImportExpressionConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
+    public Object convert(JsonNode json, ConversionContext context) {
         // Handle dynamic import: await import('module')
         // TypeScript ImportExpression uses 'expression' field (not 'argument')
-        JsonObject expr = json.getAsJsonObject("expression");
-        String modulePath = expr != null ? context.convertExpression(expr) : "";
+        JsonNode exprNode = json.get("expression");
+        String modulePath = (exprNode != null && exprNode.isObject()) ? context.convertExpression(exprNode) : "";
         return "import(" + modulePath + ")";
     }
 }

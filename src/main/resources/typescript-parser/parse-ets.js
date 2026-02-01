@@ -178,6 +178,23 @@ function convertAstToJson(node, extractedDecorators = []) {
                     result.members.push(memberJson);
                 }
             }
+
+            // Add heritage clauses (extends, implements)
+            if (node.heritageClauses && node.heritageClauses.length > 0) {
+                result.heritageClauses = [];
+                for (const clause of node.heritageClauses) {
+                    const clauseJson = {
+                        token: getSyntaxKindName(clause.token) || '',
+                        types: []
+                    };
+                    if (clause.types) {
+                        for (const type of clause.types) {
+                            clauseJson.types.push(type.expression.getText());
+                        }
+                    }
+                    result.heritageClauses.push(clauseJson);
+                }
+            }
             break;
 
         case ts.SyntaxKind.MethodDeclaration:
@@ -219,12 +236,30 @@ function convertAstToJson(node, extractedDecorators = []) {
             }
             result.parameters = [];
             for (const param of (node.parameters || [])) {
-                result.parameters.push({
+                const paramJson = {
                     name: param.name?.escapedText || '',
                     type: param.type?.getText() || '',
                     hasDotDotDot: param.dotDotDotToken ? true : false,
                     questionToken: param.questionToken ? true : false
-                });
+                };
+                // Handle binding patterns (destructuring in parameters)
+                if (param.name && param.name.kind) {
+                    const bindingKind = getSyntaxKindName(param.name.kind);
+                    if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+                        paramJson.bindingPattern = convertAstToJson(param.name);
+                        paramJson.name = param.name.getText() || '';
+                    }
+                }
+                // Add initializer for default parameters
+                if (param.initializer) {
+                    paramJson.initializer = convertAstToJson(param.initializer);
+                    if (paramJson.initializer && paramJson.initializer.text) {
+                        paramJson.initializerText = paramJson.initializer.text;
+                    } else {
+                        paramJson.initializerText = param.initializer?.getText() || '';
+                    }
+                }
+                result.parameters.push(paramJson);
             }
             result.body = node.body ? convertAstToJson(node.body) : null;
             result.asteriskToken = node.asteriskToken ? true : false;
@@ -243,16 +278,66 @@ function convertAstToJson(node, extractedDecorators = []) {
             }
             result.parameters = [];
             for (const param of (node.parameters || [])) {
-                result.parameters.push({
+                const paramJson = {
                     name: param.name?.escapedText || '',
                     type: param.type?.getText() || '',
                     hasDotDotDot: param.dotDotDotToken ? true : false,
                     questionToken: param.questionToken ? true : false
-                });
+                };
+                // Handle binding patterns (destructuring in parameters)
+                if (param.name && param.name.kind) {
+                    const bindingKind = getSyntaxKindName(param.name.kind);
+                    if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+                        paramJson.bindingPattern = convertAstToJson(param.name);
+                        paramJson.name = param.name.getText() || '';
+                    }
+                }
+                // Add initializer for default parameters
+                if (param.initializer) {
+                    paramJson.initializer = convertAstToJson(param.initializer);
+                    if (paramJson.initializer && paramJson.initializer.text) {
+                        paramJson.initializerText = paramJson.initializer.text;
+                    } else {
+                        paramJson.initializerText = param.initializer?.getText() || '';
+                    }
+                }
+                result.parameters.push(paramJson);
             }
             result.body = node.body ? convertAstToJson(node.body) : null;
             // Add asterisk for generator functions
             result.asteriskToken = node.asteriskToken ? true : false;
+            break;
+
+        case ts.SyntaxKind.Constructor:
+            result.name = 'constructor';
+            result.parameters = [];
+            for (const param of (node.parameters || [])) {
+                const paramJson = {
+                    name: param.name?.escapedText || '',
+                    type: param.type?.getText() || '',
+                    hasDotDotDot: param.dotDotDotToken ? true : false,
+                    questionToken: param.questionToken ? true : false
+                };
+                // Handle binding patterns (destructuring in parameters)
+                if (param.name && param.name.kind) {
+                    const bindingKind = getSyntaxKindName(param.name.kind);
+                    if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+                        paramJson.bindingPattern = convertAstToJson(param.name);
+                        paramJson.name = param.name.getText() || '';
+                    }
+                }
+                // Add initializer for default parameters
+                if (param.initializer) {
+                    paramJson.initializer = convertAstToJson(param.initializer);
+                    if (paramJson.initializer && paramJson.initializer.text) {
+                        paramJson.initializerText = paramJson.initializer.text;
+                    } else {
+                        paramJson.initializerText = param.initializer?.getText() || '';
+                    }
+                }
+                result.parameters.push(paramJson);
+            }
+            result.body = node.body ? convertAstToJson(node.body) : null;
             break;
 
         case ts.SyntaxKind.PropertyDeclaration:
@@ -591,16 +676,32 @@ function convertAstToJson(node, extractedDecorators = []) {
             break;
 
         case ts.SyntaxKind.ArrowFunction:
+        case ts.SyntaxKind.FunctionExpression:
+            result.name = node.name?.escapedText || node.name?.text || '';
             result.parameters = [];
             for (const param of (node.parameters || [])) {
-                result.parameters.push({
+                const paramJson = {
                     name: param.name?.escapedText || '',
                     type: param.type?.getText() || ''
-                });
+                };
+                // Handle binding patterns (destructuring in parameters)
+                if (param.name && param.name.kind) {
+                    const bindingKind = getSyntaxKindName(param.name.kind);
+                    if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+                        paramJson.bindingPattern = convertAstToJson(param.name);
+                        // Use text for the binding pattern
+                        paramJson.name = param.name.getText() || '';
+                    }
+                }
+                result.parameters.push(paramJson);
             }
             result.body = convertAstToJson(node.body);
             // Generate JavaScript-compatible text without type annotations
-            result.text = generateArrowFunctionText(node);
+            if (node.kind === ts.SyntaxKind.ArrowFunction) {
+                result.text = generateArrowFunctionText(node);
+            } else {
+                result.text = generateFunctionExpressionText(node);
+            }
             break;
 
         case ts.SyntaxKind.StringLiteral:
@@ -807,6 +908,41 @@ function convertAstToJson(node, extractedDecorators = []) {
             result.expression = convertAstToJson(node.expression);
             break;
 
+        case ts.SyntaxKind.ObjectBindingPattern:
+            result.elements = [];
+            if (node.elements) {
+                for (const elem of node.elements) {
+                    result.elements.push(convertAstToJson(elem));
+                }
+            }
+            break;
+
+        case ts.SyntaxKind.ArrayBindingPattern:
+            result.elements = [];
+            if (node.elements) {
+                for (const elem of node.elements) {
+                    result.elements.push(convertAstToJson(elem));
+                }
+            }
+            break;
+
+        case ts.SyntaxKind.BindingElement:
+            result.name = node.name?.getText() || '';
+            if (node.propertyName) {
+                result.propertyName = node.propertyName.getText();
+            }
+            if (node.initializer) {
+                result.initializer = convertAstToJson(node.initializer);
+            }
+            if (node.dotDotDotToken) {
+                result.dotDotDotToken = true;
+            }
+            break;
+
+        case ts.SyntaxKind.DeleteExpression:
+            result.expression = convertAstToJson(node.expression);
+            break;
+
         // Add more cases as needed
     }
 
@@ -880,11 +1016,16 @@ function getSyntaxKindName(kind) {
         [ts.SyntaxKind.ContinueStatement]: 'ContinueStatement',
         [ts.SyntaxKind.SpreadElement]: 'SpreadElement',
         [ts.SyntaxKind.SpreadAssignment]: 'SpreadAssignment',
+        [ts.SyntaxKind.DeleteExpression]: 'DeleteExpression',
+        [ts.SyntaxKind.ObjectBindingPattern]: 'ObjectBindingPattern',
+        [ts.SyntaxKind.ArrayBindingPattern]: 'ArrayBindingPattern',
+        [ts.SyntaxKind.BindingElement]: 'BindingElement',
         [ts.SyntaxKind.TemplateExpression]: 'TemplateExpression',
         [ts.SyntaxKind.NoSubstitutionTemplateLiteral]: 'NoSubstitutionTemplateLiteral',
         [ts.SyntaxKind.ImportExpression]: 'ImportExpression',
         [ts.SyntaxKind.InterfaceDeclaration]: 'InterfaceDeclaration',
         [ts.SyntaxKind.FunctionDeclaration]: 'FunctionDeclaration',
+        [ts.SyntaxKind.FunctionExpression]: 'FunctionExpression',
     };
 
     return kindMap[kind] || `Unknown_${kind}`;
@@ -1089,9 +1230,31 @@ function generateTryStatementText(node) {
  */
 function generateArrowFunctionText(node) {
     const params = (node.parameters || []).map(param => {
-        // Get parameter name without type annotation
-        const name = param.name?.escapedText || param.name?.text || '';
-        return name;
+        let paramText = '';
+        // Handle rest parameter (...)
+        if (param.dotDotDotToken) {
+            paramText += '...';
+        }
+        // Handle binding patterns (destructuring in parameters)
+        if (param.name && param.name.kind) {
+            const bindingKind = getSyntaxKindName(param.name.kind);
+            if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+                // For binding patterns, use getText() to get the full pattern
+                paramText += param.name.getText();
+            } else {
+                // For simple identifiers, use escapedText
+                paramText += param.name?.escapedText || param.name?.text || '';
+            }
+        } else {
+            // Fallback to escapedText or text
+            paramText += param.name?.escapedText || param.name?.text || '';
+        }
+        // Handle default values
+        if (param.initializer) {
+            const initJson = convertAstToJson(param.initializer);
+            paramText += ' = ' + jsonToCodeString(initJson);
+        }
+        return paramText;
     }).join(', ');
 
     // Check if the arrow function has async modifier
@@ -1117,6 +1280,69 @@ function generateArrowFunctionText(node) {
         } else {
             // Expression body: () => expression
             result += bodyCode;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Generate JavaScript-compatible text for function expression (without type annotations)
+ */
+function generateFunctionExpressionText(node) {
+    const params = (node.parameters || []).map(param => {
+        let paramText = '';
+        // Handle rest parameter (...)
+        if (param.dotDotDotToken) {
+            paramText += '...';
+        }
+        // Handle binding patterns (destructuring in parameters)
+        if (param.name && param.name.kind) {
+            const bindingKind = getSyntaxKindName(param.name.kind);
+            if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+                // For binding patterns, use getText() to get the full pattern
+                paramText += param.name.getText();
+            } else {
+                // For simple identifiers, use escapedText
+                paramText += param.name?.escapedText || param.name?.text || '';
+            }
+        } else {
+            // Fallback to escapedText or text
+            paramText += param.name?.escapedText || param.name?.text || '';
+        }
+        // Handle default values
+        if (param.initializer) {
+            const initJson = convertAstToJson(param.initializer);
+            paramText += ' = ' + jsonToCodeString(initJson);
+        }
+        return paramText;
+    }).join(', ');
+
+    // Check if the function has async modifier
+    const hasAsync = node.modifiers && node.modifiers.some(m =>
+        m.kind === ts.SyntaxKind.AsyncKeyword
+    );
+
+    // Get function name if present
+    const name = node.name?.escapedText || node.name?.text || '';
+
+    let result = '';
+    if (hasAsync) {
+        result += 'async ';
+    }
+    result += 'function ' + name + '(' + params + ') ';
+
+    // Handle body - convert to JSON and use jsonToCodeString to strip TypeScript syntax
+    if (node.body) {
+        const bodyJson = convertAstToJson(node.body);
+        const bodyCode = jsonToCodeString(bodyJson);
+
+        if (node.body.kind === ts.SyntaxKind.Block) {
+            // Block body: function() { statements }
+            result += '{\n' + bodyCode + '\n}';
+        } else {
+            // Expression body (rare but possible)
+            result += '{ ' + bodyCode + ' }';
         }
     }
 
@@ -1190,6 +1416,18 @@ function generateObjectLiteralExpressionText(node) {
             const exprJson = convertAstToJson(prop.expression);
             const exprStr = exprJson ? jsonToCodeString(exprJson) : '';
             return '...' + exprStr;
+        } else if (prop.kind === ts.SyntaxKind.MethodDeclaration) {
+            // Handle method shorthand: { methodName() { ... } }
+            const methodJson = convertAstToJson(prop);
+            return methodJson ? jsonToCodeString(methodJson) : '';
+        } else if (prop.kind === ts.SyntaxKind.GetAccessor) {
+            // Handle getter: { get propName() { ... } }
+            const accessorJson = convertAstToJson(prop);
+            return accessorJson ? jsonToCodeString(accessorJson) : '';
+        } else if (prop.kind === ts.SyntaxKind.SetAccessor) {
+            // Handle setter: { set propName(val) { ... } }
+            const accessorJson = convertAstToJson(prop);
+            return accessorJson ? jsonToCodeString(accessorJson) : '';
         }
         return '';
     }).join(', ');
@@ -1436,11 +1674,57 @@ function jsonToCodeString(json) {
         }
 
         case 'ArrowFunction': {
-            return '/* arrow function */';
+            // Use pre-generated text if available
+            if (json.text) return json.text;
+            // Otherwise generate from parameters and body
+            const params = (json.parameters || []).map(p => {
+                let param = '';
+                if (p.hasDotDotDotDot) param += '...';
+                // Use bindingPattern if present (for destructuring parameters)
+                if (p.bindingPattern) {
+                    param += jsonToCodeString(p.bindingPattern);
+                } else {
+                    param += p.name;
+                }
+                if (p.initializerText || (p.initializer && p.initializer.text)) {
+                    param += ' = ' + (p.initializerText || p.initializer.text);
+                }
+                return param;
+            }).join(', ');
+            const body = json.body ? jsonToCodeString(json.body) : '{}';
+            // Check if body is a block
+            if (body.startsWith('{')) {
+                return '(' + params + ') => ' + body;
+            } else {
+                return '(' + params + ') => { ' + body + ' }';
+            }
         }
 
         case 'FunctionExpression': {
-            return '/* function expression */';
+            // Use pre-generated text if available
+            if (json.text) return json.text;
+            // Otherwise generate from parameters and body
+            const name = json.name || '';
+            const params = (json.parameters || []).map(p => {
+                let param = '';
+                if (p.hasDotDotDotDot) param += '...';
+                // Use bindingPattern if present (for destructuring parameters)
+                if (p.bindingPattern) {
+                    param += jsonToCodeString(p.bindingPattern);
+                } else {
+                    param += p.name;
+                }
+                if (p.initializerText || (p.initializer && p.initializer.text)) {
+                    param += ' = ' + (p.initializerText || p.initializer.text);
+                }
+                return param;
+            }).join(', ');
+            const body = json.body ? jsonToCodeString(json.body) : '{}';
+            if (name) {
+                return 'function ' + name + '(' + params + ') ' + body;
+            } else {
+                return 'function(' + params + ') ' + body;
+            }
         }
 
         case 'SpreadElement': {
@@ -1449,6 +1733,43 @@ function jsonToCodeString(json) {
 
         case 'SpreadAssignment': {
             return '...' + jsonToCodeString(json.expression);
+        }
+
+        case 'DeleteExpression': {
+            const expr = json.expression;
+            if (expr) {
+                return 'delete ' + jsonToCodeString(expr);
+            }
+            return 'delete undefined';
+        }
+
+        case 'ObjectBindingPattern': {
+            const elements = json.elements || [];
+            if (elements.length === 0) return '{}';
+            const props = elements.map(elem => jsonToCodeString(elem)).join(', ');
+            return '{' + props + '}';
+        }
+
+        case 'ArrayBindingPattern': {
+            const elements = json.elements || [];
+            const props = elements.map(elem => jsonToCodeString(elem)).join(', ');
+            return '[' + props + ']';
+        }
+
+        case 'BindingElement': {
+            let elem = '';
+            if (json.dotDotDotToken) {
+                elem += '...';
+            }
+            if (json.propertyName) {
+                elem += json.propertyName + ': ';
+            }
+            elem += json.name || '';
+            if (json.initializer) {
+                const initStr = jsonToCodeString(json.initializer);
+                elem += ' = ' + initStr;
+            }
+            return elem;
         }
 
         case 'TemplateExpression': {

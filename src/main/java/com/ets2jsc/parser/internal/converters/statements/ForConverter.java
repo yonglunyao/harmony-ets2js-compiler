@@ -1,7 +1,7 @@
 package com.ets2jsc.parser.internal.converters.statements;
 
 import com.ets2jsc.parser.internal.ConversionContext;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for for loop statements.
@@ -15,14 +15,14 @@ public class ForConverter extends LoopConverter {
     }
 
     @Override
-    protected String getLoopHeader(JsonObject json, ConversionContext context) {
-        JsonObject initializer = json.getAsJsonObject("initializer");
-        JsonObject condition = json.getAsJsonObject("condition");
-        JsonObject incrementor = json.getAsJsonObject("incrementor");
+    protected String getLoopHeader(JsonNode json, ConversionContext context) {
+        JsonNode initializerNode = json.get("initializer");
+        JsonNode conditionNode = json.get("condition");
+        JsonNode incrementorNode = json.get("incrementor");
 
-        String initStr = initializer != null ? context.convertExpression(initializer) : "";
-        String condStr = condition != null ? context.convertExpression(condition) : "";
-        String incrStr = incrementor != null ? context.convertExpression(incrementor) : "";
+        String initStr = (initializerNode != null && initializerNode.isObject()) ? context.convertExpression(initializerNode) : "";
+        String condStr = (conditionNode != null && conditionNode.isObject()) ? context.convertExpression(conditionNode) : "";
+        String incrStr = (incrementorNode != null && incrementorNode.isObject()) ? context.convertExpression(incrementorNode) : "";
 
         StringBuilder sb = new StringBuilder();
         sb.append("for (").append(initStr).append("; ");
@@ -33,7 +33,7 @@ public class ForConverter extends LoopConverter {
     }
 
     @Override
-    protected JsonObject getLoopBody(JsonObject json) {
-        return json.getAsJsonObject("statement");
+    protected JsonNode getLoopBody(JsonNode json) {
+        return json.get("statement");
     }
 }

@@ -2,7 +2,7 @@ package com.ets2jsc.parser.internal.converters.expressions;
 
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for binary expressions.
@@ -16,13 +16,13 @@ public class BinaryExpressionConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        JsonObject left = json.getAsJsonObject("left");
-        String operator = json.has("operator") ? json.get("operator").getAsString() : "";
-        JsonObject right = json.getAsJsonObject("right");
+    public Object convert(JsonNode json, ConversionContext context) {
+        JsonNode leftNode = json.get("left");
+        String operator = json.has("operator") ? json.get("operator").asText() : "";
+        JsonNode rightNode = json.get("right");
 
-        String leftStr = context.convertExpression(left);
-        String rightStr = context.convertExpression(right);
+        String leftStr = (leftNode != null && leftNode.isObject()) ? context.convertExpression(leftNode) : "";
+        String rightStr = (rightNode != null && rightNode.isObject()) ? context.convertExpression(rightNode) : "";
 
         return leftStr + " " + operator + " " + rightStr;
     }

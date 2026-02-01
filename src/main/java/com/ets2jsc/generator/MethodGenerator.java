@@ -36,7 +36,10 @@ public class MethodGenerator {
         String name = method.getName();
 
         if ("constructor".equals(name)) {
-            sb.append("constructor() {\n");
+            sb.append("constructor(");
+            // Add constructor parameters
+            generateParameters(sb);
+            sb.append(") {\n");
         } else if (name.startsWith("get ")) {
             sb.append("get ").append(name.substring(4)).append("() {\n");
         } else if (name.startsWith("set ")) {

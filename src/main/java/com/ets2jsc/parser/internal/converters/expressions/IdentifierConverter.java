@@ -2,7 +2,7 @@ package com.ets2jsc.parser.internal.converters.expressions;
 
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for identifier and import keyword expressions.
@@ -11,12 +11,25 @@ public class IdentifierConverter implements NodeConverter {
 
     @Override
     public boolean canConvert(String kindName) {
-        return "Identifier".equals(kindName) || "ImportKeyword".equals(kindName);
+        return "Identifier".equals(kindName)
+            || "ImportKeyword".equals(kindName)
+            || "SuperKeyword".equals(kindName);
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        String text = json.has("text") ? json.get("text").getAsString() : "";
+    public Object convert(JsonNode json, ConversionContext context) {
+        String kindName = json.has("kindName") ? json.get("kindName").asText() : "";
+
+        // Handle special keywords
+        if ("SuperKeyword".equals(kindName)) {
+            return "super";
+        }
+        if ("ImportKeyword".equals(kindName)) {
+            return "import";
+        }
+
+        // Handle regular identifiers
+        String text = json.has("text") ? json.get("text").asText() : "";
         return text.trim();
     }
 

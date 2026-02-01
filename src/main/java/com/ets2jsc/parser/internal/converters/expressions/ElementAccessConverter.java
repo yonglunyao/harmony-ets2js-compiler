@@ -2,7 +2,7 @@ package com.ets2jsc.parser.internal.converters.expressions;
 
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for element access expressions.
@@ -16,11 +16,11 @@ public class ElementAccessConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        JsonObject elementObj = json.getAsJsonObject("expression");
-        String elementStr = elementObj != null ? context.convertExpression(elementObj) : "";
-        JsonObject argumentExpr = json.getAsJsonObject("argumentExpression");
-        String argStr = argumentExpr != null ? context.convertExpression(argumentExpr) : "";
+    public Object convert(JsonNode json, ConversionContext context) {
+        JsonNode elementNode = json.get("expression");
+        String elementStr = (elementNode != null && elementNode.isObject()) ? context.convertExpression(elementNode) : "";
+        JsonNode argumentExprNode = json.get("argumentExpression");
+        String argStr = (argumentExprNode != null && argumentExprNode.isObject()) ? context.convertExpression(argumentExprNode) : "";
         return elementStr + "[" + argStr + "]";
     }
 }

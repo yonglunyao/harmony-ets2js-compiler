@@ -2,7 +2,7 @@ package com.ets2jsc.parser.internal.converters.expressions;
 
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for await expressions.
@@ -16,10 +16,10 @@ public class AwaitExpressionConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        JsonObject awaitExpr = json.getAsJsonObject("expression");
-        if (awaitExpr != null) {
-            String awaitResult = context.convertExpression(awaitExpr);
+    public Object convert(JsonNode json, ConversionContext context) {
+        JsonNode awaitExprNode = json.get("expression");
+        if (awaitExprNode != null && awaitExprNode.isObject()) {
+            String awaitResult = context.convertExpression(awaitExprNode);
             return "await " + awaitResult.trim();
         }
         return "await";

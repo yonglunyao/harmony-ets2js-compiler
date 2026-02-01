@@ -2,7 +2,7 @@ package com.ets2jsc.parser.internal.converters.expressions;
 
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for conditional (ternary) expressions.
@@ -16,14 +16,14 @@ public class ConditionalExpressionConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        JsonObject condition = json.getAsJsonObject("condition");
-        JsonObject whenTrue = json.getAsJsonObject("whenTrue");
-        JsonObject whenFalse = json.getAsJsonObject("whenFalse");
+    public Object convert(JsonNode json, ConversionContext context) {
+        JsonNode conditionNode = json.get("condition");
+        JsonNode whenTrueNode = json.get("whenTrue");
+        JsonNode whenFalseNode = json.get("whenFalse");
 
-        String condStr = context.convertExpression(condition);
-        String trueStr = context.convertExpression(whenTrue);
-        String falseStr = context.convertExpression(whenFalse);
+        String condStr = (conditionNode != null && conditionNode.isObject()) ? context.convertExpression(conditionNode) : "";
+        String trueStr = (whenTrueNode != null && whenTrueNode.isObject()) ? context.convertExpression(whenTrueNode) : "";
+        String falseStr = (whenFalseNode != null && whenFalseNode.isObject()) ? context.convertExpression(whenFalseNode) : "";
 
         return condStr + " ? " + trueStr + " : " + falseStr;
     }

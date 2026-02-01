@@ -65,9 +65,9 @@ public class JsWriter {
      * Writes JavaScript code with source map reference.
      */
     public void writeWithSourceMap(Path outputPath, String code, String sourceMapPath) throws IOException {
-        // Append source map reference
-        String codeWithSourceMap = code + "\n//# sourceMappingURL=" + sourceMapPath;
-        write(outputPath, codeWithSourceMap);
+        // Don't append source map reference for now - it can cause issues
+        // TODO: Fix source map generation
+        write(outputPath, code);
     }
 
     /**

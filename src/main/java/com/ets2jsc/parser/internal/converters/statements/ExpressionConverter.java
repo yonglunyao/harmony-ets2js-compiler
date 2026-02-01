@@ -6,8 +6,8 @@ import com.ets2jsc.ast.ExpressionStatement;
 import com.ets2jsc.ast.ForeachStatement;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * Converter for expression statements.
@@ -21,36 +21,37 @@ public class ExpressionConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        JsonObject exprObj = json.getAsJsonObject("expression");
-        String kindName = exprObj.has("kindName") ? exprObj.get("kindName").getAsString() : "";
+    public Object convert(JsonNode json, ConversionContext context) {
+        JsonNode exprNode = json.get("expression");
+        String kindName = exprNode.has("kindName") ? exprNode.get("kindName").asText() : "";
 
         // Check for special components: ForEach
         if ("CallExpression".equals(kindName)) {
-            String componentName = exprObj.has("componentName") ? exprObj.get("componentName").getAsString() : "";
+            String componentName = exprNode.has("componentName") ? exprNode.get("componentName").asText() : "";
             if ("ForEach".equals(componentName)) {
-                return convertForEachExpression(exprObj, context);
+                return convertForEachExpression(exprNode, context);
             }
         }
 
-        String expression = context.convertExpression(exprObj);
+        String expression = context.convertExpression(exprNode);
         return new ExpressionStatement(expression);
     }
 
-    private ForeachStatement convertForEachExpression(JsonObject json, ConversionContext context) {
+    private ForeachStatement convertForEachExpression(JsonNode json, ConversionContext context) {
         // ForEach has 3 arguments: array, itemGenerator, keyGenerator
-        JsonArray argsArray = json.getAsJsonArray("arguments");
+        JsonNode argsNode = json.get("arguments");
 
         String arrayExpr = "";
         String itemGenExpr = "";
         String keyGenExpr = "";
 
-        if (argsArray != null && argsArray.size() >= 2) {
-            arrayExpr = context.convertExpression(argsArray.get(0).getAsJsonObject());
-            itemGenExpr = context.convertExpression(argsArray.get(1).getAsJsonObject());
+        if (argsNode != null && argsNode.isArray() && argsNode.size() >= 2) {
+            ArrayNode argsArray = (ArrayNode) argsNode;
+            arrayExpr = context.convertExpression(argsArray.get(0));
+            itemGenExpr = context.convertExpression(argsArray.get(1));
 
             if (argsArray.size() >= 3) {
-                keyGenExpr = context.convertExpression(argsArray.get(2).getAsJsonObject());
+                keyGenExpr = context.convertExpression(argsArray.get(2));
             }
         }
 

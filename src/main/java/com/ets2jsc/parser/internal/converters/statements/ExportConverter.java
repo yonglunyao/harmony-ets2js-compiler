@@ -4,8 +4,8 @@ import com.ets2jsc.ast.AstNode;
 import com.ets2jsc.ast.ExportStatement;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * Converter for export declarations.
@@ -19,7 +19,7 @@ public class ExportConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
+    public Object convert(JsonNode json, ConversionContext context) {
         boolean isTypeOnly = isTypeOnlyExport(json);
         String moduleSpecifier = extractModuleSpecifier(json);
         String exportClause = buildExportClause(json);
@@ -31,20 +31,20 @@ public class ExportConverter implements NodeConverter {
      * Checks if this is a type-only export.
      * CC: 2 (has check + boolean)
      */
-    private boolean isTypeOnlyExport(JsonObject json) {
-        return json.has("isTypeOnly") && json.get("isTypeOnly").getAsBoolean();
+    private boolean isTypeOnlyExport(JsonNode json) {
+        return json.has("isTypeOnly") && json.get("isTypeOnly").asBoolean();
     }
 
     /**
      * Extracts and cleans module specifier.
      * CC: 2 (has check + null check)
      */
-    private String extractModuleSpecifier(JsonObject json) {
-        if (!json.has("moduleSpecifier") || json.get("moduleSpecifier").isJsonNull()) {
+    private String extractModuleSpecifier(JsonNode json) {
+        if (!json.has("moduleSpecifier") || json.get("moduleSpecifier").isNull()) {
             return null;
         }
 
-        String moduleSpecifier = json.get("moduleSpecifier").getAsString();
+        String moduleSpecifier = json.get("moduleSpecifier").asText();
         return moduleSpecifier.replaceAll("^['\"]|['\"]$", "");
     }
 
@@ -52,14 +52,19 @@ public class ExportConverter implements NodeConverter {
      * Builds the export clause string.
      * CC: 3 (null checks)
      */
-    private String buildExportClause(JsonObject json) {
-        JsonObject exportClauseObj = json.getAsJsonObject("exportClause");
-        if (exportClauseObj == null) {
+    private String buildExportClause(JsonNode json) {
+        JsonNode exportClauseNode = json.get("exportClause");
+        if (exportClauseNode == null || !exportClauseNode.isObject()) {
             return null;
         }
 
-        JsonArray elementsArray = exportClauseObj.getAsJsonArray("elements");
-        if (elementsArray == null || elementsArray.size() == 0) {
+        JsonNode elementsNode = exportClauseNode.get("elements");
+        if (elementsNode == null || !elementsNode.isArray()) {
+            return null;
+        }
+
+        ArrayNode elementsArray = (ArrayNode) elementsNode;
+        if (elementsArray.size() == 0) {
             return null;
         }
 
@@ -70,7 +75,7 @@ public class ExportConverter implements NodeConverter {
      * Builds named exports string like "{ A, B as C }".
      * CC: 2 (loop + ternary)
      */
-    private String buildNamedExports(JsonArray elementsArray) {
+    private String buildNamedExports(ArrayNode elementsArray) {
         StringBuilder exportStr = new StringBuilder("{ ");
 
         for (int i = 0; i < elementsArray.size(); i++) {
@@ -78,7 +83,7 @@ public class ExportConverter implements NodeConverter {
                 exportStr.append(", ");
             }
 
-            JsonObject element = elementsArray.get(i).getAsJsonObject();
+            JsonNode element = elementsArray.get(i);
             String name = getElementName(element);
             String propertyName = getElementPropertyName(element);
 
@@ -106,18 +111,18 @@ public class ExportConverter implements NodeConverter {
      * Extracts element name.
      * CC: 1
      */
-    private String getElementName(JsonObject element) {
-        return element.has("name") ? element.get("name").getAsString() : "";
+    private String getElementName(JsonNode element) {
+        return element.has("name") ? element.get("name").asText() : "";
     }
 
     /**
      * Extracts element property name.
      * CC: 2 (has check + null check)
      */
-    private String getElementPropertyName(JsonObject element) {
-        if (!element.has("propertyName") || element.get("propertyName").isJsonNull()) {
+    private String getElementPropertyName(JsonNode element) {
+        if (!element.has("propertyName") || element.get("propertyName").isNull()) {
             return null;
         }
-        return element.get("propertyName").getAsString();
+        return element.get("propertyName").asText();
     }
 }

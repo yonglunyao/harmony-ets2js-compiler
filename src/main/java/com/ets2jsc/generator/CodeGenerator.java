@@ -286,9 +286,11 @@ public class CodeGenerator implements AstVisitor<String> {
      */
     private String formatExpressionStatement(String expr) {
         String trimmed = expr.trim();
-        if (trimmed.endsWith(";") || trimmed.endsWith("}") || trimmed.startsWith("{")) {
+        if (trimmed.endsWith(";")) {
             return expr;
         }
+        // Object literals and blocks need semicolons for proper ASI (Automatic Semicolon Insertion)
+        // when followed by other statements like destructuring assignments
         return expr + ";";
     }
 

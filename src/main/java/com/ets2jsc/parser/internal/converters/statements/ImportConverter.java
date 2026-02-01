@@ -4,8 +4,8 @@ import com.ets2jsc.ast.AstNode;
 import com.ets2jsc.ast.ImportStatement;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * Converter for import declarations.
@@ -21,14 +21,14 @@ public class ImportConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
+    public Object convert(JsonNode json, ConversionContext context) {
         String moduleSpecifier = extractModuleSpecifier(json);
         ImportStatement importStmt = new ImportStatement(moduleSpecifier);
 
-        JsonObject importClauseObj = json.getAsJsonObject("importClause");
-        if (importClauseObj != null) {
-            addDefaultImport(importStmt, importClauseObj);
-            addNamedImports(importStmt, importClauseObj);
+        JsonNode importClauseNode = json.get("importClause");
+        if (importClauseNode != null && importClauseNode.isObject()) {
+            addDefaultImport(importStmt, importClauseNode);
+            addNamedImports(importStmt, importClauseNode);
         }
 
         return importStmt;
@@ -38,8 +38,8 @@ public class ImportConverter implements NodeConverter {
      * Extracts and cleans module specifier.
      * CC: 1
      */
-    private String extractModuleSpecifier(JsonObject json) {
-        String moduleSpecifier = json.get("moduleSpecifier").getAsString();
+    private String extractModuleSpecifier(JsonNode json) {
+        String moduleSpecifier = json.get("moduleSpecifier").asText();
         return moduleSpecifier.replaceAll("^['\"]|['\"]$", "");
     }
 
@@ -47,12 +47,12 @@ public class ImportConverter implements NodeConverter {
      * Adds default import specifier if present.
      * CC: 2 (has check + null check)
      */
-    private void addDefaultImport(ImportStatement importStmt, JsonObject importClauseObj) {
-        if (!importClauseObj.has("name") || importClauseObj.get("name").isJsonNull()) {
+    private void addDefaultImport(ImportStatement importStmt, JsonNode importClauseObj) {
+        if (!importClauseObj.has("name") || importClauseObj.get("name").isNull()) {
             return;
         }
 
-        String defaultName = importClauseObj.get("name").getAsString();
+        String defaultName = importClauseObj.get("name").asText();
         importStmt.addSpecifier(new ImportStatement.ImportSpecifier(
                 defaultName, defaultName, ImportStatement.ImportSpecifier.SpecifierKind.DEFAULT));
     }
@@ -61,14 +61,15 @@ public class ImportConverter implements NodeConverter {
      * Adds named and namespace import specifiers.
      * CC: 4 (null check + loop + condition checks)
      */
-    private void addNamedImports(ImportStatement importStmt, JsonObject importClauseObj) {
-        JsonArray namedBindings = importClauseObj.getAsJsonArray("namedBindings");
-        if (namedBindings == null) {
+    private void addNamedImports(ImportStatement importStmt, JsonNode importClauseObj) {
+        JsonNode namedBindingsNode = importClauseObj.get("namedBindings");
+        if (namedBindingsNode == null || !namedBindingsNode.isArray()) {
             return;
         }
 
+        ArrayNode namedBindings = (ArrayNode) namedBindingsNode;
         for (int i = 0; i < namedBindings.size(); i++) {
-            JsonObject bindingObj = namedBindings.get(i).getAsJsonObject();
+            JsonNode bindingObj = namedBindings.get(i);
             addBindingSpecifier(importStmt, bindingObj);
         }
     }
@@ -77,7 +78,7 @@ public class ImportConverter implements NodeConverter {
      * Adds a single binding specifier.
      * CC: 3 (has check + condition check)
      */
-    private void addBindingSpecifier(ImportStatement importStmt, JsonObject bindingObj) {
+    private void addBindingSpecifier(ImportStatement importStmt, JsonNode bindingObj) {
         if (isNamespaceBinding(bindingObj)) {
             addNamespaceSpecifier(importStmt, bindingObj);
         } else {
@@ -89,16 +90,16 @@ public class ImportConverter implements NodeConverter {
      * Checks if binding is a namespace import.
      * CC: 2 (has check + equals check)
      */
-    private boolean isNamespaceBinding(JsonObject bindingObj) {
-        return bindingObj.has("kind") && NAMESPACE_KIND.equals(bindingObj.get("kind").getAsString());
+    private boolean isNamespaceBinding(JsonNode bindingObj) {
+        return bindingObj.has("kind") && NAMESPACE_KIND.equals(bindingObj.get("kind").asText());
     }
 
     /**
      * Adds namespace import specifier (* as Module).
      * CC: 1
      */
-    private void addNamespaceSpecifier(ImportStatement importStmt, JsonObject bindingObj) {
-        String name = bindingObj.get("name").getAsString();
+    private void addNamespaceSpecifier(ImportStatement importStmt, JsonNode bindingObj) {
+        String name = bindingObj.get("name").asText();
         importStmt.addSpecifier(new ImportStatement.ImportSpecifier(
                 "*", name, ImportStatement.ImportSpecifier.SpecifierKind.NAMESPACE));
     }
@@ -107,10 +108,10 @@ public class ImportConverter implements NodeConverter {
      * Adds named import specifier ({ A, B as C }).
      * CC: 2 (has check + ternary)
      */
-    private void addNamedSpecifier(ImportStatement importStmt, JsonObject bindingObj) {
-        String name = bindingObj.get("name").getAsString();
-        String propertyName = bindingObj.has("propertyName") && !bindingObj.get("propertyName").isJsonNull()
-                ? bindingObj.get("propertyName").getAsString() : name;
+    private void addNamedSpecifier(ImportStatement importStmt, JsonNode bindingObj) {
+        String name = bindingObj.get("name").asText();
+        String propertyName = bindingObj.has("propertyName") && !bindingObj.get("propertyName").isNull()
+                ? bindingObj.get("propertyName").asText() : name;
 
         importStmt.addSpecifier(new ImportStatement.ImportSpecifier(
                 propertyName, name, ImportStatement.ImportSpecifier.SpecifierKind.NAMED));

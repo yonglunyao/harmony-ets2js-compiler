@@ -5,9 +5,8 @@ import com.ets2jsc.ast.Decorator;
 import com.ets2jsc.ast.MethodDeclaration;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * Converter for method declarations.
@@ -21,8 +20,8 @@ public class MethodDeclarationConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        String name = json.get("name").getAsString();
+    public Object convert(JsonNode json, ConversionContext context) {
+        String name = json.get("name").asText();
         MethodDeclaration methodDecl = new MethodDeclaration(name);
 
         convertDecorators(methodDecl, json);
@@ -37,19 +36,19 @@ public class MethodDeclarationConverter implements NodeConverter {
      * Converts decorators.
      * CC: 2 (null check + loop)
      */
-    private void convertDecorators(MethodDeclaration methodDecl, JsonObject json) {
-        JsonArray decoratorsArray = json.getAsJsonArray("decorators");
-        if (decoratorsArray == null) {
+    private void convertDecorators(MethodDeclaration methodDecl, JsonNode json) {
+        JsonNode decoratorsNode = json.get("decorators");
+        if (decoratorsNode == null || !decoratorsNode.isArray()) {
             return;
         }
 
+        ArrayNode decoratorsArray = (ArrayNode) decoratorsNode;
         for (int i = 0; i < decoratorsArray.size(); i++) {
-            JsonElement decElement = decoratorsArray.get(i);
-            if (decElement.isJsonNull() || !decElement.isJsonObject()) {
+            JsonNode decNode = decoratorsArray.get(i);
+            if (decNode == null || decNode.isNull() || !decNode.isObject()) {
                 continue;
             }
-            JsonObject decObj = decElement.getAsJsonObject();
-            String decName = decObj.has("name") ? decObj.get("name").getAsString() : "";
+            String decName = decNode.has("name") ? decNode.get("name").asText() : "";
             methodDecl.addDecorator(new Decorator(decName));
         }
     }
@@ -58,19 +57,19 @@ public class MethodDeclarationConverter implements NodeConverter {
      * Converts modifiers (static, async, etc.).
      * CC: 3 (null check + loop + multiple ifs)
      */
-    private void convertModifiers(MethodDeclaration methodDecl, JsonObject json) {
-        JsonArray modifiersArray = json.getAsJsonArray("modifiers");
-        if (modifiersArray == null) {
+    private void convertModifiers(MethodDeclaration methodDecl, JsonNode json) {
+        JsonNode modifiersNode = json.get("modifiers");
+        if (modifiersNode == null || !modifiersNode.isArray()) {
             return;
         }
 
+        ArrayNode modifiersArray = (ArrayNode) modifiersNode;
         for (int i = 0; i < modifiersArray.size(); i++) {
-            JsonElement modElement = modifiersArray.get(i);
-            if (modElement.isJsonNull() || !modElement.isJsonObject()) {
+            JsonNode modNode = modifiersArray.get(i);
+            if (modNode == null || modNode.isNull() || !modNode.isObject()) {
                 continue;
             }
-            JsonObject modObj = modElement.getAsJsonObject();
-            String modKindName = getKindName(modObj);
+            String modKindName = getKindName(modNode);
             applyModifier(methodDecl, modKindName);
         }
     }
@@ -92,21 +91,21 @@ public class MethodDeclarationConverter implements NodeConverter {
      * Converts parameters.
      * CC: 2 (null check + loop)
      */
-    private void convertParameters(MethodDeclaration methodDecl, JsonObject json) {
-        JsonArray paramsArray = json.getAsJsonArray("parameters");
-        if (paramsArray == null) {
+    private void convertParameters(MethodDeclaration methodDecl, JsonNode json) {
+        JsonNode paramsNode = json.get("parameters");
+        if (paramsNode == null || !paramsNode.isArray()) {
             return;
         }
 
+        ArrayNode paramsArray = (ArrayNode) paramsNode;
         for (int i = 0; i < paramsArray.size(); i++) {
-            JsonElement paramElement = paramsArray.get(i);
-            if (paramElement.isJsonNull() || !paramElement.isJsonObject()) {
+            JsonNode paramNode = paramsArray.get(i);
+            if (paramNode == null || paramNode.isNull() || !paramNode.isObject()) {
                 continue;
             }
-            JsonObject paramObj = paramElement.getAsJsonObject();
-            String paramName = paramObj.has("name") ? paramObj.get("name").getAsString() : "";
-            String paramType = paramObj.has("type") && !paramObj.get("type").isJsonNull()
-                ? paramObj.get("type").getAsString()
+            String paramName = paramNode.has("name") ? paramNode.get("name").asText() : "";
+            String paramType = paramNode.has("type") && !paramNode.get("type").isNull()
+                ? paramNode.get("type").asText()
                 : "any";
             MethodDeclaration.Parameter param = new MethodDeclaration.Parameter(paramName, paramType);
             methodDecl.addParameter(param);
@@ -117,13 +116,13 @@ public class MethodDeclarationConverter implements NodeConverter {
      * Converts method body.
      * CC: 2 (null checks)
      */
-    private void convertBody(MethodDeclaration methodDecl, JsonObject json, ConversionContext context) {
-        JsonElement bodyElem = json.get("body");
-        if (bodyElem == null || bodyElem.isJsonNull()) {
+    private void convertBody(MethodDeclaration methodDecl, JsonNode json, ConversionContext context) {
+        JsonNode bodyNode = json.get("body");
+        if (bodyNode == null || bodyNode.isNull() || !bodyNode.isObject()) {
             return;
         }
 
-        AstNode body = context.convertStatement(bodyElem.getAsJsonObject());
+        AstNode body = context.convertStatement(bodyNode);
         methodDecl.setBody(body);
     }
 
@@ -131,8 +130,8 @@ public class MethodDeclarationConverter implements NodeConverter {
      * Gets kind name safely.
      * CC: 1
      */
-    private String getKindName(JsonObject obj) {
-        return obj.has("kindName") ? obj.get("kindName").getAsString() : "";
+    private String getKindName(JsonNode obj) {
+        return obj.has("kindName") ? obj.get("kindName").asText() : "";
     }
 
     /**

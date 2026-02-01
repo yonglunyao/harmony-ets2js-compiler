@@ -6,8 +6,8 @@ import com.ets2jsc.ast.ExpressionStatement;
 import com.ets2jsc.generator.CodeGenerator;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * Converter for try-catch-finally statements.
@@ -23,30 +23,31 @@ public class TryConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
+    public Object convert(JsonNode json, ConversionContext context) {
         // Check for pre-generated text first
         if (json.has("text")) {
-            return new ExpressionStatement(json.get("text").getAsString());
+            return new ExpressionStatement(json.get("text").asText());
         }
 
         StringBuilder sb = new StringBuilder();
 
         // Build try block
         sb.append("try {\n");
-        appendBlockContent(sb, json.getAsJsonObject("tryBlock"), context);
+        JsonNode tryBlockNode = json.get("tryBlock");
+        appendBlockContent(sb, tryBlockNode, context);
         sb.append("\n}");
 
         // Build catch block
-        JsonObject catchClause = json.getAsJsonObject("catchClause");
-        if (catchClause != null) {
-            appendCatchClause(sb, catchClause, context);
+        JsonNode catchClauseNode = json.get("catchClause");
+        if (catchClauseNode != null && catchClauseNode.isObject()) {
+            appendCatchClause(sb, catchClauseNode, context);
         }
 
         // Build finally block
-        JsonObject finallyBlock = json.getAsJsonObject("finallyBlock");
-        if (finallyBlock != null) {
+        JsonNode finallyBlockNode = json.get("finallyBlock");
+        if (finallyBlockNode != null && finallyBlockNode.isObject()) {
             sb.append(" finally {\n");
-            appendBlockContent(sb, finallyBlock, context);
+            appendBlockContent(sb, finallyBlockNode, context);
             sb.append("\n}");
         }
 
@@ -57,7 +58,7 @@ public class TryConverter implements NodeConverter {
      * Appends catch clause to the output.
      * CC: 3 (if-else for variable name check)
      */
-    private void appendCatchClause(StringBuilder sb, JsonObject catchClause, ConversionContext context) {
+    private void appendCatchClause(StringBuilder sb, JsonNode catchClause, ConversionContext context) {
         String varName = extractVariableName(catchClause);
 
         if (!varName.isEmpty()) {
@@ -66,8 +67,8 @@ public class TryConverter implements NodeConverter {
             sb.append(" catch {\n");
         }
 
-        JsonObject catchBlock = catchClause.getAsJsonObject("block");
-        appendBlockContent(sb, catchBlock, context);
+        JsonNode catchBlockNode = catchClause.get("block");
+        appendBlockContent(sb, catchBlockNode, context);
         sb.append("\n}");
     }
 
@@ -75,19 +76,24 @@ public class TryConverter implements NodeConverter {
      * Extracts variable name from catch clause.
      * CC: 2 (null check + array size check)
      */
-    private String extractVariableName(JsonObject catchClause) {
-        JsonObject varDecl = catchClause.getAsJsonObject("variableDeclaration");
-        if (varDecl == null) {
+    private String extractVariableName(JsonNode catchClause) {
+        JsonNode varDeclNode = catchClause.get("variableDeclaration");
+        if (varDeclNode == null || !varDeclNode.isObject()) {
             return "";
         }
 
-        JsonArray declarations = varDecl.getAsJsonArray("declarations");
-        if (declarations == null || declarations.size() == 0) {
+        JsonNode declarationsNode = varDeclNode.get("declarations");
+        if (declarationsNode == null || !declarationsNode.isArray()) {
             return "";
         }
 
-        JsonObject decl = declarations.get(0).getAsJsonObject();
-        return decl.has("name") ? decl.get("name").getAsString() : "";
+        ArrayNode declarations = (ArrayNode) declarationsNode;
+        if (declarations.size() == 0) {
+            return "";
+        }
+
+        JsonNode decl = declarations.get(0);
+        return decl.has("name") ? decl.get("name").asText() : "";
     }
 
     /**
@@ -95,8 +101,8 @@ public class TryConverter implements NodeConverter {
      * Eliminates duplicate code used for try/catch/finally blocks.
      * CC: 2 (null check + instance check)
      */
-    private void appendBlockContent(StringBuilder sb, JsonObject block, ConversionContext context) {
-        if (block == null) {
+    private void appendBlockContent(StringBuilder sb, JsonNode block, ConversionContext context) {
+        if (block == null || !block.isObject()) {
             return;
         }
 

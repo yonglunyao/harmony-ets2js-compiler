@@ -1,7 +1,7 @@
 package com.ets2jsc.parser.internal;
 
 import com.ets2jsc.parser.internal.converters.expressions.*;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Registry for expression converters.
@@ -37,17 +37,25 @@ public class ExpressionConverterRegistry extends NodeConverterRegistry {
         register(new AwaitExpressionConverter());
         register(new ArrowFunctionConverter());
         register(new ImportExpressionConverter());
+        register(new DeleteExpressionConverter());
+        register(new FunctionExpressionConverter());
+        register(new ClassExpressionConverter());
+        register(new YieldExpressionConverter());
+        register(new VoidExpressionConverter());
+        register(new RegularExpressionLiteralConverter());
+        register(new TaggedTemplateExpressionConverter());
+        register(new MethodDeclarationExpressionConverter());
     }
 
     /**
      * Converts a JSON expression to a JavaScript string.
      */
-    public String convert(JsonObject json, ConversionContext context) {
-        String kindName = json.has("kindName") ? json.get("kindName").getAsString() : "";
+    public String convert(JsonNode json, ConversionContext context) {
+        String kindName = json.has("kindName") ? json.get("kindName").asText() : "";
 
         // Check for pre-generated text first (optimization)
         if (json.has("text")) {
-            String text = json.get("text").getAsString();
+            String text = json.get("text").asText();
             if (!text.isEmpty()) {
                 return text.trim();
             }

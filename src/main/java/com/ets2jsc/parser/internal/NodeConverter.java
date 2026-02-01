@@ -1,6 +1,6 @@
 package com.ets2jsc.parser.internal;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Interface for converting JSON nodes to AST nodes or strings.
@@ -11,12 +11,12 @@ public interface NodeConverter {
     /**
      * Converts a JSON node to the target representation.
      *
-     * @param json the JSON object representing the AST node
+     * @param json the JSON node representing the AST node
      * @param context the conversion context providing shared state and utilities
      * @return the converted result (may be String, AstNode, or other types)
      * @throws UnsupportedOperationException if the converter cannot handle the given node
      */
-    Object convert(JsonObject json, ConversionContext context);
+    Object convert(JsonNode json, ConversionContext context);
 
     /**
      * Checks if this converter can handle the given node type.

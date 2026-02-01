@@ -1,6 +1,6 @@
 package com.ets2jsc.config;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -26,12 +26,13 @@ public class ProjectConfig {
     private String mainPage;
     private String[] pages;
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     /**
      * Creates ProjectConfig from JSON string.
      */
-    public static ProjectConfig fromJson(String jsonContent) {
-        Gson gson = new Gson();
-        return gson.fromJson(jsonContent, ProjectConfig.class);
+    public static ProjectConfig fromJson(String jsonContent) throws IOException {
+        return OBJECT_MAPPER.readValue(jsonContent, ProjectConfig.class);
     }
 
     /**

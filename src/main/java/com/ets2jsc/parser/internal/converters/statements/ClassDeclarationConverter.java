@@ -7,9 +7,8 @@ import com.ets2jsc.ast.MethodDeclaration;
 import com.ets2jsc.ast.PropertyDeclaration;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,13 +26,14 @@ public class ClassDeclarationConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        String name = json.get("name").getAsString();
+    public Object convert(JsonNode json, ConversionContext context) {
+        String name = json.get("name").asText();
         ClassDeclaration classDecl = new ClassDeclaration(name);
 
         try {
             convertDecorators(classDecl, json);
             setExportFlag(classDecl, json);
+            setExtends(classDecl, json);
             convertMembers(classDecl, json, context);
         } catch (Exception e) {
             LOGGER.error("Failed to convert class {}: {}", name, e.getMessage(), e);
@@ -47,19 +47,21 @@ public class ClassDeclarationConverter implements NodeConverter {
      * Converts decorators and returns if @Entry was found.
      * CC: 3 (null check + loop + early continue)
      */
-    private void convertDecorators(ClassDeclaration classDecl, JsonObject json) {
-        JsonArray decoratorsArray = json.getAsJsonArray("decorators");
-        if (decoratorsArray == null) {
+    private void convertDecorators(ClassDeclaration classDecl, JsonNode json) {
+        JsonNode decoratorsNode = json.get("decorators");
+        if (decoratorsNode == null || !decoratorsNode.isArray()) {
             return;
         }
 
+        ArrayNode decoratorsArray = (ArrayNode) decoratorsNode;
         for (int i = 0; i < decoratorsArray.size(); i++) {
             // Check if decorator is not null before converting
-            if (decoratorsArray.get(i).isJsonNull()) {
+            JsonNode decNode = decoratorsArray.get(i);
+            if (decNode == null || decNode.isNull()) {
                 continue;
             }
-            JsonObject decObj = decoratorsArray.get(i).getAsJsonObject();
-            String decName = decObj.get("name").getAsString();
+            JsonNode decObj = decoratorsArray.get(i);
+            String decName = decObj.get("name").asText();
             classDecl.addDecorator(new Decorator(decName));
         }
     }
@@ -68,8 +70,8 @@ public class ClassDeclarationConverter implements NodeConverter {
      * Sets export flag based on isExport or @Entry decorator.
      * CC: 3 (multiple conditions)
      */
-    private void setExportFlag(ClassDeclaration classDecl, JsonObject json) {
-        boolean isExported = json.has("isExport") && json.get("isExport").getAsBoolean();
+    private void setExportFlag(ClassDeclaration classDecl, JsonNode json) {
+        boolean isExported = json.has("isExport") && json.get("isExport").asBoolean();
         boolean hasEntryDecorator = classDecl.hasDecorator("Entry");
 
         if (isExported || hasEntryDecorator) {
@@ -78,27 +80,58 @@ public class ClassDeclarationConverter implements NodeConverter {
     }
 
     /**
-     * Converts class members.
-     * CC: 3 (null check + loop + instance checks)
+     * Sets extends clause if present.
+     * CC: 3 (null checks + loop)
      */
-    private void convertMembers(ClassDeclaration classDecl, JsonObject json, ConversionContext context) {
-        JsonArray membersArray = json.getAsJsonArray("members");
-        if (membersArray == null) {
+    private void setExtends(ClassDeclaration classDecl, JsonNode json) {
+        JsonNode heritageClausesNode = json.get("heritageClauses");
+        if (heritageClausesNode == null || !heritageClausesNode.isArray()) {
             return;
         }
 
+        ArrayNode heritageArray = (ArrayNode) heritageClausesNode;
+        for (int i = 0; i < heritageArray.size(); i++) {
+            JsonNode clause = heritageArray.get(i);
+            if (clause == null || !clause.isObject()) {
+                continue;
+            }
+
+            // Check token type (extends or implements)
+            String token = clause.has("token") ? clause.get("token").asText() : "";
+            if ("extends".equals(token) || "ExtendsKeyword".equals(token)) {
+                // Get the first type from types array
+                JsonNode typesNode = clause.get("types");
+                if (typesNode != null && typesNode.isArray() && typesNode.size() > 0) {
+                    String extendsClass = typesNode.get(0).asText();
+                    classDecl.setSuperClass(extendsClass);
+                }
+            }
+        }
+    }
+
+    /**
+     * Converts class members.
+     * CC: 3 (null check + loop + instance checks)
+     */
+    private void convertMembers(ClassDeclaration classDecl, JsonNode json, ConversionContext context) {
+        JsonNode membersNode = json.get("members");
+        if (membersNode == null || !membersNode.isArray()) {
+            return;
+        }
+
+        ArrayNode membersArray = (ArrayNode) membersNode;
         for (int i = 0; i < membersArray.size(); i++) {
-            JsonElement memberElement = membersArray.get(i);
+            JsonNode memberNode = membersArray.get(i);
             // Check if member is not null before converting
-            if (memberElement.isJsonNull()) {
+            if (memberNode == null || memberNode.isNull()) {
                 LOGGER.debug("Skipping null member at index {} in class {}", i, classDecl.getName());
                 continue;
             }
-            if (!memberElement.isJsonObject()) {
-                LOGGER.warn("Member at index {} in class {} is not a JsonObject: {}", i, classDecl.getName(), memberElement);
+            if (!memberNode.isObject()) {
+                LOGGER.warn("Member at index {} in class {} is not an Object: {}", i, classDecl.getName(), memberNode);
                 continue;
             }
-            JsonObject memberObj = memberElement.getAsJsonObject();
+            JsonNode memberObj = membersArray.get(i);
             AstNode member = context.convertStatement(memberObj);
             addMember(classDecl, member);
         }

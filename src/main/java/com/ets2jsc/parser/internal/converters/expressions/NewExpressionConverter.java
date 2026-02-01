@@ -2,8 +2,8 @@ package com.ets2jsc.parser.internal.converters.expressions;
 
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,16 +20,17 @@ public class NewExpressionConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        JsonObject newExpr = json.getAsJsonObject("expression");
-        String exprStr = newExpr != null ? context.convertExpression(newExpr) : "";
+    public Object convert(JsonNode json, ConversionContext context) {
+        JsonNode newExprNode = json.get("expression");
+        String exprStr = (newExprNode != null && newExprNode.isObject()) ? context.convertExpression(newExprNode) : "";
         StringBuilder sb = new StringBuilder();
         sb.append("new ").append(exprStr).append("(");
-        JsonArray arguments = json.getAsJsonArray("arguments");
-        if (arguments != null && !arguments.isEmpty()) {
+        JsonNode argumentsNode = json.get("arguments");
+        if (argumentsNode != null && argumentsNode.isArray() && argumentsNode.size() > 0) {
+            ArrayNode arguments = (ArrayNode) argumentsNode;
             List<String> argStrings = new ArrayList<>();
             for (int i = 0; i < arguments.size(); i++) {
-                String argStr = context.convertExpression(arguments.get(i).getAsJsonObject());
+                String argStr = context.convertExpression(arguments.get(i));
                 argStrings.add(argStr);
             }
             sb.append(String.join(", ", argStrings));

@@ -3,7 +3,7 @@ package com.ets2jsc.parser.internal.converters.statements;
 import com.ets2jsc.ast.EmptyStatement;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for empty statements.
@@ -19,7 +19,7 @@ public class EmptyStatementConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
+    public Object convert(JsonNode json, ConversionContext context) {
         return new EmptyStatement();
     }
 }

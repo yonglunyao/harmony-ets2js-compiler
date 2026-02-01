@@ -8,10 +8,9 @@ import com.ets2jsc.exception.ParserException;
 import com.ets2jsc.exception.ParserInitializationException;
 
 import com.ets2jsc.parser.internal.ConversionContext;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,11 +51,12 @@ public class TypeScriptScriptParser {
     private static final String TEMP_AST_PREFIX = "ets-ast-";
 
     private final String scriptPath;
-    private final Gson gson = new Gson();
+    private final ObjectMapper objectMapper;
     private final ConversionContext conversionContext;
 
     public TypeScriptScriptParser() {
-        this.conversionContext = new ConversionContext(gson);
+        this.objectMapper = new ObjectMapper();
+        this.conversionContext = new ConversionContext(objectMapper);
 
         // Try to use the classpath location directly (where node_modules is also available)
         URL scriptUrl = getClass().getClassLoader().getResource(SCRIPT_RESOURCE_PATH);
@@ -130,7 +130,7 @@ public class TypeScriptScriptParser {
 
             try {
                 // Run Node.js TypeScript parser
-                JsonObject astJson = runTypeScriptParser(tempSourceFile, tempAstFile);
+                JsonNode astJson = runTypeScriptParser(tempSourceFile, tempAstFile);
 
                 // Convert JSON to AST
                 return convertJsonToAst(fileName, sourceCode, astJson);
@@ -149,7 +149,7 @@ public class TypeScriptScriptParser {
     /**
      * Run the Node.js TypeScript parser script.
      */
-    private JsonObject runTypeScriptParser(Path sourceFile, Path outputFile) throws Exception {
+    private JsonNode runTypeScriptParser(Path sourceFile, Path outputFile) throws Exception {
         List<String> command = new ArrayList<>();
         command.add("node");
         command.add(scriptPath);
@@ -178,7 +178,7 @@ public class TypeScriptScriptParser {
 
             // Read and parse JSON output
             String jsonContent = Files.readString(outputFile);
-            return gson.fromJson(jsonContent, JsonObject.class);
+            return objectMapper.readTree(jsonContent);
         } finally {
             // Close the reader if it was opened
             if (reader != null) {
@@ -198,14 +198,14 @@ public class TypeScriptScriptParser {
     /**
      * Convert JSON AST to our AST model.
      */
-    private SourceFile convertJsonToAst(String fileName, String sourceCode, JsonObject astJson) {
+    private SourceFile convertJsonToAst(String fileName, String sourceCode, JsonNode astJson) {
         SourceFile sourceFile = new SourceFile(fileName, sourceCode);
 
-        JsonArray statements = astJson.getAsJsonArray("statements");
-        if (statements != null) {
-            for (JsonElement stmtElement : statements) {
-                JsonObject stmtObj = stmtElement.getAsJsonObject();
-                AstNode node = convertJsonNode(stmtObj);
+        JsonNode statements = astJson.get("statements");
+        if (statements != null && statements.isArray()) {
+            ArrayNode statementsArray = (ArrayNode) statements;
+            for (JsonNode stmtElement : statementsArray) {
+                AstNode node = convertJsonNode(stmtElement);
                 if (node != null) {
                     sourceFile.addStatement(node);
                 }
@@ -218,8 +218,8 @@ public class TypeScriptScriptParser {
     /**
      * Convert JSON node to AST node using the new converter architecture.
      */
-    private AstNode convertJsonNode(JsonObject json) {
-        String kindName = json.get("kindName").getAsString();
+    private AstNode convertJsonNode(JsonNode json) {
+        String kindName = json.get("kindName").asText();
 
         // Special cases that don't go through converters
         switch (kindName) {
@@ -244,6 +244,7 @@ public class TypeScriptScriptParser {
             case "NullLiteral":
             case "UndefinedLiteral":
             case "ThisKeyword":
+            case "SuperKeyword":
                 // These are expression literals - convert to expression statement
                 return new ExpressionStatement(convertExpressionToString(json));
             default:
@@ -264,7 +265,7 @@ public class TypeScriptScriptParser {
      * Used only if the new converter architecture fails.
      */
     @Deprecated
-    private AstNode convertJsonNodeLegacy(JsonObject json, String kindName) {
+    private AstNode convertJsonNodeLegacy(JsonNode json, String kindName) {
         // Simplified fallback - just handle expression statements as strings
         if (kindName.endsWith("Expression")) {
             return new ExpressionStatement(convertExpressionToString(json));
@@ -272,12 +273,12 @@ public class TypeScriptScriptParser {
         return null;
     }
 
-    private SourceFile convertSourceFile(JsonObject json) {
-        return new SourceFile(json.get("fileName").getAsString());
+    private SourceFile convertSourceFile(JsonNode json) {
+        return new SourceFile(json.get("fileName").asText());
     }
 
-    private Decorator convertDecorator(JsonObject json) {
-        String name = json.get("name").getAsString();
+    private Decorator convertDecorator(JsonNode json) {
+        String name = json.get("name").asText();
         return new Decorator(name);
     }
 
@@ -285,21 +286,21 @@ public class TypeScriptScriptParser {
      * Safely gets the kindName from a JSON object.
      * Returns empty string if kindName is not present.
      */
-    private String getKindName(JsonObject json) {
-        return json.has("kindName") ? json.get("kindName").getAsString() : "";
+    private String getKindName(JsonNode json) {
+        return json.has("kindName") ? json.get("kindName").asText() : "";
     }
 
     /**
      * Converts a JSON expression to a JavaScript string representation.
      * Now delegates to the new converter architecture.
      */
-    private String convertExpressionToString(JsonObject exprJson) {
+    private String convertExpressionToString(JsonNode exprJson) {
         // Use the new converter architecture
         try {
             return conversionContext.convertExpression(exprJson);
         } catch (Exception e) {
             // Fallback: return the text if available
-            String fallbackText = exprJson.has("text") ? exprJson.get("text").getAsString() : "";
+            String fallbackText = exprJson.has("text") ? exprJson.get("text").asText() : "";
             if (!fallbackText.isEmpty()) {
                 return fallbackText.trim();
             }

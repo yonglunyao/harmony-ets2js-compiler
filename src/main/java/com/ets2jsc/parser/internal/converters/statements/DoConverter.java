@@ -4,7 +4,7 @@ import com.ets2jsc.ast.AstNode;
 import com.ets2jsc.ast.Block;
 import com.ets2jsc.ast.ExpressionStatement;
 import com.ets2jsc.parser.internal.ConversionContext;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for do...while loop statements.
@@ -18,13 +18,13 @@ public class DoConverter extends LoopConverter {
     }
 
     @Override
-    protected String getLoopHeader(JsonObject json, ConversionContext context) {
+    protected String getLoopHeader(JsonNode json, ConversionContext context) {
         return "do {\n";
     }
 
     @Override
-    protected JsonObject getLoopBody(JsonObject json) {
-        return json.getAsJsonObject("statement");
+    protected JsonNode getLoopBody(JsonNode json) {
+        return json.get("statement");
     }
 
     @Override
@@ -33,10 +33,10 @@ public class DoConverter extends LoopConverter {
     }
 
     @Override
-    protected String formatBody(com.ets2jsc.ast.AstNode stmt) {
+    protected String formatBody(AstNode stmt) {
         StringBuilder sb = new StringBuilder();
         if (stmt instanceof Block block) {
-            for (com.ets2jsc.ast.AstNode blockStmt : block.getStatements()) {
+            for (AstNode blockStmt : block.getStatements()) {
                 String stmtCode = blockStmt.accept(new com.ets2jsc.generator.CodeGenerator());
                 sb.append("  ").append(stmtCode);
             }
@@ -48,10 +48,10 @@ public class DoConverter extends LoopConverter {
     }
 
     @Override
-    protected AstNode convertLoop(JsonObject json, ConversionContext context) {
+    protected AstNode convertLoop(JsonNode json, ConversionContext context) {
         // Priority 1: Check for pre-generated text
         if (json.has("text")) {
-            String text = json.get("text").getAsString();
+            String text = json.get("text").asText();
             if (!text.isEmpty()) {
                 return new ExpressionStatement(text);
             }
@@ -60,15 +60,15 @@ public class DoConverter extends LoopConverter {
         StringBuilder sb = new StringBuilder();
         sb.append(getLoopHeader(json, context));
 
-        JsonObject body = getLoopBody(json);
-        if (body != null) {
+        JsonNode body = getLoopBody(json);
+        if (body != null && body.isObject()) {
             AstNode stmt = context.convertStatement(body);
             sb.append(formatBody(stmt));
         }
 
         // Add condition after the closing brace
-        JsonObject expression = json.getAsJsonObject("expression");
-        String condition = expression != null ? context.convertExpression(expression) : "";
+        JsonNode expressionNode = json.get("expression");
+        String condition = (expressionNode != null && expressionNode.isObject()) ? context.convertExpression(expressionNode) : "";
         sb.append(getLoopFooter()).append(condition).append(")");
 
         return new ExpressionStatement(sb.toString());

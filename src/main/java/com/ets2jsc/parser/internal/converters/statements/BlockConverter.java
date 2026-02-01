@@ -9,8 +9,8 @@ import com.ets2jsc.constant.Symbols;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
 import com.ets2jsc.transformer.ComponentExpressionTransformer;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * Converter for block statements.
@@ -24,14 +24,15 @@ public class BlockConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
+    public Object convert(JsonNode json, ConversionContext context) {
         Block block = new Block();
-        JsonArray statementsArray = json.getAsJsonArray("statements");
+        JsonNode statementsNode = json.get("statements");
 
-        if (statementsArray == null) {
+        if (statementsNode == null || !statementsNode.isArray()) {
             return block;
         }
 
+        ArrayNode statementsArray = (ArrayNode) statementsNode;
         processStatements(statementsArray, block, context);
         return block;
     }
@@ -41,10 +42,10 @@ public class BlockConverter implements NodeConverter {
      * Handles container component + children block pattern.
      * CC: 3 (loop + early continue + nested if)
      */
-    private void processStatements(JsonArray statementsArray, Block block, ConversionContext context) {
+    private void processStatements(ArrayNode statementsArray, Block block, ConversionContext context) {
         int i = Symbols.INDEX_ZERO;
         while (i < statementsArray.size()) {
-            JsonObject stmtObj = statementsArray.get(i).getAsJsonObject();
+            JsonNode stmtObj = statementsArray.get(i);
 
             // Check for container component pattern
             int skipCount = tryProcessContainerComponent(statementsArray, i, stmtObj, block, context);
@@ -67,8 +68,8 @@ public class BlockConverter implements NodeConverter {
      * Returns the number of statements to skip (0 if not a pattern).
      * CC: 4 (early returns + condition check)
      */
-    private int tryProcessContainerComponent(JsonArray statementsArray, int index,
-                                              JsonObject stmtObj, Block block, ConversionContext context) {
+    private int tryProcessContainerComponent(ArrayNode statementsArray, int index,
+                                              JsonNode stmtObj, Block block, ConversionContext context) {
         // Must have next statement
         if (index + 1 >= statementsArray.size()) {
             return 0;
@@ -91,7 +92,7 @@ public class BlockConverter implements NodeConverter {
         }
 
         // Check if next is a Block
-        JsonObject nextStmtObj = statementsArray.get(index + 1).getAsJsonObject();
+        JsonNode nextStmtObj = statementsArray.get(index + 1);
         if (!"Block".equals(getKindName(nextStmtObj))) {
             return 0;
         }
@@ -105,9 +106,9 @@ public class BlockConverter implements NodeConverter {
      * Extracts component name from ExpressionStatement.
      * CC: 2 (null checks)
      */
-    private String extractComponentName(JsonObject stmtObj) {
-        JsonObject exprObj = stmtObj.getAsJsonObject("expression");
-        if (exprObj == null) {
+    private String extractComponentName(JsonNode stmtObj) {
+        JsonNode exprObj = stmtObj.get("expression");
+        if (exprObj == null || !exprObj.isObject()) {
             return null;
         }
 
@@ -116,8 +117,8 @@ public class BlockConverter implements NodeConverter {
             return null;
         }
 
-        JsonObject idObj = exprObj.getAsJsonObject("expression");
-        if (idObj == null) {
+        JsonNode idObj = exprObj.get("expression");
+        if (idObj == null || !idObj.isObject()) {
             return null;
         }
 
@@ -125,14 +126,14 @@ public class BlockConverter implements NodeConverter {
             return null;
         }
 
-        return idObj.get("name").getAsString();
+        return idObj.get("name").asText();
     }
 
     /**
      * Processes a container component with its children block.
      * CC: 3 (if-else chain)
      */
-    private void processContainerWithChildren(JsonObject componentStmt, JsonObject childrenBlockJson,
+    private void processContainerWithChildren(JsonNode componentStmt, JsonNode childrenBlockJson,
                                               Block block, ConversionContext context) {
         AstNode componentStmtNode = context.convertStatement(componentStmt);
         Block childrenBlock = (Block) context.convertStatement(childrenBlockJson);
@@ -165,13 +166,13 @@ public class BlockConverter implements NodeConverter {
     }
 
     /**
-     * Safely extracts kindName from JsonObject.
+     * Safely extracts kindName from JsonNode.
      * CC: 1
      */
-    private String getKindName(JsonObject obj) {
+    private String getKindName(JsonNode obj) {
         if (obj == null || !obj.has("kindName")) {
             return "";
         }
-        return obj.get("kindName").getAsString();
+        return obj.get("kindName").asText();
     }
 }

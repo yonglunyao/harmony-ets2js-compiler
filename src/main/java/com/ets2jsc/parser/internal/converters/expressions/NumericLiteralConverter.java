@@ -3,7 +3,7 @@ package com.ets2jsc.parser.internal.converters.expressions;
 import com.ets2jsc.constant.Symbols;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for numeric literal expressions.
@@ -17,11 +17,11 @@ public class NumericLiteralConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        String numText = json.has("text") ? json.get("text").getAsString() : "";
+    public Object convert(JsonNode json, ConversionContext context) {
+        String numText = json.has("text") ? json.get("text").asText() : "";
         // Check for computed value (for octal conversion)
         if (json.has("value")) {
-            Number value = json.get("value").getAsNumber();
+            Number value = json.get("value").numberValue();
             return String.valueOf(value.intValue());
         }
         // Manual octal conversion if needed

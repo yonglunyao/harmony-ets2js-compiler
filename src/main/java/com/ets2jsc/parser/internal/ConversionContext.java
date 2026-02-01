@@ -1,8 +1,8 @@
 package com.ets2jsc.parser.internal;
 
 import com.ets2jsc.ast.AstNode;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,20 +13,20 @@ import java.util.Map;
  */
 public class ConversionContext {
 
-    private final Gson gson;
+    private final ObjectMapper objectMapper;
     private final Map<String, Object> cache;
     private final ExpressionConverterRegistry expressionConverter;
     private final StatementConverterRegistry statementConverter;
 
     public ConversionContext() {
-        this.gson = new Gson();
+        this.objectMapper = new ObjectMapper();
         this.cache = new HashMap<>();
         this.expressionConverter = new ExpressionConverterRegistry();
         this.statementConverter = new StatementConverterRegistry();
     }
 
-    public ConversionContext(Gson gson) {
-        this.gson = gson;
+    public ConversionContext(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
         this.cache = new HashMap<>();
         this.expressionConverter = new ExpressionConverterRegistry();
         this.statementConverter = new StatementConverterRegistry();
@@ -35,22 +35,22 @@ public class ConversionContext {
     /**
      * Converts a JSON expression to a JavaScript string.
      */
-    public String convertExpression(JsonObject expr) {
+    public String convertExpression(JsonNode expr) {
         return expressionConverter.convert(expr, this);
     }
 
     /**
      * Converts a JSON statement to an AST node.
      */
-    public AstNode convertStatement(JsonObject stmt) {
+    public AstNode convertStatement(JsonNode stmt) {
         return statementConverter.convert(stmt, this);
     }
 
     /**
-     * Gets the GSON instance for JSON parsing.
+     * Gets the ObjectMapper instance for JSON parsing.
      */
-    public Gson getGson() {
-        return gson;
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
     }
 
     /**

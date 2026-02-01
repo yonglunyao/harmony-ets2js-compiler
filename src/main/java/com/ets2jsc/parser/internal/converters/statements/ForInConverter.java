@@ -1,7 +1,7 @@
 package com.ets2jsc.parser.internal.converters.statements;
 
 import com.ets2jsc.parser.internal.ConversionContext;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for...in loop statements.
@@ -15,18 +15,18 @@ public class ForInConverter extends LoopConverter {
     }
 
     @Override
-    protected String getLoopHeader(JsonObject json, ConversionContext context) {
-        JsonObject initializer = json.getAsJsonObject("initializer");
-        JsonObject expression = json.getAsJsonObject("expression");
+    protected String getLoopHeader(JsonNode json, ConversionContext context) {
+        JsonNode initializerNode = json.get("initializer");
+        JsonNode expressionNode = json.get("expression");
 
-        String initStr = initializer != null ? context.convertExpression(initializer) : "";
-        String exprStr = expression != null ? context.convertExpression(expression) : "";
+        String initStr = (initializerNode != null && initializerNode.isObject()) ? context.convertExpression(initializerNode) : "";
+        String exprStr = (expressionNode != null && expressionNode.isObject()) ? context.convertExpression(expressionNode) : "";
 
         return "for (" + initStr + " in " + exprStr + ") {\n";
     }
 
     @Override
-    protected JsonObject getLoopBody(JsonObject json) {
-        return json.getAsJsonObject("statement");
+    protected JsonNode getLoopBody(JsonNode json) {
+        return json.get("statement");
     }
 }

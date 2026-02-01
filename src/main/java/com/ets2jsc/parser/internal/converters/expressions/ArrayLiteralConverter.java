@@ -2,8 +2,8 @@ package com.ets2jsc.parser.internal.converters.expressions;
 
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * Converter for array literal expressions.
@@ -17,17 +17,17 @@ public class ArrayLiteralConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        JsonArray elements = json.getAsJsonArray("elements");
-        if (elements == null || elements.isEmpty()) {
+    public Object convert(JsonNode json, ConversionContext context) {
+        JsonNode elementsNode = json.get("elements");
+        if (elementsNode == null || !elementsNode.isArray() || elementsNode.size() == 0) {
             return "[]";
         }
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
+        ArrayNode elements = (ArrayNode) elementsNode;
+        StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < elements.size(); i++) {
             if (i > 0) sb.append(", ");
-            sb.append(context.convertExpression(elements.get(i).getAsJsonObject()));
+            sb.append(context.convertExpression(elements.get(i)));
         }
         sb.append("]");
         return sb.toString();

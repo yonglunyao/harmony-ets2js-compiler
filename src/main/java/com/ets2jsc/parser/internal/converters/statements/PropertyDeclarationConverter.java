@@ -5,9 +5,8 @@ import com.ets2jsc.ast.Decorator;
 import com.ets2jsc.ast.PropertyDeclaration;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,8 +26,8 @@ public class PropertyDeclarationConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        String name = json.get("name").getAsString();
+    public Object convert(JsonNode json, ConversionContext context) {
+        String name = json.get("name").asText();
         PropertyDeclaration propDecl = new PropertyDeclaration(name);
 
         setTypeAnnotation(propDecl, json);
@@ -42,13 +41,13 @@ public class PropertyDeclarationConverter implements NodeConverter {
      * Sets type annotation if present.
      * CC: 2 (null check + empty check)
      */
-    private void setTypeAnnotation(PropertyDeclaration propDecl, JsonObject json) {
-        JsonElement typeElem = json.get("type");
-        if (typeElem == null || typeElem.isJsonNull()) {
+    private void setTypeAnnotation(PropertyDeclaration propDecl, JsonNode json) {
+        JsonNode typeNode = json.get("type");
+        if (typeNode == null || typeNode.isNull()) {
             return;
         }
 
-        String type = typeElem.getAsString();
+        String type = typeNode.asText();
         if (type != null && !type.isEmpty()) {
             propDecl.setTypeAnnotation(type);
         }
@@ -58,37 +57,37 @@ public class PropertyDeclarationConverter implements NodeConverter {
      * Sets initializer if present.
      * CC: 3 (null check + instance checks)
      */
-    private void setInitializer(PropertyDeclaration propDecl, JsonObject json, ConversionContext context) {
-        JsonElement initElem = json.get("initializer");
-        if (initElem == null || initElem.isJsonNull()) {
+    private void setInitializer(PropertyDeclaration propDecl, JsonNode json, ConversionContext context) {
+        JsonNode initNode = json.get("initializer");
+        if (initNode == null || initNode.isNull()) {
             return;
         }
 
-        String initializer = extractInitializer(initElem, json, context);
+        String initializer = extractInitializer(initNode, json, context);
         if (initializer != null && !initializer.isEmpty()) {
             propDecl.setInitializer(initializer);
         }
     }
 
     /**
-     * Extracts initializer value from JsonElement.
+     * Extracts initializer value from JsonNode.
      * CC: 3 (if-else for different types)
      */
-    private String extractInitializer(JsonElement initElem, JsonObject json, ConversionContext context) {
+    private String extractInitializer(JsonNode initNode, JsonNode json, ConversionContext context) {
         // Priority 1: Pre-processed initializerText
         if (json.has("initializerText")) {
-            String initializerText = json.get("initializerText").getAsString();
+            String initializerText = json.get("initializerText").asText();
             return stripTypeArguments(initializerText);
         }
 
         // Priority 2: Complex expression object
-        if (initElem.isJsonObject()) {
-            return extractComplexInitializer(initElem.getAsJsonObject(), context);
+        if (initNode.isObject()) {
+            return extractComplexInitializer(initNode, context);
         }
 
-        // Priority 3: Simple string value
-        if (initElem.isJsonPrimitive() && initElem.getAsJsonPrimitive().isString()) {
-            return initElem.getAsString();
+        // Priority 3: Simple string value (Jackson doesn't have isJsonPrimitive, we check isValueNode)
+        if (initNode.isValueNode() && initNode.isTextual()) {
+            return initNode.asText();
         }
 
         return null;
@@ -112,9 +111,9 @@ public class PropertyDeclarationConverter implements NodeConverter {
      * Extracts initializer from complex expression object.
      * CC: 3 (has check + else)
      */
-    private String extractComplexInitializer(JsonObject initObj, ConversionContext context) {
+    private String extractComplexInitializer(JsonNode initObj, ConversionContext context) {
         if (initObj.has("text")) {
-            return initObj.get("text").getAsString();
+            return initObj.get("text").asText();
         }
 
         return context.convertExpression(initObj);
@@ -124,19 +123,19 @@ public class PropertyDeclarationConverter implements NodeConverter {
      * Converts decorators and adds them to property declaration.
      * CC: 2 (null check + loop)
      */
-    private void convertDecorators(PropertyDeclaration propDecl, JsonObject json) {
-        JsonArray decoratorsArray = json.getAsJsonArray("decorators");
-        if (decoratorsArray == null) {
+    private void convertDecorators(PropertyDeclaration propDecl, JsonNode json) {
+        JsonNode decoratorsNode = json.get("decorators");
+        if (decoratorsNode == null || !decoratorsNode.isArray()) {
             return;
         }
 
+        ArrayNode decoratorsArray = (ArrayNode) decoratorsNode;
         for (int i = 0; i < decoratorsArray.size(); i++) {
-            JsonElement decElement = decoratorsArray.get(i);
-            if (decElement.isJsonNull() || !decElement.isJsonObject()) {
+            JsonNode decNode = decoratorsArray.get(i);
+            if (decNode == null || decNode.isNull() || !decNode.isObject()) {
                 continue;
             }
-            JsonObject decObj = decElement.getAsJsonObject();
-            String decName = decObj.has("name") ? decObj.get("name").getAsString() : "";
+            String decName = decNode.has("name") ? decNode.get("name").asText() : "";
             propDecl.addDecorator(new Decorator(decName));
         }
     }

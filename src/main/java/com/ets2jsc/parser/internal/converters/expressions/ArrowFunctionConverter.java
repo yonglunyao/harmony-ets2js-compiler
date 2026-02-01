@@ -2,7 +2,7 @@ package com.ets2jsc.parser.internal.converters.expressions;
 
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for arrow function expressions.
@@ -16,9 +16,9 @@ public class ArrowFunctionConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
+    public Object convert(JsonNode json, ConversionContext context) {
         // Arrow functions are already handled in parse-ets.js
-        String arrowText = json.has("text") ? json.get("text").getAsString() : "";
+        String arrowText = json.has("text") ? json.get("text").asText() : "";
         return arrowText.trim();
     }
 }

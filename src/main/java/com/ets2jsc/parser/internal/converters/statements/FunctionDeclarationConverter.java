@@ -5,9 +5,8 @@ import com.ets2jsc.ast.ExpressionStatement;
 import com.ets2jsc.generator.CodeGenerator;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * Converter for standalone function declarations.
@@ -21,10 +20,11 @@ public class FunctionDeclarationConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        String name = json.get("name").getAsString();
+    public Object convert(JsonNode json, ConversionContext context) {
+        JsonNode nameNode = json.get("name");
+        String name = (nameNode != null && !nameNode.isNull()) ? nameNode.asText() : "anonymous";
         boolean isAsync = hasAsyncModifier(json);
-        String params = convertParameters(json);
+        String params = convertParameters(json, context);
         String body = convertBody(json, context);
 
         return buildFunctionDeclaration(name, isAsync, params, body);
@@ -34,14 +34,15 @@ public class FunctionDeclarationConverter implements NodeConverter {
      * Checks if function has async modifier.
      * CC: 2 (null check + loop)
      */
-    private boolean hasAsyncModifier(JsonObject json) {
-        JsonArray modifiersArray = json.getAsJsonArray("modifiers");
-        if (modifiersArray == null) {
+    private boolean hasAsyncModifier(JsonNode json) {
+        JsonNode modifiersNode = json.get("modifiers");
+        if (modifiersNode == null || !modifiersNode.isArray()) {
             return false;
         }
 
+        ArrayNode modifiersArray = (ArrayNode) modifiersNode;
         for (int i = 0; i < modifiersArray.size(); i++) {
-            JsonObject modObj = modifiersArray.get(i).getAsJsonObject();
+            JsonNode modObj = modifiersArray.get(i);
             String modKindName = getKindName(modObj);
             if (isAsyncKeyword(modKindName)) {
                 return true;
@@ -54,9 +55,14 @@ public class FunctionDeclarationConverter implements NodeConverter {
      * Converts function parameters to string.
      * CC: 2 (null check + loop)
      */
-    private String convertParameters(JsonObject json) {
-        JsonArray paramsArray = json.getAsJsonArray("parameters");
-        if (paramsArray == null || paramsArray.size() == 0) {
+    private String convertParameters(JsonNode json, ConversionContext context) {
+        JsonNode paramsNode = json.get("parameters");
+        if (paramsNode == null || !paramsNode.isArray()) {
+            return "";
+        }
+
+        ArrayNode paramsArray = (ArrayNode) paramsNode;
+        if (paramsArray.size() == 0) {
             return "";
         }
 
@@ -65,9 +71,22 @@ public class FunctionDeclarationConverter implements NodeConverter {
             if (i > 0) {
                 params.append(", ");
             }
-            JsonObject paramObj = paramsArray.get(i).getAsJsonObject();
-            String paramName = paramObj.get("name").getAsString();
+            JsonNode paramObj = paramsArray.get(i);
+            JsonNode paramNameNode = paramObj.get("name");
+            String paramName = (paramNameNode != null && !paramNameNode.isNull()) ? paramNameNode.asText() : "param" + i;
+
+            // Handle rest parameter (...)
+            if (hasDotDotDotToken(paramObj)) {
+                params.append("...");
+            }
             params.append(paramName);
+
+            // Handle default value
+            if (paramObj.has("initializer") && !paramObj.get("initializer").isNull()) {
+                JsonNode initializer = paramObj.get("initializer");
+                String defaultVal = context.convertExpression(initializer);
+                params.append(" = ").append(defaultVal);
+            }
         }
         return params.toString();
     }
@@ -76,18 +95,18 @@ public class FunctionDeclarationConverter implements NodeConverter {
      * Converts function body to string.
      * CC: 3 (null checks)
      */
-    private String convertBody(JsonObject json, ConversionContext context) {
-        JsonElement bodyElem = json.get("body");
-        if (bodyElem == null || bodyElem.isJsonNull()) {
+    private String convertBody(JsonNode json, ConversionContext context) {
+        JsonNode bodyNode = json.get("body");
+        if (bodyNode == null || bodyNode.isNull() || !bodyNode.isObject()) {
             return "";
         }
 
-        JsonObject bodyObj = bodyElem.getAsJsonObject();
-        JsonArray statementsArray = bodyObj.getAsJsonArray("statements");
-        if (statementsArray == null) {
+        JsonNode statementsNode = bodyNode.get("statements");
+        if (statementsNode == null || !statementsNode.isArray()) {
             return "";
         }
 
+        ArrayNode statementsArray = (ArrayNode) statementsNode;
         return convertStatements(statementsArray, context);
     }
 
@@ -95,14 +114,14 @@ public class FunctionDeclarationConverter implements NodeConverter {
      * Converts statements array to string.
      * CC: 2 (loop + null check)
      */
-    private String convertStatements(JsonArray statementsArray, ConversionContext context) {
+    private String convertStatements(ArrayNode statementsArray, ConversionContext context) {
         StringBuilder body = new StringBuilder();
         for (int i = 0; i < statementsArray.size(); i++) {
-            JsonObject stmtObj = statementsArray.get(i).getAsJsonObject();
+            JsonNode stmtObj = statementsArray.get(i);
             AstNode stmt = context.convertStatement(stmtObj);
             if (stmt != null) {
                 String stmtCode = stmt.accept(new CodeGenerator());
-                body.append("  ").append(stmtCode);
+                body.append("  ").append(stmtCode).append("\n");
             }
         }
         return body.toString();
@@ -130,8 +149,8 @@ public class FunctionDeclarationConverter implements NodeConverter {
      * Gets kind name safely.
      * CC: 1
      */
-    private String getKindName(JsonObject obj) {
-        return obj.has("kindName") ? obj.get("kindName").getAsString() : "";
+    private String getKindName(JsonNode obj) {
+        return obj.has("kindName") ? obj.get("kindName").asText() : "";
     }
 
     /**
@@ -140,5 +159,23 @@ public class FunctionDeclarationConverter implements NodeConverter {
      */
     private boolean isAsyncKeyword(String kindName) {
         return "AsyncKeyword".equals(kindName) || "async".equals(kindName);
+    }
+
+    /**
+     * Checks if parameter has ... prefix (rest parameter).
+     * CC: 2 (null check + has check)
+     */
+    private boolean hasDotDotDotToken(JsonNode param) {
+        if (param == null) {
+            return false;
+        }
+        // Check both field names for compatibility
+        if (param.has("hasDotDotDot") && param.get("hasDotDotDot").asBoolean(false)) {
+            return true;
+        }
+        if (param.has("dotDotDotToken") && param.get("dotDotDotToken").asBoolean(false)) {
+            return true;
+        }
+        return false;
     }
 }

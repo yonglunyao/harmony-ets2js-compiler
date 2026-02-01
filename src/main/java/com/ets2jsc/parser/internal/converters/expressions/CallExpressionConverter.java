@@ -2,9 +2,8 @@ package com.ets2jsc.parser.internal.converters.expressions;
 
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +24,7 @@ public class CallExpressionConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
+    public Object convert(JsonNode json, ConversionContext context) {
         String kindName = getKindName(json);
 
         if (RESOURCE_REF_EXPRESSION.equals(kindName)) {
@@ -39,13 +38,13 @@ public class CallExpressionConverter implements NodeConverter {
      * Converts a standard call expression.
      * CC: 3 (null check + import check + else)
      */
-    private String convertCallExpression(JsonObject json, ConversionContext context) {
-        JsonObject expression = json.getAsJsonObject("expression");
-        if (expression == null) {
+    private String convertCallExpression(JsonNode json, ConversionContext context) {
+        JsonNode expressionNode = json.get("expression");
+        if (expressionNode == null || !expressionNode.isObject()) {
             return "";
         }
 
-        String base = context.convertExpression(expression);
+        String base = context.convertExpression(expressionNode);
 
         // Check for dynamic import pattern: import('module')
         if (IMPORT_KEYWORD.equals(base)) {
@@ -61,9 +60,14 @@ public class CallExpressionConverter implements NodeConverter {
      * Converts dynamic import expression.
      * CC: 2 (null check + else)
      */
-    private String convertDynamicImport(JsonObject json) {
-        JsonArray argsArray = json.getAsJsonArray("arguments");
-        if (argsArray == null || argsArray.size() == 0) {
+    private String convertDynamicImport(JsonNode json) {
+        JsonNode argsArrayNode = json.get("arguments");
+        if (argsArrayNode == null || !argsArrayNode.isArray()) {
+            return "import()";
+        }
+
+        ArrayNode argsArray = (ArrayNode) argsArrayNode;
+        if (argsArray.size() == 0) {
             return "import()";
         }
 
@@ -75,14 +79,15 @@ public class CallExpressionConverter implements NodeConverter {
      * Converts all arguments to a comma-separated string.
      * CC: 3 (null check + loop + ternary)
      */
-    private String convertArguments(JsonObject json, ConversionContext context) {
-        JsonArray argsArray = json.getAsJsonArray("arguments");
-        if (argsArray == null) {
+    private String convertArguments(JsonNode json, ConversionContext context) {
+        JsonNode argsArrayNode = json.get("arguments");
+        if (argsArrayNode == null || !argsArrayNode.isArray()) {
             return "";
         }
 
+        ArrayNode argsArray = (ArrayNode) argsArrayNode;
         List<String> argStrings = new ArrayList<>();
-        for (JsonElement argElement : argsArray) {
+        for (JsonNode argElement : argsArray) {
             String arg = convertSingleArgument(argElement, context);
             argStrings.add(arg != null ? arg.trim() : "");
         }
@@ -94,16 +99,16 @@ public class CallExpressionConverter implements NodeConverter {
      * Converts a single argument element to string.
      * CC: 3 (instance checks)
      */
-    private String convertSingleArgument(JsonElement argElement, ConversionContext context) {
-        if (argElement.isJsonObject()) {
-            return context.convertExpression(argElement.getAsJsonObject());
+    private String convertSingleArgument(JsonNode argElement, ConversionContext context) {
+        if (argElement.isObject()) {
+            return context.convertExpression(argElement);
         }
 
-        if (argElement.isJsonPrimitive() && argElement.getAsJsonPrimitive().isString()) {
-            return argElement.getAsString();
+        if (argElement.isTextual()) {
+            return argElement.asText();
         }
 
-        if (argElement.isJsonNull()) {
+        if (argElement.isNull()) {
             return "null";
         }
 
@@ -114,17 +119,16 @@ public class CallExpressionConverter implements NodeConverter {
      * Extracts string value from argument element.
      * CC: 2 (instance checks)
      */
-    private String extractArgumentString(JsonElement argElement) {
-        if (argElement.isJsonObject()) {
+    private String extractArgumentString(JsonNode argElement) {
+        if (argElement.isObject()) {
             // For complex objects, try to get text content
-            JsonObject obj = argElement.getAsJsonObject();
-            if (obj.has("text")) {
-                return obj.get("text").getAsString();
+            if (argElement.has("text")) {
+                return argElement.get("text").asText();
             }
         }
 
-        if (argElement.isJsonPrimitive() && argElement.getAsJsonPrimitive().isString()) {
-            return argElement.getAsString();
+        if (argElement.isTextual()) {
+            return argElement.asText();
         }
 
         return "";
@@ -134,16 +138,16 @@ public class CallExpressionConverter implements NodeConverter {
      * Convert resource reference call ($r or $rawfile) to runtime function call.
      * CC: 3 (if-else for type check)
      */
-    private String convertResourceReference(JsonObject json) {
-        String resourceRefType = json.has("resourceRefType") ? json.get("resourceRefType").getAsString() : "";
-        JsonArray argsArray = json.getAsJsonArray("arguments");
+    private String convertResourceReference(JsonNode json) {
+        String resourceRefType = json.has("resourceRefType") ? json.get("resourceRefType").asText() : "";
+        JsonNode argsArrayNode = json.get("arguments");
 
         if ("rawfile".equals(resourceRefType)) {
-            return convertRawfileReference(argsArray);
+            return convertRawfileReference(argsArrayNode);
         }
 
         if ("r".equals(resourceRefType)) {
-            return convertResourceReference(argsArray);
+            return convertRResourceReference(argsArrayNode);
         }
 
         return "";
@@ -153,8 +157,9 @@ public class CallExpressionConverter implements NodeConverter {
      * Converts $rawfile() reference.
      * CC: 2 (null check)
      */
-    private String convertRawfileReference(JsonArray argsArray) {
-        if (argsArray != null && argsArray.size() > 0) {
+    private String convertRawfileReference(JsonNode argsArrayNode) {
+        if (argsArrayNode != null && argsArrayNode.isArray() && argsArrayNode.size() > 0) {
+            ArrayNode argsArray = (ArrayNode) argsArrayNode;
             String filename = extractAndCleanArgument(argsArray.get(0));
             return "__getRawFileId__(\"" + filename + "\")";
         }
@@ -165,8 +170,13 @@ public class CallExpressionConverter implements NodeConverter {
      * Converts $r() resource reference.
      * CC: 3 (null check + parse check + else)
      */
-    private String convertResourceReference(JsonArray argsArray) {
-        if (argsArray == null || argsArray.size() == 0) {
+    private String convertRResourceReference(JsonNode argsArrayNode) {
+        if (argsArrayNode == null || !argsArrayNode.isArray()) {
+            return "__getResourceId__(10003, undefined, \"\", \"\")";
+        }
+
+        ArrayNode argsArray = (ArrayNode) argsArrayNode;
+        if (argsArray.size() == 0) {
             return "__getResourceId__(10003, undefined, \"\", \"\")";
         }
 
@@ -185,7 +195,7 @@ public class CallExpressionConverter implements NodeConverter {
      * Extracts and cleans argument string (removes quotes).
      * CC: 1
      */
-    private String extractAndCleanArgument(JsonElement argElement) {
+    private String extractAndCleanArgument(JsonNode argElement) {
         String value = extractArgumentString(argElement);
         return value.replaceAll("^['\"]|['\"]$", "");
     }
@@ -206,14 +216,14 @@ public class CallExpressionConverter implements NodeConverter {
     }
 
     /**
-     * Safely extracts kindName from JsonObject.
+     * Safely extracts kindName from JsonNode.
      * CC: 2 (null check + has check)
      */
-    private String getKindName(JsonObject json) {
+    private String getKindName(JsonNode json) {
         if (json == null || !json.has("kindName")) {
             return "";
         }
-        return json.get("kindName").getAsString();
+        return json.get("kindName").asText();
     }
 
     /**

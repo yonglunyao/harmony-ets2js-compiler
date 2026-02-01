@@ -2,7 +2,7 @@ package com.ets2jsc.parser.internal.converters.expressions;
 
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Converter for literal expressions using enum pattern to minimize class count.
@@ -20,8 +20,8 @@ public class LiteralConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
-        String kindName = json.has("kindName") ? json.get("kindName").getAsString() : "";
+    public Object convert(JsonNode json, ConversionContext context) {
+        String kindName = json.has("kindName") ? json.get("kindName").asText() : "";
 
         switch (kindName) {
             case "TrueLiteral":

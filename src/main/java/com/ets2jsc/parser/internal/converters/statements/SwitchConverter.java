@@ -6,8 +6,8 @@ import com.ets2jsc.constant.Symbols;
 import com.ets2jsc.generator.CodeGenerator;
 import com.ets2jsc.parser.internal.ConversionContext;
 import com.ets2jsc.parser.internal.NodeConverter;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * Converter for switch statements.
@@ -25,9 +25,9 @@ public class SwitchConverter implements NodeConverter {
     }
 
     @Override
-    public Object convert(JsonObject json, ConversionContext context) {
+    public Object convert(JsonNode json, ConversionContext context) {
         if (json.has("text")) {
-            return new ExpressionStatement(json.get("text").getAsString());
+            return new ExpressionStatement(json.get("text").asText());
         }
 
         String exprStr = convertSwitchExpression(json, context);
@@ -43,27 +43,28 @@ public class SwitchConverter implements NodeConverter {
     /**
      * Converts the switch expression.
      */
-    private String convertSwitchExpression(JsonObject json, ConversionContext context) {
-        JsonObject expression = json.getAsJsonObject("expression");
-        return expression != null ? context.convertExpression(expression) : Symbols.EMPTY_STRING;
+    private String convertSwitchExpression(JsonNode json, ConversionContext context) {
+        JsonNode expressionNode = json.get("expression");
+        return (expressionNode != null && expressionNode.isObject()) ? context.convertExpression(expressionNode) : Symbols.EMPTY_STRING;
     }
 
     /**
      * Processes the case block and all its clauses.
      */
-    private void processCaseBlock(JsonObject json, StringBuilder sb, ConversionContext context) {
-        JsonObject caseBlock = json.getAsJsonObject("caseBlock");
-        if (caseBlock == null) {
+    private void processCaseBlock(JsonNode json, StringBuilder sb, ConversionContext context) {
+        JsonNode caseBlockNode = json.get("caseBlock");
+        if (caseBlockNode == null || !caseBlockNode.isObject()) {
             return;
         }
 
-        JsonArray clauses = caseBlock.getAsJsonArray("clauses");
-        if (clauses == null) {
+        JsonNode clausesNode = caseBlockNode.get("clauses");
+        if (clausesNode == null || !clausesNode.isArray()) {
             return;
         }
 
+        ArrayNode clauses = (ArrayNode) clausesNode;
         for (int i = Symbols.INDEX_ZERO; i < clauses.size(); i++) {
-            JsonObject clause = clauses.get(i).getAsJsonObject();
+            JsonNode clause = clauses.get(i);
             String kindName = getKindName(clause);
             processClause(clause, kindName, sb, context);
         }
@@ -72,7 +73,7 @@ public class SwitchConverter implements NodeConverter {
     /**
      * Processes a single case or default clause.
      */
-    private void processClause(JsonObject clause, String kindName, StringBuilder sb, ConversionContext context) {
+    private void processClause(JsonNode clause, String kindName, StringBuilder sb, ConversionContext context) {
         if (KIND_CASE_CLAUSE.equals(kindName)) {
             processCaseClause(clause, sb, context);
         } else if (KIND_DEFAULT_CLAUSE.equals(kindName)) {
@@ -83,7 +84,7 @@ public class SwitchConverter implements NodeConverter {
     /**
      * Processes a case clause.
      */
-    private void processCaseClause(JsonObject clause, StringBuilder sb, ConversionContext context) {
+    private void processCaseClause(JsonNode clause, StringBuilder sb, ConversionContext context) {
         String caseExpr = convertClauseExpression(clause, context);
         sb.append("  case ").append(caseExpr).append(":\n");
 
@@ -94,7 +95,7 @@ public class SwitchConverter implements NodeConverter {
     /**
      * Processes a default clause.
      */
-    private void processDefaultClause(JsonObject clause, StringBuilder sb, ConversionContext context) {
+    private void processDefaultClause(JsonNode clause, StringBuilder sb, ConversionContext context) {
         sb.append("  default:\n");
         processStatements(clause, sb, context);
     }
@@ -102,22 +103,23 @@ public class SwitchConverter implements NodeConverter {
     /**
      * Converts the clause expression for a case statement.
      */
-    private String convertClauseExpression(JsonObject clause, ConversionContext context) {
-        JsonObject clauseExpr = clause.getAsJsonObject("expression");
-        return clauseExpr != null ? context.convertExpression(clauseExpr) : Symbols.EMPTY_STRING;
+    private String convertClauseExpression(JsonNode clause, ConversionContext context) {
+        JsonNode clauseExprNode = clause.get("expression");
+        return (clauseExprNode != null && clauseExprNode.isObject()) ? context.convertExpression(clauseExprNode) : Symbols.EMPTY_STRING;
     }
 
     /**
      * Processes all statements within a clause.
      */
-    private void processStatements(JsonObject clause, StringBuilder sb, ConversionContext context) {
-        JsonArray stmts = clause.getAsJsonArray("statements");
-        if (stmts == null) {
+    private void processStatements(JsonNode clause, StringBuilder sb, ConversionContext context) {
+        JsonNode stmtsNode = clause.get("statements");
+        if (stmtsNode == null || !stmtsNode.isArray()) {
             return;
         }
 
+        ArrayNode stmts = (ArrayNode) stmtsNode;
         for (int j = Symbols.INDEX_ZERO; j < stmts.size(); j++) {
-            JsonObject stmt = stmts.get(j).getAsJsonObject();
+            JsonNode stmt = stmts.get(j);
             AstNode stmtNode = context.convertStatement(stmt);
             if (stmtNode != null) {
                 String stmtCode = stmtNode.accept(new CodeGenerator());
@@ -127,9 +129,9 @@ public class SwitchConverter implements NodeConverter {
     }
 
     /**
-     * Gets the kind name from a JSON object.
+     * Gets the kind name from a JSON node.
      */
-    private String getKindName(JsonObject json) {
-        return json.has(KIND_NAME) ? json.get(KIND_NAME).getAsString() : Symbols.EMPTY_STRING;
+    private String getKindName(JsonNode json) {
+        return json.has(KIND_NAME) ? json.get(KIND_NAME).asText() : Symbols.EMPTY_STRING;
     }
 }
