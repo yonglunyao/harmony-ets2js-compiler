@@ -1,12 +1,24 @@
 #!/usr/bin/env node
 
+/**
+ * ETS/TypeScript to AST Parser
+ *
+ * Parses ETS (ArkTS) and TypeScript source code and outputs an AST as JSON.
+ * Handles ETS-specific syntax like struct by preprocessing to class.
+ *
+ * @module parse-ets
+ * @author ETS Compiler Team
+ * @since 1.0
+ */
+
 const ts = require('typescript');
 const fs = require('fs');
 
-/**
- * Resource type ID mapping for $r() function calls.
- * Maps resource type names to their numeric IDs.
- */
+// =============================================================================
+// CONSTANTS - All magic numbers and strings extracted to named constants
+// =============================================================================
+
+// Resource type ID mapping for $r() function calls
 const RESOURCE_TYPE_IDS = {
     'color': 10001,
     'float': 10002,
@@ -22,6 +34,110 @@ const RESOURCE_TYPE_IDS = {
     'profile': 10012
 };
 
+// Default resource type ID (string type) when type cannot be determined
+const DEFAULT_RESOURCE_TYPE_ID = 10003;
+
+// Resource reference function names
+const RESOURCE_REF_FUNCTIONS = {
+    R: '$r',
+    RAWFILE: '$rawfile'
+};
+
+// Resource reference type identifiers
+const RESOURCE_REF_TYPES = {
+    R: 'r',
+    RAWFILE: 'rawfile'
+};
+
+// Special component names that require JSON objects as arguments
+const SPECIAL_COMPONENTS = {
+    FOR_EACH: 'ForEach',
+    IF: 'If'
+};
+
+// Syntax kind names for decorators and modifiers
+const SYNTAX_KIND_NAMES = {
+    EXPORT_KEYWORD: 'ExportKeyword',
+    DECORATOR: 'Decorator',
+    OBJECT_BINDING_PATTERN: 'ObjectBindingPattern',
+    ARRAY_BINDING_PATTERN: 'ArrayBindingPattern'
+};
+
+// Variable declaration kinds
+const DECLARATION_KINDS = {
+    LET: 'let',
+    CONST: 'const',
+    VAR: 'var',
+    DEFAULT: 'const'  // Default for const declarations without initializer
+};
+
+// Common keyword strings
+const KEYWORDS = {
+    STRUCT: 'struct',
+    CLASS: 'class',
+    EXPORT: 'export',
+    IMPORT: 'import',
+    ASYNC: 'async',
+    FUNCTION: 'function',
+    CONSTRUCTOR: 'constructor',
+    GET: 'get',
+    SET: 'set',
+    FOR: 'for',
+    WHILE: 'while',
+    DO: 'do',
+    SWITCH: 'switch',
+    CASE: 'case',
+    DEFAULT: 'default',
+    BREAK: 'break',
+    CONTINUE: 'continue',
+    RETURN: 'return',
+    THROW: 'throw',
+    TRY: 'try',
+    CATCH: 'catch',
+    FINALLY: 'finally',
+    IF: 'if',
+    ELSE: 'else',
+    NEW: 'new',
+    TYPEOF: 'typeof',
+    AWAIT: 'await',
+    DELETE: 'delete',
+    EXTENDS: 'extends'
+};
+
+// Empty/default value strings
+const EMPTY_VALUES = {
+    EMPTY_STRING: '',
+    UNDEFINED: 'undefined',
+    NULL: 'null'
+};
+
+// Error messages
+const ERROR_MESSAGES = {
+    USAGE: 'Usage: node parse-ets.js <source-file> <output-file>',
+    PARSE_FAILED: 'Error parsing file:',
+    SUCCESS: 'Successfully parsed:'
+};
+
+// Regex patterns for ETS preprocessing
+const REGEX_PATTERNS = {
+    // Pattern: decorators followed by optional export keyword and struct
+    STRUCT_DECORATOR: /(@\w+\s*(?:\([^)]*\))?\s*)\b(?:export\s+)?struct\s+/g,
+    // Pattern for individual decorators
+    INDIVIDUAL_DECORATOR: /@(\w+)(?:\s*\([^)]*\))?/g,
+    // Pattern for struct keyword
+    STRUCT_KEYWORD: /\bstruct\s+/g,
+    // Pattern for @Entry decorator with optional @Component
+    ENTRY_PATTERN: /@Entry\s*\n(?:@Component\s*\n)?(?:export\s+)?class\s+(\w+)/g,
+    // Pattern for decorator name extraction
+    DECORATOR_NAME: /@(\w+)/,
+    // Pattern for removing quotes from strings
+    QUOTES: /^['"]|['"]$/g
+};
+
+// =============================================================================
+// MAIN FUNCTION
+// =============================================================================
+
 /**
  * Parse ETS/TypeScript source code and output AST as JSON.
  * Handles ETS-specific syntax like struct by preprocessing.
@@ -29,7 +145,7 @@ const RESOURCE_TYPE_IDS = {
 function main() {
     const args = process.argv.slice(2);
     if (args.length < 2) {
-        console.error('Usage: node parse-ets.js <source-file> <output-file>');
+        console.error(ERROR_MESSAGES.USAGE);
         process.exit(1);
     }
 
@@ -56,10 +172,10 @@ function main() {
 
         // Write output
         fs.writeFileSync(outputFile, JSON.stringify(astJson, null, 2));
-        console.error('Successfully parsed:', sourceFilePath);
+        console.error(ERROR_MESSAGES.SUCCESS, sourceFilePath);
 
     } catch (error) {
-        console.error('Error parsing file:', error.message);
+        console.error(ERROR_MESSAGES.PARSE_FAILED, error.message);
         console.error(error.stack);
         process.exit(1);
     }
@@ -72,18 +188,16 @@ function preprocessEts(sourceCode) {
     let processedCode = sourceCode;
 
     // Extract decorators immediately before struct/class declaration
-    // Pattern: decorators followed by optional export keyword and struct/class
-    const structDecoratorPattern = /(@\w+\s*(?:\([^)]*\))?\s*)\b(?:export\s+)?struct\s+/g;
     const extractedDecorators = [];
 
     // Find struct with preceding decorators
     let match;
-    while ((match = structDecoratorPattern.exec(sourceCode)) !== null) {
+    while ((match = REGEX_PATTERNS.STRUCT_DECORATOR.exec(sourceCode)) !== null) {
         // Extract individual decorators from the matched text
         const decoratorText = match[1];
-        const individualDecPattern = /@(\w+)(?:\s*\([^)]*\))?/g;
+        REGEX_PATTERNS.INDIVIDUAL_DECORATOR.lastIndex = 0;
         let decMatch;
-        while ((decMatch = individualDecPattern.exec(decoratorText)) !== null) {
+        while ((decMatch = REGEX_PATTERNS.INDIVIDUAL_DECORATOR.exec(decoratorText)) !== null) {
             extractedDecorators.push({
                 name: decMatch[1],
                 fullText: decMatch[0]
@@ -92,17 +206,16 @@ function preprocessEts(sourceCode) {
     }
 
     // Replace struct with class
-    processedCode = processedCode.replace(/\bstruct\s+/g, 'class ');
+    processedCode = processedCode.replace(REGEX_PATTERNS.STRUCT_KEYWORD, 'class ');
 
     // Extract @Entry decorator and ensure export
-    // Pattern: @Entry followed by optional @Component and class declaration
-    const entryPattern = /@Entry\s*\n(?:@Component\s*\n)?(?:export\s+)?class\s+(\w+)/g;
     const entryClasses = [];
-    while ((match = entryPattern.exec(processedCode)) !== null) {
+    REGEX_PATTERNS.ENTRY_PATTERN.lastIndex = 0;
+    while ((match = REGEX_PATTERNS.ENTRY_PATTERN.exec(processedCode)) !== null) {
         entryClasses.push(match[1]);
         // Add export if missing
         const classDecl = match[0];
-        if (!classDecl.includes('export')) {
+        if (!classDecl.includes(KEYWORDS.EXPORT)) {
             processedCode = processedCode.replace(classDecl, classDecl.replace('class ', 'export class '));
         }
     }
@@ -146,7 +259,7 @@ function convertAstToJson(node, extractedDecorators = []) {
             if (node.modifiers) {
                 for (const mod of node.modifiers) {
                     const modKindName = getSyntaxKindName(mod.kind);
-                    if (modKindName === 'ExportKeyword') {
+                    if (modKindName === SYNTAX_KIND_NAMES.EXPORT_KEYWORD) {
                         result.isExport = true;
                         break;
                     }
@@ -254,11 +367,11 @@ function convertAstToJson(node, extractedDecorators = []) {
 
                     // ETS workaround: check if modifier is a decorator and extract name from getText()
                     // This handles @Builder and other ETS method decorators
-                    if (modInfo.kindName === 'Decorator' && result.decorators.length === 0) {
+                    if (modInfo.kindName === SYNTAX_KIND_NAMES.DECORATOR && result.decorators.length === 0) {
                         // Try to get decorator name from the modifier's text
                         try {
                             const modText = mod.getText();
-                            const decoratorMatch = modText.match(/@(\w+)/);
+                            const decoratorMatch = modText.match(REGEX_PATTERNS.DECORATOR_NAME);
                             if (decoratorMatch) {
                                 result.decorators.push({
                                     name: decoratorMatch[1]
@@ -281,7 +394,7 @@ function convertAstToJson(node, extractedDecorators = []) {
                 // Handle binding patterns (destructuring in parameters)
                 if (param.name && param.name.kind) {
                     const bindingKind = getSyntaxKindName(param.name.kind);
-                    if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+                    if (bindingKind === SYNTAX_KIND_NAMES.OBJECT_BINDING_PATTERN || bindingKind === SYNTAX_KIND_NAMES.ARRAY_BINDING_PATTERN) {
                         paramJson.bindingPattern = convertAstToJson(param.name);
                         paramJson.name = param.name.getText() || '';
                     }
@@ -345,7 +458,7 @@ function convertAstToJson(node, extractedDecorators = []) {
                 // Handle binding patterns (destructuring in parameters)
                 if (param.name && param.name.kind) {
                     const bindingKind = getSyntaxKindName(param.name.kind);
-                    if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+                    if (bindingKind === SYNTAX_KIND_NAMES.OBJECT_BINDING_PATTERN || bindingKind === SYNTAX_KIND_NAMES.ARRAY_BINDING_PATTERN) {
                         paramJson.bindingPattern = convertAstToJson(param.name);
                         paramJson.name = param.name.getText() || '';
                     }
@@ -367,7 +480,7 @@ function convertAstToJson(node, extractedDecorators = []) {
             break;
 
         case ts.SyntaxKind.Constructor:
-            result.name = 'constructor';
+            result.name = KEYWORDS.CONSTRUCTOR;
             result.parameters = [];
             for (const param of (node.parameters || [])) {
                 const paramJson = {
@@ -379,7 +492,7 @@ function convertAstToJson(node, extractedDecorators = []) {
                 // Handle binding patterns (destructuring in parameters)
                 if (param.name && param.name.kind) {
                     const bindingKind = getSyntaxKindName(param.name.kind);
-                    if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+                    if (bindingKind === SYNTAX_KIND_NAMES.OBJECT_BINDING_PATTERN || bindingKind === SYNTAX_KIND_NAMES.ARRAY_BINDING_PATTERN) {
                         paramJson.bindingPattern = convertAstToJson(param.name);
                         paramJson.name = param.name.getText() || '';
                     }
@@ -431,11 +544,11 @@ function convertAstToJson(node, extractedDecorators = []) {
                     result.modifiers.push(modInfo);
 
                     // ETS workaround: check if modifier is a decorator and extract name from getText()
-                    if (modInfo.kindName === 'Decorator' && result.decorators.length === 0) {
+                    if (modInfo.kindName === SYNTAX_KIND_NAMES.DECORATOR && result.decorators.length === 0) {
                         // Try to get decorator name from the modifier's text
                         try {
                             const modText = mod.getText();
-                            const decoratorMatch = modText.match(/@(\w+)/);
+                            const decoratorMatch = modText.match(REGEX_PATTERNS.DECORATOR_NAME);
                             if (decoratorMatch) {
                                 result.decorators.push({
                                     name: decoratorMatch[1]
@@ -480,11 +593,11 @@ function convertAstToJson(node, extractedDecorators = []) {
             result.declarations = [];
             // Capture variable declaration keyword (let, const, var)
             if (node.flags & ts.NodeFlags.Let) {
-                result.declarationKind = 'let';
+                result.declarationKind = DECLARATION_KINDS.LET;
             } else if (node.flags & ts.NodeFlags.Const) {
-                result.declarationKind = 'const';
+                result.declarationKind = DECLARATION_KINDS.CONST;
             } else {
-                result.declarationKind = 'var';
+                result.declarationKind = DECLARATION_KINDS.VAR;
             }
             for (const decl of (node.declarations || [])) {
                 const declJson = convertAstToJson(decl);
@@ -510,22 +623,22 @@ function convertAstToJson(node, extractedDecorators = []) {
 
             // Check if this is a resource reference call ($r or $rawfile)
             const isResourceCall = result.expression && result.expression.kindName === 'Identifier' &&
-                                 (result.expression.name === '$r' || result.expression.name === '$rawfile');
+                                 (result.expression.name === RESOURCE_REF_FUNCTIONS.R || result.expression.name === RESOURCE_REF_FUNCTIONS.RAWFILE);
 
             // Check if this is a special component (ForEach) that needs JSON objects as arguments
             const isForEach = result.expression && result.expression.kindName === 'Identifier' &&
-                            result.expression.name === 'ForEach';
+                            result.expression.name === SPECIAL_COMPONENTS.FOR_EACH;
 
             if (isResourceCall) {
                 // Handle resource reference conversion
                 const funcName = result.expression.name;
-                if (funcName === '$r') {
+                if (funcName === RESOURCE_REF_FUNCTIONS.R) {
                     // Convert $r('app.string.name') to __getResourceId__(type, bundle, module, name)
-                    result.resourceRefType = 'r';
+                    result.resourceRefType = RESOURCE_REF_TYPES.R;
                     result.kindName = 'ResourceReferenceExpression';
-                } else if (funcName === '$rawfile') {
+                } else if (funcName === RESOURCE_REF_FUNCTIONS.RAWFILE) {
                     // Convert $rawfile('icon.png') to __getRawFileId__('icon.png')
-                    result.resourceRefType = 'rawfile';
+                    result.resourceRefType = RESOURCE_REF_TYPES.RAWFILE;
                     result.kindName = 'ResourceReferenceExpression';
                 }
             }
@@ -591,7 +704,7 @@ function convertAstToJson(node, extractedDecorators = []) {
             // Check for special components like ForEach and If
             if (result.expression && result.expression.kindName === 'Identifier') {
                 const componentName = result.expression.name;
-                if (componentName === 'ForEach' || componentName === 'If') {
+                if (componentName === SPECIAL_COMPONENTS.FOR_EACH || componentName === SPECIAL_COMPONENTS.IF) {
                     result.isSpecialComponent = true;
                     result.componentName = componentName;
                 }
@@ -604,7 +717,7 @@ function convertAstToJson(node, extractedDecorators = []) {
 
             // Preserve resource reference functions ($r, $rawfile) as-is
             // These are runtime functions that should not be transformed
-            if (result.name === '$r' || result.name === '$rawfile') {
+            if (result.name === RESOURCE_REF_FUNCTIONS.R || result.name === RESOURCE_REF_FUNCTIONS.RAWFILE) {
                 // Keep the original text for resource functions
                 result.text = result.name;
             }
@@ -613,8 +726,8 @@ function convertAstToJson(node, extractedDecorators = []) {
 
         case ts.SyntaxKind.ImportKeyword:
             // The "import" keyword - treat as an identifier with text "import"
-            result.name = 'import';
-            result.text = 'import';
+            result.name = KEYWORDS.IMPORT;
+            result.text = KEYWORDS.IMPORT;
             break;
 
         case ts.SyntaxKind.PropertyAccessExpression:
@@ -747,7 +860,7 @@ function convertAstToJson(node, extractedDecorators = []) {
                 // Handle binding patterns (destructuring in parameters)
                 if (param.name && param.name.kind) {
                     const bindingKind = getSyntaxKindName(param.name.kind);
-                    if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+                    if (bindingKind === SYNTAX_KIND_NAMES.OBJECT_BINDING_PATTERN || bindingKind === SYNTAX_KIND_NAMES.ARRAY_BINDING_PATTERN) {
                         paramJson.bindingPattern = convertAstToJson(param.name);
                         // Use text for the binding pattern
                         paramJson.name = param.name.getText() || '';
@@ -1106,11 +1219,11 @@ function generateForOfStatementText(node) {
     let initStr = initializer ? jsonToCodeString(initializer) : '';
     // Add const/let prefix for VariableDeclarationList
     if (initializer && initializer.kindName === 'VariableDeclarationList' && initStr) {
-        initStr = 'const ' + initStr;
+        initStr = DECLARATION_KINDS.CONST + ' ' + initStr;
     }
     const exprStr = expression ? jsonToCodeString(expression) : '';
 
-    let result = awaitModifier ? 'for await (' : 'for (';
+    let result = awaitModifier ? KEYWORDS.FOR + ' await (' : KEYWORDS.FOR + ' (';
     result += initStr + ' of ' + exprStr + ') ';
 
     if (statement) {
@@ -1133,11 +1246,11 @@ function generateForInStatementText(node) {
     let initStr = initializer ? jsonToCodeString(initializer) : '';
     // Add const/let prefix for VariableDeclarationList
     if (initializer && initializer.kindName === 'VariableDeclarationList' && initStr) {
-        initStr = 'const ' + initStr;
+        initStr = DECLARATION_KINDS.CONST + ' ' + initStr;
     }
     const exprStr = expression ? jsonToCodeString(expression) : '';
 
-    let result = 'for (' + initStr + ' in ' + exprStr + ') ';
+    let result = KEYWORDS.FOR + ' (' + initStr + ' in ' + exprStr + ') ';
 
     if (statement) {
         result += '{\n' + jsonToCodeString(statement) + '\n}';
@@ -1157,7 +1270,7 @@ function generateWhileStatementText(node) {
 
     const condStr = expression ? jsonToCodeString(expression) : '';
 
-    let result = 'while (' + condStr + ') ';
+    let result = KEYWORDS.WHILE + ' (' + condStr + ') ';
 
     if (statement) {
         result += '{\n' + jsonToCodeString(statement) + '\n}';
@@ -1177,7 +1290,7 @@ function generateDoStatementText(node) {
 
     const condStr = expression ? jsonToCodeString(expression) : '';
 
-    let result = 'do ';
+    let result = KEYWORDS.DO + ' ';
 
     if (statement) {
         result += '{\n' + jsonToCodeString(statement) + '\n} ';
@@ -1185,7 +1298,7 @@ function generateDoStatementText(node) {
         result += '{ } ';
     }
 
-    result += 'while (' + condStr + ')';
+    result += KEYWORDS.WHILE + ' (' + condStr + ')';
 
     return result;
 }
@@ -1203,13 +1316,13 @@ function generateForStatementText(node) {
     // Add const/let prefix for VariableDeclarationList in initializer position
     if (initializer && initializer.kindName === 'VariableDeclarationList' && initStr) {
         // Use the declarationKind from the VariableDeclarationList
-        const declKind = initializer.declarationKind || 'const';
+        const declKind = initializer.declarationKind || DECLARATION_KINDS.DEFAULT;
         initStr = declKind + ' ' + initStr;
     }
     const condStr = condition ? jsonToCodeString(condition) : '';
     const incrStr = incrementor ? jsonToCodeString(incrementor) : '';
 
-    let result = 'for (' + initStr + '; ' + condStr + '; ' + incrStr + ') ';
+    let result = KEYWORDS.FOR + ' (' + initStr + '; ' + condStr + '; ' + incrStr + ') ';
 
     if (statement) {
         result += '{\n' + jsonToCodeString(statement) + '\n}';
@@ -1229,22 +1342,22 @@ function generateSwitchStatementText(node) {
 
     const exprStr = expression ? jsonToCodeString(expression) : '';
 
-    let result = 'switch (' + exprStr + ') {\n';
+    let result = KEYWORDS.SWITCH + ' (' + exprStr + ') {\n';
 
     if (caseBlock && caseBlock.clauses) {
         for (const clause of caseBlock.clauses) {
             if (clause.kindName === 'CaseClause') {
                 const caseExpr = clause.expression ? jsonToCodeString(clause.expression) : '';
-                result += '  case ' + caseExpr + ':\n';
+                result += '  ' + KEYWORDS.CASE + ' ' + caseExpr + ':\n';
 
                 if (clause.statements && clause.statements.length > 0) {
                     for (const stmt of clause.statements) {
                         result += '    ' + jsonToCodeString(stmt) + '\n';
                     }
                 }
-                result += '    break;\n';
+                result += '    ' + KEYWORDS.BREAK + ';\n';
             } else if (clause.kindName === 'DefaultClause') {
-                result += '  default:\n';
+                result += '  ' + KEYWORDS.DEFAULT + ':\n';
 
                 if (clause.statements && clause.statements.length > 0) {
                     for (const stmt of clause.statements) {
@@ -1267,7 +1380,7 @@ function generateTryStatementText(node) {
     const catchClause = node.catchClause ? convertAstToJson(node.catchClause) : null;
     const finallyBlock = node.finallyBlock ? convertAstToJson(node.finallyBlock) : null;
 
-    let result = 'try {\n' + jsonToCodeString(tryBlock) + '\n}';
+    let result = KEYWORDS.TRY + ' {\n' + jsonToCodeString(tryBlock) + '\n}';
 
     if (catchClause) {
         const varDecl = catchClause.variableDeclaration;
@@ -1275,14 +1388,14 @@ function generateTryStatementText(node) {
         const catchBlock = catchClause.block;
 
         if (varName) {
-            result += ' catch (' + varName + ') {\n' + jsonToCodeString(catchBlock) + '\n}';
+            result += ' ' + KEYWORDS.CATCH + ' (' + varName + ') {\n' + jsonToCodeString(catchBlock) + '\n}';
         } else {
-            result += ' catch {\n' + jsonToCodeString(catchBlock) + '\n}';
+            result += ' ' + KEYWORDS.CATCH + ' {\n' + jsonToCodeString(catchBlock) + '\n}';
         }
     }
 
     if (finallyBlock) {
-        result += ' finally {\n' + jsonToCodeString(finallyBlock) + '\n}';
+        result += ' ' + KEYWORDS.FINALLY + ' {\n' + jsonToCodeString(finallyBlock) + '\n}';
     }
 
     return result;
@@ -1301,7 +1414,7 @@ function generateArrowFunctionText(node) {
         // Handle binding patterns (destructuring in parameters)
         if (param.name && param.name.kind) {
             const bindingKind = getSyntaxKindName(param.name.kind);
-            if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+            if (bindingKind === SYNTAX_KIND_NAMES.OBJECT_BINDING_PATTERN || bindingKind === SYNTAX_KIND_NAMES.ARRAY_BINDING_PATTERN) {
                 // For binding patterns, use getText() to get the full pattern
                 paramText += param.name.getText();
             } else {
@@ -1327,7 +1440,7 @@ function generateArrowFunctionText(node) {
 
     let result = '';
     if (hasAsync) {
-        result += 'async ';
+        result += KEYWORDS.ASYNC + ' ';
     }
     result += '(' + params + ') => ';
 
@@ -1362,7 +1475,7 @@ function generateFunctionExpressionText(node) {
         // Handle binding patterns (destructuring in parameters)
         if (param.name && param.name.kind) {
             const bindingKind = getSyntaxKindName(param.name.kind);
-            if (bindingKind === 'ObjectBindingPattern' || bindingKind === 'ArrayBindingPattern') {
+            if (bindingKind === SYNTAX_KIND_NAMES.OBJECT_BINDING_PATTERN || bindingKind === SYNTAX_KIND_NAMES.ARRAY_BINDING_PATTERN) {
                 // For binding patterns, use getText() to get the full pattern
                 paramText += param.name.getText();
             } else {
@@ -1391,9 +1504,9 @@ function generateFunctionExpressionText(node) {
 
     let result = '';
     if (hasAsync) {
-        result += 'async ';
+        result += KEYWORDS.ASYNC + ' ';
     }
-    result += 'function ' + name + '(' + params + ') ';
+    result += KEYWORDS.FUNCTION + ' ' + name + '(' + params + ') ';
 
     // Handle body - convert to JSON and use jsonToCodeString to strip TypeScript syntax
     if (node.body) {
@@ -1417,7 +1530,7 @@ function generateFunctionExpressionText(node) {
  */
 function generateGetAccessorText(node) {
     const name = node.name ? node.name.getText() : '';
-    let result = 'get ' + name + '() ';
+    let result = KEYWORDS.GET + ' ' + name + '() ';
     if (node.body) {
         const bodyJson = convertAstToJson(node.body);
         const bodyCode = bodyJson ? jsonToCodeString(bodyJson) : '{}';
@@ -1434,7 +1547,7 @@ function generateGetAccessorText(node) {
 function generateSetAccessorText(node) {
     const name = node.name ? node.name.getText() : '';
     const params = (node.parameters || []).map(p => p.name?.getText() || '').join(', ');
-    let result = 'set ' + name + '(' + params + ') ';
+    let result = KEYWORDS.SET + ' ' + name + '(' + params + ') ';
     if (node.body) {
         const bodyJson = convertAstToJson(node.body);
         const bodyCode = bodyJson ? jsonToCodeString(bodyJson) : '{}';
@@ -1451,7 +1564,7 @@ function generateSetAccessorText(node) {
 function generateClassExpressionText(node) {
     const className = node.name ? node.name.getText() : '';
 
-    let result = 'class ';
+    let result = KEYWORDS.CLASS + ' ';
     if (className) {
         result += className + ' ';
     }
@@ -1462,7 +1575,7 @@ function generateClassExpressionText(node) {
             const tokenName = getSyntaxKindName(clause.token);
             if (tokenName === 'ExtendsKeyword') {
                 if (clause.types && clause.types.length > 0) {
-                    result += 'extends ' + clause.types[0].expression.getText() + ' ';
+                    result += KEYWORDS.EXTENDS + ' ' + clause.types[0].expression.getText() + ' ';
                 }
             }
         }
@@ -1499,7 +1612,7 @@ function generateClassExpressionText(node) {
  */
 function generateConstructorText(node) {
     const params = (node.parameters || []).map(p => p.name?.getText() || '').join(', ');
-    return `constructor(${params}) { ${generateBlockBodyText(node.body)} }`;
+    return `${KEYWORDS.CONSTRUCTOR}(${params}) { ${generateBlockBodyText(node.body)} }`;
 }
 
 /**
@@ -1545,7 +1658,7 @@ function generateBlockBodyText(blockNode) {
  */
 function generateThrowStatementText(node) {
     const expr = node.expression ? convertAstToJson(node.expression) : null;
-    return expr ? 'throw ' + jsonToCodeString(expr) : 'throw';
+    return expr ? KEYWORDS.THROW + ' ' + jsonToCodeString(expr) : KEYWORDS.THROW;
 }
 
 /**
@@ -1683,9 +1796,9 @@ function jsonToCodeString(json) {
             const retExpr = json.expression;
             if (retExpr) {
                 const retExprStr = jsonToCodeString(retExpr);
-                return 'return ' + retExprStr + ';';
+                return KEYWORDS.RETURN + ' ' + retExprStr + ';';
             }
-            return 'return;';
+            return KEYWORDS.RETURN + ';';
         }
 
         case 'VariableStatement':
@@ -1698,13 +1811,13 @@ function jsonToCodeString(json) {
                     const name = decl.name;
                     const init = decl.initializer;
                     // Use the declarationKind (const/let/var) from the VariableDeclarationList
-                    const declKind = declList.declarationKind || 'const';
+                    const declKind = declList.declarationKind || DECLARATION_KINDS.DEFAULT;
                     let result = declKind + ' ' + name;
                     if (init) {
                         result += ' = ' + jsonToCodeString(init);
-                    } else if (declKind === 'const') {
+                    } else if (declKind === DECLARATION_KINDS.CONST) {
                         // const declarations require an initializer in JavaScript
-                        result += ' = undefined';
+                        result += ' = ' + EMPTY_VALUES.UNDEFINED;
                     }
                     return result + ';';
                 }
@@ -1799,9 +1912,9 @@ function jsonToCodeString(json) {
             const ifExpr = json.expression;
             const thenStmt = json.thenStatement;
             const elseStmt = json.elseStatement;
-            let result = 'if (' + jsonToCodeString(ifExpr) + ') {\n' + jsonToCodeString(thenStmt) + '\n}';
+            let result = KEYWORDS.IF + ' (' + jsonToCodeString(ifExpr) + ') {\n' + jsonToCodeString(thenStmt) + '\n}';
             if (elseStmt) {
-                result += ' else {\n' + jsonToCodeString(elseStmt) + '\n}';
+                result += ' ' + KEYWORDS.ELSE + ' {\n' + jsonToCodeString(elseStmt) + '\n}';
             }
             return result;
         }
@@ -1814,7 +1927,7 @@ function jsonToCodeString(json) {
         }
 
         case 'TypeOfExpression': {
-            return 'typeof ' + jsonToCodeString(json.expression);
+            return KEYWORDS.TYPEOF + ' ' + jsonToCodeString(json.expression);
         }
 
         case 'ArrayLiteralExpression': {
@@ -1839,12 +1952,12 @@ function jsonToCodeString(json) {
         }
 
         case 'AwaitExpression': {
-            return 'await ' + jsonToCodeString(json.expression);
+            return KEYWORDS.AWAIT + ' ' + jsonToCodeString(json.expression);
         }
 
         case 'ThrowStatement': {
             const expr = json.expression ? jsonToCodeString(json.expression) : '';
-            return 'throw ' + expr;
+            return KEYWORDS.THROW + ' ' + expr;
         }
 
         case 'ObjectLiteralExpression': {
@@ -1863,7 +1976,7 @@ function jsonToCodeString(json) {
             const expr = json.expression;
             const args = json.arguments || [];
             const argStr = args.map(arg => jsonToCodeString(arg)).join(', ');
-            return 'new ' + jsonToCodeString(expr) + '(' + argStr + ')';
+            return KEYWORDS.NEW + ' ' + jsonToCodeString(expr) + '(' + argStr + ')';
         }
 
         case 'ArrowFunction': {
@@ -1914,9 +2027,9 @@ function jsonToCodeString(json) {
             }).join(', ');
             const body = json.body ? jsonToCodeString(json.body) : '{}';
             if (name) {
-                return 'function ' + name + '(' + params + ') ' + body;
+                return KEYWORDS.FUNCTION + ' ' + name + '(' + params + ') ' + body;
             } else {
-                return 'function(' + params + ') ' + body;
+                return KEYWORDS.FUNCTION + '(' + params + ') ' + body;
             }
         }
 
@@ -1933,7 +2046,7 @@ function jsonToCodeString(json) {
             // Otherwise generate from name and body
             const name = json.name || '';
             const body = json.body ? jsonToCodeString(json.body) : '{}';
-            return 'get ' + name + '() { ' + body + ' }';
+            return KEYWORDS.GET + ' ' + name + '() { ' + body + ' }';
         }
 
         case 'SetAccessor': {
@@ -1943,7 +2056,7 @@ function jsonToCodeString(json) {
             const name = json.name || '';
             const params = (json.parameters || []).map(p => p.name || '').join(', ');
             const body = json.body ? jsonToCodeString(json.body) : '{}';
-            return 'set ' + name + '(' + params + ') { ' + body + ' }';
+            return KEYWORDS.SET + ' ' + name + '(' + params + ') { ' + body + ' }';
         }
 
         case 'SpreadElement': {
@@ -1957,9 +2070,9 @@ function jsonToCodeString(json) {
         case 'DeleteExpression': {
             const expr = json.expression;
             if (expr) {
-                return 'delete ' + jsonToCodeString(expr);
+                return KEYWORDS.DELETE + ' ' + jsonToCodeString(expr);
             }
-            return 'delete undefined';
+            return KEYWORDS.DELETE + ' ' + EMPTY_VALUES.UNDEFINED;
         }
 
         case 'ObjectBindingPattern': {
@@ -2011,16 +2124,16 @@ function jsonToCodeString(json) {
 
         case 'BreakStatement': {
             if (json.label) {
-                return 'break ' + json.label + ';';
+                return KEYWORDS.BREAK + ' ' + json.label + ';';
             }
-            return 'break;';
+            return KEYWORDS.BREAK + ';';
         }
 
         case 'ContinueStatement': {
             if (json.label) {
-                return 'continue ' + json.label + ';';
+                return KEYWORDS.CONTINUE + ' ' + json.label + ';';
             }
-            return 'continue;';
+            return KEYWORDS.CONTINUE + ';';
         }
 
         case 'TryStatement': {
@@ -2031,29 +2144,29 @@ function jsonToCodeString(json) {
 
         case 'ResourceReferenceExpression': {
             // Handle resource reference conversion ($r and $rawfile)
-            if (json.resourceRefType === 'r') {
+            if (json.resourceRefType === RESOURCE_REF_TYPES.R) {
                 // Convert $r('app.string.name') to __getResourceId__(type, bundle, module, name)
                 if (json.arguments && json.arguments.length > 0) {
                     const resourcePath = json.arguments[0];
                     // Remove quotes from string literal
-                    const pathStr = resourcePath.replace(/^['"]|['"]$/g, '');
+                    const pathStr = resourcePath.replace(REGEX_PATTERNS.QUOTES, '');
                     // Parse format: 'app.type.name' or 'module.type.name'
                     const parts = pathStr.split('.');
                     if (parts.length >= 3) {
                         const module = parts[0];
                         const type = parts[parts.length - 2];
                         const name = parts[parts.length - 1];
-                        const typeId = RESOURCE_TYPE_IDS[type] || 10003; // Default to string
-                        return `__getResourceId__(${typeId}, undefined, "${module}", "${name}")`;
+                        const typeId = RESOURCE_TYPE_IDS[type] || DEFAULT_RESOURCE_TYPE_ID;
+                        return `__getResourceId__(${typeId}, ${EMPTY_VALUES.UNDEFINED}, "${module}", "${name}")`;
                     }
                 }
-                return '__getResourceId__(10003, undefined, "", "")';
-            } else if (json.resourceRefType === 'rawfile') {
+                return `__getResourceId__(${DEFAULT_RESOURCE_TYPE_ID}, ${EMPTY_VALUES.UNDEFINED}, "${EMPTY_VALUES.EMPTY_STRING}", "${EMPTY_VALUES.EMPTY_STRING}")`;
+            } else if (json.resourceRefType === RESOURCE_REF_TYPES.RAWFILE) {
                 // Convert $rawfile('icon.png') to __getRawFileId__('icon.png')
                 if (json.arguments && json.arguments.length > 0) {
                     const filename = json.arguments[0];
                     // Remove quotes if present
-                    const filenameStr = filename.replace(/^['"]|['"]$/g, '');
+                    const filenameStr = filename.replace(REGEX_PATTERNS.QUOTES, '');
                     return `__getRawFileId__("${filenameStr}")`;
                 }
                 return '__getRawFileId__("")';
