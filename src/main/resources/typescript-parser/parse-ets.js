@@ -197,6 +197,42 @@ function convertAstToJson(node, extractedDecorators = []) {
             }
             break;
 
+        case ts.SyntaxKind.ClassExpression:
+            result.name = node.name?.escapedText || '';
+            result.decorators = [];
+            for (const dec of (node.decorators || [])) {
+                const decJson = convertAstToJson(dec);
+                if (decJson) {
+                    result.decorators.push(decJson);
+                }
+            }
+            result.members = [];
+            for (const member of (node.members || [])) {
+                const memberJson = convertAstToJson(member);
+                if (memberJson) {
+                    result.members.push(memberJson);
+                }
+            }
+            // Add heritage clauses (extends, implements)
+            if (node.heritageClauses && node.heritageClauses.length > 0) {
+                result.heritageClauses = [];
+                for (const clause of node.heritageClauses) {
+                    const clauseJson = {
+                        token: getSyntaxKindName(clause.token) || '',
+                        types: []
+                    };
+                    if (clause.types) {
+                        for (const type of clause.types) {
+                            clauseJson.types.push(type.expression.getText());
+                        }
+                    }
+                    result.heritageClauses.push(clauseJson);
+                }
+            }
+            // Generate text representation for class expression
+            result.text = generateClassExpressionText(node);
+            break;
+
         case ts.SyntaxKind.MethodDeclaration:
             result.name = node.name?.escapedText || '';
             result.decorators = [];
@@ -962,6 +998,7 @@ function getSyntaxKindName(kind) {
     const kindMap = {
         [ts.SyntaxKind.SourceFile]: 'SourceFile',
         [ts.SyntaxKind.ClassDeclaration]: 'ClassDeclaration',
+        [ts.SyntaxKind.ClassExpression]: 'ClassExpression',
         [ts.SyntaxKind.MethodDeclaration]: 'MethodDeclaration',
         [ts.SyntaxKind.PropertyDeclaration]: 'PropertyDeclaration',
         [ts.SyntaxKind.Decorator]: 'Decorator',
@@ -1350,6 +1387,101 @@ function generateFunctionExpressionText(node) {
 }
 
 /**
+ * Generate text representation for class expression (without type annotations)
+ */
+function generateClassExpressionText(node) {
+    const className = node.name ? node.name.getText() : '';
+
+    let result = 'class ';
+    if (className) {
+        result += className + ' ';
+    }
+
+    // Handle extends clause
+    if (node.heritageClauses) {
+        for (const clause of node.heritageClauses) {
+            const tokenName = getSyntaxKindName(clause.token);
+            if (tokenName === 'ExtendsKeyword') {
+                if (clause.types && clause.types.length > 0) {
+                    result += 'extends ' + clause.types[0].expression.getText() + ' ';
+                }
+            }
+        }
+    }
+
+    result += '{ ';
+
+    // Handle members - generate them directly
+    if (node.members) {
+        const memberTexts = [];
+        for (const member of node.members) {
+            const memberKind = getSyntaxKindName(member.kind);
+            if (memberKind === 'Constructor') {
+                // Generate constructor directly
+                memberTexts.push(generateConstructorText(member));
+            } else if (memberKind === 'MethodDeclaration') {
+                // Generate method directly
+                memberTexts.push(generateMethodDeclarationText(member));
+            } else if (memberKind === 'PropertyDeclaration') {
+                // Generate property directly
+                memberTexts.push(generatePropertyDeclarationText(member));
+            }
+        }
+        result += memberTexts.join(' ');
+    }
+
+    result += ' }';
+
+    return result;
+}
+
+/**
+ * Generate text representation for constructor (without type annotations)
+ */
+function generateConstructorText(node) {
+    const params = (node.parameters || []).map(p => p.name?.getText() || '').join(', ');
+    return `constructor(${params}) { ${generateBlockBodyText(node.body)} }`;
+}
+
+/**
+ * Generate text representation for method declaration (without type annotations)
+ */
+function generateMethodDeclarationText(node) {
+    const name = node.name?.getText() || '';
+    const params = (node.parameters || []).map(p => p.name?.getText() || '').join(', ');
+    return `${name}(${params}) { ${generateBlockBodyText(node.body)} }`;
+}
+
+/**
+ * Generate text representation for property declaration (without type annotations)
+ */
+function generatePropertyDeclarationText(node) {
+    const name = node.name?.getText() || '';
+    if (node.initializer) {
+        const initText = node.initializer.getText();
+        return `${name} = ${initText};`;
+    }
+    return `${name};`;
+}
+
+/**
+ * Generate text representation for block body
+ */
+function generateBlockBodyText(blockNode) {
+    if (!blockNode || !blockNode.statements) {
+        return '';
+    }
+    const statements = [];
+    for (const stmt of blockNode.statements) {
+        const stmtText = stmt.getText();
+        if (stmtText) {
+            statements.push(stmtText);
+        }
+    }
+    return statements.join(' ');
+}
+
+/**
  * Generate text representation for throw statement
  */
 function generateThrowStatementText(node) {
@@ -1725,6 +1857,13 @@ function jsonToCodeString(json) {
             } else {
                 return 'function(' + params + ') ' + body;
             }
+        }
+
+        case 'ClassExpression': {
+            // Use pre-generated text if available
+            if (json.text) return json.text;
+            // Fallback to class placeholder
+            return 'class {}';
         }
 
         case 'SpreadElement': {

@@ -87,10 +87,6 @@ public class MethodGenerator {
             if (param.hasDefault() && param.getDefaultValue() != null) {
                 sb.append(" = ").append(param.getDefaultValue());
             }
-
-            if (param.getType() != null) {
-                sb.append(" /* ").append(param.getType()).append(" */");
-            }
         }
     }
 
