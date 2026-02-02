@@ -3,7 +3,7 @@ package com.ets2jsc.cli;
 import com.ets2jsc.compiler.CompilerFactory;
 import com.ets2jsc.compiler.ICompiler;
 import com.ets2jsc.compiler.CompilationResult;
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.shared.exception.CompilationException;
 import com.ets2jsc.shared.util.SourceFileFinder;
 import org.slf4j.Logger;

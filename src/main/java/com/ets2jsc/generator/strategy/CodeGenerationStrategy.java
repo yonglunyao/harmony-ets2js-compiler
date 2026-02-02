@@ -1,6 +1,6 @@
 package com.ets2jsc.generator.strategy;
 
-import com.ets2jsc.ast.AstNode;
+import com.ets2jsc.domain.model.ast.AstNode;
 import com.ets2jsc.generator.context.GenerationContext;
 
 /**

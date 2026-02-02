@@ -1,8 +1,8 @@
 package com.ets2jsc.parser;
 
-import com.ets2jsc.ast.ClassDeclaration;
-import com.ets2jsc.ast.Decorator;
-import com.ets2jsc.ast.SourceFile;
+import com.ets2jsc.domain.model.ast.ClassDeclaration;
+import com.ets2jsc.domain.model.ast.Decorator;
+import com.ets2jsc.domain.model.ast.SourceFile;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

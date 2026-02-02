@@ -1,6 +1,6 @@
 package com.ets2jsc.parser;
 
-import com.ets2jsc.ast.AstNode;
+import com.ets2jsc.domain.model.ast.AstNode;
 import com.ets2jsc.parser.converters.stmt.*;
 import com.fasterxml.jackson.databind.JsonNode;
 

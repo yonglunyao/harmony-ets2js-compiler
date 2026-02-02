@@ -1,6 +1,6 @@
 package com.ets2jsc.ast;
 
-import com.ets2jsc.ast.Decorator;
+import com.ets2jsc.domain.model.ast.Decorator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

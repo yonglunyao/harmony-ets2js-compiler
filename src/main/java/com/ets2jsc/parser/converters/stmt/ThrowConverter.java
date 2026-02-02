@@ -1,6 +1,6 @@
 package com.ets2jsc.parser.converters.stmt;
 
-import com.ets2jsc.ast.ExpressionStatement;
+import com.ets2jsc.domain.model.ast.ExpressionStatement;
 import com.ets2jsc.parser.ConversionContext;
 import com.ets2jsc.parser.NodeConverter;
 import com.fasterxml.jackson.databind.JsonNode;

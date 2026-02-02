@@ -1,6 +1,6 @@
 package com.ets2jsc.debug;
 
-import com.ets2jsc.ast.SourceFile;
+import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.parser.AstBuilder;
 import com.ets2jsc.generator.CodeGenerator;
 

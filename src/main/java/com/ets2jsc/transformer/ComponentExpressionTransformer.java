@@ -1,8 +1,8 @@
 package com.ets2jsc.transformer;
 
-import com.ets2jsc.ast.*;
-import com.ets2jsc.ast.ComponentStatement.ComponentPart;
-import com.ets2jsc.ast.ComponentStatement.PartKind;
+import com.ets2jsc.domain.model.ast.*;
+import com.ets2jsc.domain.model.ast.ComponentStatement.ComponentPart;
+import com.ets2jsc.domain.model.ast.ComponentStatement.PartKind;
 
 import java.util.List;
 import java.util.regex.Matcher;

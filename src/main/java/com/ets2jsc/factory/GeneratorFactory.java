@@ -1,6 +1,6 @@
 package com.ets2jsc.factory;
 
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.generator.CodeGenerator;
 import com.ets2jsc.generator.JsWriter;
 import com.ets2jsc.generator.SourceMapGenerator;

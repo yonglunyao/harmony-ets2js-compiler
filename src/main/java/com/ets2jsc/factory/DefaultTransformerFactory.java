@@ -1,7 +1,7 @@
 package com.ets2jsc.factory;
 
-import com.ets2jsc.ast.AstNode;
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.ast.AstNode;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.transformer.AstTransformer;
 import com.ets2jsc.transformer.BuildMethodTransformer;
 import com.ets2jsc.transformer.ComponentTransformer;

@@ -1,6 +1,6 @@
 package com.ets2jsc.api;
 
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 
 /**
  * Factory interface for creating module instances.

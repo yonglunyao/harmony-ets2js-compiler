@@ -1,6 +1,6 @@
 package com.ets2jsc.context;
 
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.shared.constant.Symbols;
 import lombok.Getter;
 

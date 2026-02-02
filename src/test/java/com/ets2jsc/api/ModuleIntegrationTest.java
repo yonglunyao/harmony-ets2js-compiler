@@ -1,7 +1,7 @@
 package com.ets2jsc.api;
 
-import com.ets2jsc.ast.SourceFile;
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.ast.SourceFile;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.di.ModuleServiceProvider;
 import com.ets2jsc.shared.exception.ParserException;
 import com.ets2jsc.impl.DefaultModuleFactory;

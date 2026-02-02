@@ -1,10 +1,10 @@
 package com.ets2jsc.parser.converters.stmt;
 
-import com.ets2jsc.ast.AstNode;
-import com.ets2jsc.ast.Block;
-import com.ets2jsc.ast.ComponentRegistry;
-import com.ets2jsc.ast.ComponentStatement;
-import com.ets2jsc.ast.ExpressionStatement;
+import com.ets2jsc.domain.model.ast.AstNode;
+import com.ets2jsc.domain.model.ast.Block;
+import com.ets2jsc.domain.model.ast.ComponentRegistry;
+import com.ets2jsc.domain.model.ast.ComponentStatement;
+import com.ets2jsc.domain.model.ast.ExpressionStatement;
 import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.parser.ConversionContext;
 import com.ets2jsc.parser.NodeConverter;

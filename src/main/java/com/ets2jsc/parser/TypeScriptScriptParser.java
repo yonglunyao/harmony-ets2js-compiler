@@ -1,9 +1,9 @@
 package com.ets2jsc.parser;
 
-import com.ets2jsc.ast.AstNode;
-import com.ets2jsc.ast.Decorator;
-import com.ets2jsc.ast.ExpressionStatement;
-import com.ets2jsc.ast.SourceFile;
+import com.ets2jsc.domain.model.ast.AstNode;
+import com.ets2jsc.domain.model.ast.Decorator;
+import com.ets2jsc.domain.model.ast.ExpressionStatement;
+import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.shared.exception.ParserException;
 import com.ets2jsc.shared.exception.ParserInitializationException;
 

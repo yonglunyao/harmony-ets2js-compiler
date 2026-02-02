@@ -1,6 +1,6 @@
 package com.ets2jsc.config;
 
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

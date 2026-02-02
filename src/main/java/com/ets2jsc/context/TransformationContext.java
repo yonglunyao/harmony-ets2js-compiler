@@ -1,8 +1,8 @@
 package com.ets2jsc.context;
 
-import com.ets2jsc.ast.AstNode;
-import com.ets2jsc.ast.ClassDeclaration;
-import com.ets2jsc.ast.MethodDeclaration;
+import com.ets2jsc.domain.model.ast.AstNode;
+import com.ets2jsc.domain.model.ast.ClassDeclaration;
+import com.ets2jsc.domain.model.ast.MethodDeclaration;
 import lombok.Getter;
 
 import java.util.HashMap;
@@ -44,7 +44,7 @@ public class TransformationContext {
      *
      * @return the compiler configuration
      */
-    public com.ets2jsc.config.CompilerConfig getConfig() {
+    public com.ets2jsc.domain.model.config.CompilerConfig getConfig() {
         return compilationContext.getConfig();
     }
 

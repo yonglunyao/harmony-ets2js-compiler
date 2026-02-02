@@ -1,7 +1,7 @@
 package com.ets2jsc.integration;
 
-import com.ets2jsc.config.CompilerConfig;
-import com.ets2jsc.ast.SourceFile;
+import com.ets2jsc.domain.model.config.CompilerConfig;
+import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.generator.CodeGenerator;
 import com.ets2jsc.integration.util.JavaScriptSyntaxValidator;
 import com.ets2jsc.integration.util.JavaScriptSyntaxValidator.ValidationResult;

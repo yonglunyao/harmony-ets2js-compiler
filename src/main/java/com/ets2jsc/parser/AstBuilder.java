@@ -1,7 +1,7 @@
 package com.ets2jsc.parser;
 
-import com.ets2jsc.ast.AstNode;
-import com.ets2jsc.ast.SourceFile;
+import com.ets2jsc.domain.model.ast.AstNode;
+import com.ets2jsc.domain.model.ast.SourceFile;
 
 /**
  * Builds and processes AST nodes.

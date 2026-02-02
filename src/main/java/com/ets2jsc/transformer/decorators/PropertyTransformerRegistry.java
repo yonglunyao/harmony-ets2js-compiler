@@ -1,6 +1,6 @@
 package com.ets2jsc.transformer.decorators;
 
-import com.ets2jsc.ast.PropertyDeclaration;
+import com.ets2jsc.domain.model.ast.PropertyDeclaration;
 import com.ets2jsc.transformer.decorators.impl.ConsumePropertyTransformer;
 import com.ets2jsc.transformer.decorators.impl.LinkPropertyTransformer;
 import com.ets2jsc.transformer.decorators.impl.PropPropertyTransformer;

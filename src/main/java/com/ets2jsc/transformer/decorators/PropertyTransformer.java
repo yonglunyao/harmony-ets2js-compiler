@@ -1,8 +1,8 @@
 package com.ets2jsc.transformer.decorators;
 
-import com.ets2jsc.ast.ClassDeclaration;
-import com.ets2jsc.ast.MethodDeclaration;
-import com.ets2jsc.ast.PropertyDeclaration;
+import com.ets2jsc.domain.model.ast.ClassDeclaration;
+import com.ets2jsc.domain.model.ast.MethodDeclaration;
+import com.ets2jsc.domain.model.ast.PropertyDeclaration;
 import com.ets2jsc.shared.constant.RuntimeFunctions;
 import com.ets2jsc.shared.constant.Symbols;
 
@@ -131,7 +131,7 @@ public abstract class PropertyTransformer {
     protected MethodDeclaration createGetter(String propName, String privateName, String propType) {
         MethodDeclaration getter = new MethodDeclaration(Symbols.getterName(propName));
         getter.setReturnType(propType);
-        getter.setBody(new com.ets2jsc.ast.ExpressionStatement(
+        getter.setBody(new com.ets2jsc.domain.model.ast.ExpressionStatement(
                 "return " + Symbols.THIS_KEYWORD_FULL + "." + privateName + "." + RuntimeFunctions.GET + "()"));
         return getter;
     }
@@ -149,7 +149,7 @@ public abstract class PropertyTransformer {
         MethodDeclaration.Parameter valueParam = new MethodDeclaration.Parameter("newValue", propType);
         setter.addParameter(valueParam);
         setter.setReturnType("void");
-        setter.setBody(new com.ets2jsc.ast.ExpressionStatement(
+        setter.setBody(new com.ets2jsc.domain.model.ast.ExpressionStatement(
                 Symbols.THIS_KEYWORD_FULL + "." + privateName + "." + RuntimeFunctions.SET + "(newValue)"));
         return setter;
     }

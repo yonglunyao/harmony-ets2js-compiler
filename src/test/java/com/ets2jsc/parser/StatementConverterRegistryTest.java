@@ -3,7 +3,7 @@ package com.ets2jsc.parser;
 import com.ets2jsc.parser.StatementConverterRegistry;
 import com.ets2jsc.parser.ConversionContext;
 import com.ets2jsc.parser.NodeConverter;
-import com.ets2jsc.ast.AstNode;
+import com.ets2jsc.domain.model.ast.AstNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.DisplayName;
@@ -198,7 +198,7 @@ class StatementConverterRegistryTest {
         NodeConverter customConverter = new NodeConverter() {
             @Override
             public Object convert(com.fasterxml.jackson.databind.JsonNode json, ConversionContext context) {
-                return new com.ets2jsc.ast.EmptyStatement();
+                return new com.ets2jsc.domain.model.ast.EmptyStatement();
             }
 
             @Override

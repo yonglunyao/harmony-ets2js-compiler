@@ -1,7 +1,7 @@
 package com.ets2jsc.transformer.decorators;
 
-import com.ets2jsc.ast.ClassDeclaration;
-import com.ets2jsc.ast.PropertyDeclaration;
+import com.ets2jsc.domain.model.ast.ClassDeclaration;
+import com.ets2jsc.domain.model.ast.PropertyDeclaration;
 import com.ets2jsc.shared.constant.Decorators;
 
 /**

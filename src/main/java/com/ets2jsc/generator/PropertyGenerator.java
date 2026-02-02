@@ -1,6 +1,6 @@
 package com.ets2jsc.generator;
 
-import com.ets2jsc.ast.PropertyDeclaration;
+import com.ets2jsc.domain.model.ast.PropertyDeclaration;
 
 /**
  * Generates code for property declarations.

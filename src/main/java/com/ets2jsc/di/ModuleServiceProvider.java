@@ -5,7 +5,7 @@ import com.ets2jsc.api.IConfig;
 import com.ets2jsc.api.IModuleFactory;
 import com.ets2jsc.api.IParser;
 import com.ets2jsc.api.ITransformer;
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 
 /**
  * Service provider for module instances.

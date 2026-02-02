@@ -1,8 +1,8 @@
 package com.ets2jsc.ast;
 
-import com.ets2jsc.ast.ClassDeclaration;
-import com.ets2jsc.ast.ExportStatement;
-import com.ets2jsc.ast.ImportStatement;
+import com.ets2jsc.domain.model.ast.ClassDeclaration;
+import com.ets2jsc.domain.model.ast.ExportStatement;
+import com.ets2jsc.domain.model.ast.ImportStatement;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

@@ -1,8 +1,8 @@
 package com.ets2jsc.api;
 
-import com.ets2jsc.ast.AstNode;
-import com.ets2jsc.ast.SourceFile;
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.ast.AstNode;
+import com.ets2jsc.domain.model.ast.SourceFile;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.shared.exception.CodeGenerationException;
 
 import java.nio.file.Path;

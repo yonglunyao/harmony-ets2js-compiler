@@ -1,7 +1,7 @@
 package com.ets2jsc.ast;
 
-import com.ets2jsc.ast.CallExpression;
-import com.ets2jsc.ast.ExpressionStatement;
+import com.ets2jsc.domain.model.ast.CallExpression;
+import com.ets2jsc.domain.model.ast.ExpressionStatement;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

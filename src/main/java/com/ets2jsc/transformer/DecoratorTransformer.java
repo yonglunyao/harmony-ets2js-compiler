@@ -1,6 +1,6 @@
 package com.ets2jsc.transformer;
 
-import com.ets2jsc.ast.*;
+import com.ets2jsc.domain.model.ast.*;
 import com.ets2jsc.shared.constant.Decorators;
 import com.ets2jsc.shared.constant.RuntimeFunctions;
 import com.ets2jsc.shared.constant.Symbols;
@@ -169,7 +169,7 @@ public class DecoratorTransformer implements AstTransformer {
      */
     private void addConstructor(ClassDeclaration classDecl, List<PropertyDeclaration> stateProps) {
         MethodDeclaration constructor = new MethodDeclaration("constructor");
-        constructor.setBody(new com.ets2jsc.ast.ExpressionStatement(buildConstructorBody(stateProps)));
+        constructor.setBody(new com.ets2jsc.domain.model.ast.ExpressionStatement(buildConstructorBody(stateProps)));
         classDecl.getMembers().add(0, constructor);
     }
 

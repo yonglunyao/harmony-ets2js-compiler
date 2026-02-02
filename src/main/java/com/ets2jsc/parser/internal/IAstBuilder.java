@@ -1,7 +1,7 @@
 package com.ets2jsc.parser.internal;
 
-import com.ets2jsc.ast.AstNode;
-import com.ets2jsc.ast.SourceFile;
+import com.ets2jsc.domain.model.ast.AstNode;
+import com.ets2jsc.domain.model.ast.SourceFile;
 
 /**
  * Internal interface for AST builder.

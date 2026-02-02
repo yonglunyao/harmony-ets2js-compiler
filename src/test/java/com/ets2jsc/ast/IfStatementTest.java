@@ -1,8 +1,8 @@
 package com.ets2jsc.ast;
 
-import com.ets2jsc.ast.Block;
-import com.ets2jsc.ast.ExpressionStatement;
-import com.ets2jsc.ast.IfStatement;
+import com.ets2jsc.domain.model.ast.Block;
+import com.ets2jsc.domain.model.ast.ExpressionStatement;
+import com.ets2jsc.domain.model.ast.IfStatement;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

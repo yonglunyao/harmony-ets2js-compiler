@@ -1,7 +1,7 @@
 package com.ets2jsc.parser;
 
 import com.ets2jsc.parser.ConversionContext;
-import com.ets2jsc.ast.AstNode;
+import com.ets2jsc.domain.model.ast.AstNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.TextNode;

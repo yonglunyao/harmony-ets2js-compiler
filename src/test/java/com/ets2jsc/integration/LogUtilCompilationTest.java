@@ -1,10 +1,10 @@
 package com.ets2jsc.integration;
 
-import com.ets2jsc.ast.ClassDeclaration;
-import com.ets2jsc.ast.SourceFile;
+import com.ets2jsc.domain.model.ast.ClassDeclaration;
+import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.compiler.CompilerFactory;
 import com.ets2jsc.compiler.ICompiler;
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.parser.AstBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;

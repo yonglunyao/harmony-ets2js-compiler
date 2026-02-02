@@ -1,6 +1,6 @@
 package com.ets2jsc.compiler;
 
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.factory.TransformerFactory;
 import com.ets2jsc.factory.DefaultTransformerFactory;
 

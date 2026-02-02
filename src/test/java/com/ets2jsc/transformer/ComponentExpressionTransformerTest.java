@@ -1,7 +1,7 @@
 package com.ets2jsc.transformer;
 
-import com.ets2jsc.ast.AstNode;
-import com.ets2jsc.ast.ComponentStatement;
+import com.ets2jsc.domain.model.ast.AstNode;
+import com.ets2jsc.domain.model.ast.ComponentStatement;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

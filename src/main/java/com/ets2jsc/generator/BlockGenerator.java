@@ -1,6 +1,6 @@
 package com.ets2jsc.generator;
 
-import com.ets2jsc.ast.*;
+import com.ets2jsc.domain.model.ast.*;
 
 /**
  * Generates code for block statements.

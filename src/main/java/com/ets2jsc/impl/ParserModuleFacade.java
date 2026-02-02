@@ -1,7 +1,7 @@
 package com.ets2jsc.impl;
 
 import com.ets2jsc.api.IParser;
-import com.ets2jsc.ast.SourceFile;
+import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.shared.exception.ParserException;
 import com.ets2jsc.parser.AstBuilder;
 import com.ets2jsc.parser.TypeScriptScriptParser;
@@ -168,12 +168,12 @@ public class ParserModuleFacade implements IParser {
             }
 
             @Override
-            public boolean validate(com.ets2jsc.ast.AstNode node) {
+            public boolean validate(com.ets2jsc.domain.model.ast.AstNode node) {
                 return builder.validate(node);
             }
 
             @Override
-            public com.ets2jsc.ast.AstNode process(com.ets2jsc.ast.AstNode node) {
+            public com.ets2jsc.domain.model.ast.AstNode process(com.ets2jsc.domain.model.ast.AstNode node) {
                 return builder.process(node);
             }
         };

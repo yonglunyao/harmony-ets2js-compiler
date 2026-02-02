@@ -1,8 +1,8 @@
 package com.ets2jsc.api;
 
-import com.ets2jsc.ast.ClassDeclaration;
-import com.ets2jsc.ast.SourceFile;
-import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.domain.model.ast.ClassDeclaration;
+import com.ets2jsc.domain.model.ast.SourceFile;
+import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.factory.DefaultTransformerFactory;
 import com.ets2jsc.factory.TransformerFactory;
 import com.ets2jsc.impl.TransformerModuleFacade;

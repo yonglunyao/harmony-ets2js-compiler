@@ -1,9 +1,9 @@
 package com.ets2jsc.transformer;
 
-import com.ets2jsc.ast.AstNode;
-import com.ets2jsc.ast.ClassDeclaration;
-import com.ets2jsc.ast.PropertyDeclaration;
-import com.ets2jsc.ast.SourceFile;
+import com.ets2jsc.domain.model.ast.AstNode;
+import com.ets2jsc.domain.model.ast.ClassDeclaration;
+import com.ets2jsc.domain.model.ast.PropertyDeclaration;
+import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.parser.AstBuilder;
 import com.ets2jsc.transformer.DecoratorTransformer;
 import org.junit.jupiter.api.Test;

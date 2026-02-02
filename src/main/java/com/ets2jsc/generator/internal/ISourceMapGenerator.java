@@ -1,6 +1,6 @@
 package com.ets2jsc.generator.internal;
 
-import com.ets2jsc.ast.SourceFile;
+import com.ets2jsc.domain.model.ast.SourceFile;
 
 /**
  * Internal interface for source map generator.
