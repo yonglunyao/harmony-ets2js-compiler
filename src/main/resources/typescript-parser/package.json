@@ -1,16 +1,31 @@
 {
-  "name": "typescript-parser",
-  "version": "1.0.0",
-  "description": "",
-  "main": "parse.js",
+  "name": "@ets2jsc/typescript-parser",
+  "version": "2.0.0",
+  "description": "ETS/TypeScript to AST parser with npm SDK style package structure",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "parse": "node index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "typescript",
+    "ets",
+    "arkts",
+    "parser",
+    "ast"
+  ],
+  "author": "ETS Compiler Team",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "typescript": "^5.9.3"
-  }
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "files": [
+    "parse-ets.js",
+    "lib",
+    "README.md"
+  ]
 }

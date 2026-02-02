@@ -45,7 +45,7 @@ public class TypeScriptScriptParser {
     // Constants for resource paths and protocols
     private static final String PROTOCOL_FILE = "file";
     private static final String RESOURCE_PATH_PREFIX = "typescript-parser/";
-    private static final String SCRIPT_RESOURCE_PATH = "typescript-parser/parse-ets.js";
+    private static final String SCRIPT_RESOURCE_PATH = "typescript-parser/index.js";
     private static final String TEMP_DIR_PREFIX = "typescript-parser-";
     private static final String TEMP_SOURCE_PREFIX = "ets-source-";
     private static final String TEMP_AST_PREFIX = "ets-ast-";
@@ -73,7 +73,7 @@ public class TypeScriptScriptParser {
                 // Extract all resources from typescript-parser directory
                 extractResourceDirectory(RESOURCE_PATH_PREFIX, tempDir);
 
-                this.scriptPath = tempDir.resolve("parse-ets.js").toAbsolutePath().toString();
+                this.scriptPath = tempDir.resolve("index.js").toAbsolutePath().toString();
             } catch (Exception e) {
                 throw new ParserInitializationException("Failed to initialize TypeScript parser script", e);
             }

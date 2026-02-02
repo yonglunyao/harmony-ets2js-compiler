@@ -100,7 +100,7 @@ public final class Symbols {
     public static final int MAX_THREAD_MULTIPLIER = 2;
 
     // File paths and prefixes
-    public static final String TYPESCRIPT_PARSER_PATH = "typescript-parser/parse-ets.js";
+    public static final String TYPESCRIPT_PARSER_PATH = "typescript-parser/index.js";
     public static final String TEMP_SOURCE_PREFIX = "ets-source-";
     public static final String TEMP_AST_PREFIX = "ets-ast-";
 

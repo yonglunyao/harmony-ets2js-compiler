@@ -156,7 +156,7 @@ public class ProcessExecutor {
     private String locateParserScript() {
         try {
             // Try to use the classpath location directly
-            java.net.URL scriptUrl = getClass().getClassLoader().getResource("typescript-parser/parse-ets.js");
+            java.net.URL scriptUrl = getClass().getClassLoader().getResource("typescript-parser/index.js");
 
             if (scriptUrl != null && "file".equals(scriptUrl.getProtocol())) {
                 // Running from classpath on filesystem
@@ -184,7 +184,7 @@ public class ProcessExecutor {
         String jarPath = getJarPath();
         extractResourceDirectory("typescript-parser/", tempDir, jarPath);
 
-        return tempDir.resolve("parse-ets.js").toAbsolutePath().toString();
+        return tempDir.resolve("index.js").toAbsolutePath().toString();
     }
 
     /**
