@@ -3,15 +3,14 @@ package com.ets2jsc.compiler;
 import com.ets2jsc.ast.AstNode;
 import com.ets2jsc.ast.SourceFile;
 import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.factory.TransformerFactory;
+import com.ets2jsc.factory.DefaultTransformerFactory;
 import com.ets2jsc.exception.CompilationException;
 import com.ets2jsc.generator.CodeGenerator;
 import com.ets2jsc.generator.JsWriter;
 import com.ets2jsc.generator.SourceMapGenerator;
 import com.ets2jsc.parser.AstBuilder;
 import com.ets2jsc.transformer.AstTransformer;
-import com.ets2jsc.transformer.ComponentTransformer;
-import com.ets2jsc.transformer.DecoratorTransformer;
-import com.ets2jsc.transformer.BuildMethodTransformer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,6 +28,7 @@ public abstract class BaseCompiler implements ICompiler {
     protected final List<AstTransformer> transformers;
     protected final CodeGenerator codeGenerator;
     protected final JsWriter jsWriter;
+    protected final TransformerFactory transformerFactory;
 
     /**
      * Creates a new base compiler with the given configuration.
@@ -36,12 +36,21 @@ public abstract class BaseCompiler implements ICompiler {
      * @param config the compiler configuration
      */
     protected BaseCompiler(CompilerConfig config) {
+        this(config, new DefaultTransformerFactory());
+    }
+
+    /**
+     * Creates a new base compiler with the given configuration and transformer factory.
+     *
+     * @param config the compiler configuration
+     * @param transformerFactory the factory for creating transformers
+     */
+    protected BaseCompiler(CompilerConfig config, TransformerFactory transformerFactory) {
         this.config = config;
-        this.transformers = new ArrayList<>();
+        this.transformerFactory = transformerFactory;
+        this.transformers = transformerFactory.createTransformers(config);
         this.codeGenerator = new CodeGenerator(config);
         this.jsWriter = new JsWriter();
-
-        initializeTransformers();
     }
 
     @Override
@@ -177,11 +186,12 @@ public abstract class BaseCompiler implements ICompiler {
     /**
      * Initializes the transformation pipeline.
      * Subclasses can override to add custom transformers.
+     *
+     * @deprecated Use {@link TransformerFactory} instead. This method is kept for backward compatibility.
      */
+    @Deprecated
     protected void initializeTransformers() {
-        transformers.add(new DecoratorTransformer(config.isPartialUpdateMode()));
-        transformers.add(new BuildMethodTransformer(config.isPartialUpdateMode()));
-        transformers.add(new ComponentTransformer());
+        // Transformers are now initialized via TransformerFactory in the constructor
     }
 
     /**

@@ -1,0 +1,80 @@
+package com.ets2jsc.command;
+
+import com.ets2jsc.compiler.ICompiler;
+
+import java.nio.file.Path;
+import java.util.List;
+
+/**
+ * Factory for creating compilation commands.
+ * <p>
+ * This factory provides a convenient API for creating different types
+ * of compilation commands, encapsulating the complexity of command
+ * instantiation.
+ * </p>
+ *
+ * @since 1.0
+ */
+public final class CompilationCommandFactory {
+
+    private CompilationCommandFactory() {
+        // Utility class - prevent instantiation
+    }
+
+    /**
+     * Creates a command for compiling a single source file.
+     *
+     * @param compiler the compiler to use
+     * @param sourcePath the source file path
+     * @param outputPath the output file path
+     * @return a new single file compilation command
+     * @throws IllegalArgumentException if any parameter is null
+     */
+    public static CompilationCommand createSingleFileCommand(
+            ICompiler compiler, Path sourcePath, Path outputPath) {
+        return new SingleFileCompilationCommand(compiler, sourcePath, outputPath);
+    }
+
+    /**
+     * Creates a command for compiling multiple source files.
+     *
+     * @param compiler the compiler to use
+     * @param sourceFiles the list of source files to compile
+     * @param outputDir the output directory
+     * @return a new batch compilation command
+     * @throws IllegalArgumentException if any parameter is null or sourceFiles is empty
+     */
+    public static CompilationCommand createBatchCommand(
+            ICompiler compiler, List<Path> sourceFiles, Path outputDir) {
+        return new BatchCompilationCommand(compiler, sourceFiles, outputDir);
+    }
+
+    /**
+     * Creates a command for compiling an entire project.
+     *
+     * @param compiler the compiler to use
+     * @param sourceDir the source project directory
+     * @param outputDir the output directory
+     * @param copyResources whether to copy non-source resource files
+     * @return a new project compilation command
+     * @throws IllegalArgumentException if any parameter is null
+     */
+    public static CompilationCommand createProjectCommand(
+            ICompiler compiler, Path sourceDir, Path outputDir, boolean copyResources) {
+        return new ProjectCompilationCommand(compiler, sourceDir, outputDir, copyResources);
+    }
+
+    /**
+     * Creates a command for compiling an entire project without copying resources.
+     *
+     * @param compiler the compiler to use
+     * @param sourceDir the source project directory
+     * @param outputDir the output directory
+     * @return a new project compilation command
+     * @throws IllegalArgumentException if any parameter is null
+     */
+    public static CompilationCommand createProjectCommand(
+            ICompiler compiler, Path sourceDir, Path outputDir) {
+        return createProjectCommand(compiler, sourceDir, outputDir, false);
+    }
+}

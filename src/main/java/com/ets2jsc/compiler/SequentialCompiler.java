@@ -1,6 +1,7 @@
 package com.ets2jsc.compiler;
 
 import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.factory.TransformerFactory;
 import com.ets2jsc.exception.CompilationException;
 
 import java.nio.file.Path;
@@ -19,6 +20,16 @@ public class SequentialCompiler extends BaseCompiler {
      */
     public SequentialCompiler(CompilerConfig config) {
         super(config);
+    }
+
+    /**
+     * Creates a new sequential compiler with the given configuration and transformer factory.
+     *
+     * @param config the compiler configuration
+     * @param transformerFactory the factory for creating transformers
+     */
+    public SequentialCompiler(CompilerConfig config, TransformerFactory transformerFactory) {
+        super(config, transformerFactory);
     }
 
     @Override

@@ -7,7 +7,7 @@ import com.ets2jsc.ast.SourceFile;
 import com.ets2jsc.exception.ParserException;
 import com.ets2jsc.exception.ParserInitializationException;
 
-import com.ets2jsc.parser.internal.ConversionContext;
+import com.ets2jsc.parser.ConversionContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

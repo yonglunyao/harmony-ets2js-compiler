@@ -2,6 +2,7 @@ package com.ets2jsc.compiler;
 
 import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.constant.Symbols;
+import com.ets2jsc.factory.TransformerFactory;
 import com.ets2jsc.exception.CompilationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,28 @@ public class ParallelCompiler extends BaseCompiler {
      * @param threadPoolSize number of threads in the pool (0 or negative uses CPU core count)
      */
     public ParallelCompiler(CompilerConfig config, int threadPoolSize) {
-        super(config);
+        this(config, threadPoolSize, new com.ets2jsc.factory.DefaultTransformerFactory());
+    }
+
+    /**
+     * Creates a new parallel compiler with the given configuration and transformer factory.
+     *
+     * @param config the compiler configuration
+     * @param transformerFactory the factory for creating transformers
+     */
+    public ParallelCompiler(CompilerConfig config, TransformerFactory transformerFactory) {
+        this(config, Runtime.getRuntime().availableProcessors(), transformerFactory);
+    }
+
+    /**
+     * Creates a new parallel compiler with the given configuration, thread pool size, and transformer factory.
+     *
+     * @param config the compiler configuration
+     * @param threadPoolSize number of threads in the pool (0 or negative uses CPU core count)
+     * @param transformerFactory the factory for creating transformers
+     */
+    public ParallelCompiler(CompilerConfig config, int threadPoolSize, TransformerFactory transformerFactory) {
+        super(config, transformerFactory);
 
         // Determine actual thread pool size
         int cpuCores = Runtime.getRuntime().availableProcessors();
