@@ -1,4 +1,4 @@
-package com.ets2jsc.cli;
+package com.ets2jsc.interfaces.cli;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
