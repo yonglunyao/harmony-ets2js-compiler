@@ -2,8 +2,8 @@ package com.ets2jsc.debug;
 
 import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.domain.model.ast.ClassDeclaration;
-import com.ets2jsc.parser.AstBuilder;
-import com.ets2jsc.generator.CodeGenerator;
+import com.ets2jsc.infrastructure.parser.AstBuilder;
+import com.ets2jsc.infrastructure.generator.CodeGenerator;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;

@@ -1,10 +1,10 @@
-package com.ets2jsc.transformer.decorators;
+package com.ets2jsc.infrastructure.transformer.decorators;
 
 import com.ets2jsc.domain.model.ast.ClassDeclaration;
 import com.ets2jsc.domain.model.ast.Decorator;
 import com.ets2jsc.domain.model.ast.PropertyDeclaration;
 import com.ets2jsc.shared.constant.Decorators;
-import com.ets2jsc.transformer.decorators.impl.*;
+import com.ets2jsc.infrastructure.transformer.decorators.impl.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

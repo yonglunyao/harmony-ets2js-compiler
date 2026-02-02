@@ -1,8 +1,8 @@
 package com.ets2jsc.parser;
 
-import com.ets2jsc.parser.StatementConverterRegistry;
-import com.ets2jsc.parser.ConversionContext;
-import com.ets2jsc.parser.NodeConverter;
+import com.ets2jsc.infrastructure.parser.StatementConverterRegistry;
+import com.ets2jsc.infrastructure.parser.ConversionContext;
+import com.ets2jsc.infrastructure.parser.NodeConverter;
 import com.ets2jsc.domain.model.ast.AstNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

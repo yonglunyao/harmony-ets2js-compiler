@@ -2,10 +2,10 @@ package com.ets2jsc.integration;
 
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.domain.model.ast.SourceFile;
-import com.ets2jsc.generator.CodeGenerator;
+import com.ets2jsc.infrastructure.generator.CodeGenerator;
 import com.ets2jsc.integration.util.JavaScriptSyntaxValidator;
 import com.ets2jsc.integration.util.JavaScriptSyntaxValidator.ValidationResult;
-import com.ets2jsc.parser.AstBuilder;
+import com.ets2jsc.infrastructure.parser.AstBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

@@ -5,11 +5,11 @@ import com.ets2jsc.domain.model.ast.AstNode;
 import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.shared.exception.CodeGenerationException;
-import com.ets2jsc.generator.CodeGenerator;
-import com.ets2jsc.generator.JsWriter;
-import com.ets2jsc.generator.SourceMapGenerator;
-import com.ets2jsc.generator.internal.IJsWriter;
-import com.ets2jsc.generator.internal.ISourceMapGenerator;
+import com.ets2jsc.infrastructure.generator.CodeGenerator;
+import com.ets2jsc.infrastructure.generator.JsWriter;
+import com.ets2jsc.infrastructure.generator.SourceMapGenerator;
+import com.ets2jsc.infrastructure.generator.internal.IJsWriter;
+import com.ets2jsc.infrastructure.generator.internal.ISourceMapGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

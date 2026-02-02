@@ -2,7 +2,7 @@ package com.ets2jsc.generator;
 
 import com.ets2jsc.domain.model.ast.*;
 import com.ets2jsc.domain.model.config.CompilerConfig;
-import com.ets2jsc.generator.CodeGenerator;
+import com.ets2jsc.infrastructure.generator.CodeGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

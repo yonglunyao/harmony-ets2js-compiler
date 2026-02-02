@@ -8,9 +8,9 @@ import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.di.ModuleServiceProvider;
 import com.ets2jsc.shared.exception.CompilationException;
-import com.ets2jsc.factory.TransformerFactory;
-import com.ets2jsc.factory.DefaultTransformerFactory;
-import com.ets2jsc.transformer.AstTransformer;
+import com.ets2jsc.infrastructure.factory.TransformerFactory;
+import com.ets2jsc.infrastructure.factory.DefaultTransformerFactory;
+import com.ets2jsc.infrastructure.transformer.AstTransformer;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -1,7 +1,7 @@
 package com.ets2jsc.integration;
 
 import com.ets2jsc.domain.model.ast.SourceFile;
-import com.ets2jsc.parser.AstBuilder;
+import com.ets2jsc.infrastructure.parser.AstBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

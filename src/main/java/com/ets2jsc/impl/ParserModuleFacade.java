@@ -3,10 +3,10 @@ package com.ets2jsc.impl;
 import com.ets2jsc.api.IParser;
 import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.shared.exception.ParserException;
-import com.ets2jsc.parser.AstBuilder;
-import com.ets2jsc.parser.TypeScriptScriptParser;
-import com.ets2jsc.parser.internal.IAstBuilder;
-import com.ets2jsc.parser.internal.ITypeScriptParser;
+import com.ets2jsc.infrastructure.parser.AstBuilder;
+import com.ets2jsc.infrastructure.parser.TypeScriptScriptParser;
+import com.ets2jsc.infrastructure.parser.internal.IAstBuilder;
+import com.ets2jsc.infrastructure.parser.internal.ITypeScriptParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

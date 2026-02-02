@@ -1,7 +1,7 @@
 package com.ets2jsc.compiler;
 
 import com.ets2jsc.domain.model.config.CompilerConfig;
-import com.ets2jsc.factory.TransformerFactory;
+import com.ets2jsc.infrastructure.factory.TransformerFactory;
 import com.ets2jsc.shared.exception.CompilationException;
 
 import java.nio.file.Path;

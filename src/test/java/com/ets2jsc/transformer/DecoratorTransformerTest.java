@@ -2,7 +2,7 @@ package com.ets2jsc.transformer;
 
 import com.ets2jsc.domain.model.ast.*;
 import com.ets2jsc.domain.model.config.CompilerConfig;
-import com.ets2jsc.transformer.DecoratorTransformer;
+import com.ets2jsc.infrastructure.transformer.DecoratorTransformer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

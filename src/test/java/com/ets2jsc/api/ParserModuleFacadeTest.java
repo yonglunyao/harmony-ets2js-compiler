@@ -3,8 +3,8 @@ package com.ets2jsc.api;
 import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.shared.exception.ParserException;
 import com.ets2jsc.impl.ParserModuleFacade;
-import com.ets2jsc.parser.internal.IAstBuilder;
-import com.ets2jsc.parser.internal.ITypeScriptParser;
+import com.ets2jsc.infrastructure.parser.internal.IAstBuilder;
+import com.ets2jsc.infrastructure.parser.internal.ITypeScriptParser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

@@ -1,4 +1,4 @@
-package com.ets2jsc.generator.writer;
+package com.ets2jsc.infrastructure.generator.writer;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

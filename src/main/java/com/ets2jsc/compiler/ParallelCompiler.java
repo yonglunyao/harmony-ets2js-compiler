@@ -2,7 +2,7 @@ package com.ets2jsc.compiler;
 
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.shared.constant.Symbols;
-import com.ets2jsc.factory.TransformerFactory;
+import com.ets2jsc.infrastructure.factory.TransformerFactory;
 import com.ets2jsc.shared.exception.CompilationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class ParallelCompiler extends BaseCompiler {
      * @param threadPoolSize number of threads in the pool (0 or negative uses CPU core count)
      */
     public ParallelCompiler(CompilerConfig config, int threadPoolSize) {
-        this(config, threadPoolSize, new com.ets2jsc.factory.DefaultTransformerFactory());
+        this(config, threadPoolSize, new com.ets2jsc.infrastructure.factory.DefaultTransformerFactory());
     }
 
     /**

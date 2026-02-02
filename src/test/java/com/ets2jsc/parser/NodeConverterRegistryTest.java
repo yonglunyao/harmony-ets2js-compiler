@@ -1,7 +1,7 @@
 package com.ets2jsc.parser;
 
-import com.ets2jsc.parser.NodeConverter;
-import com.ets2jsc.parser.ConversionContext;
+import com.ets2jsc.infrastructure.parser.NodeConverter;
+import com.ets2jsc.infrastructure.parser.ConversionContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.junit.jupiter.api.DisplayName;

@@ -4,8 +4,8 @@ import com.ets2jsc.domain.model.ast.AstNode;
 import com.ets2jsc.domain.model.ast.ClassDeclaration;
 import com.ets2jsc.domain.model.ast.PropertyDeclaration;
 import com.ets2jsc.domain.model.ast.SourceFile;
-import com.ets2jsc.parser.AstBuilder;
-import com.ets2jsc.transformer.DecoratorTransformer;
+import com.ets2jsc.infrastructure.parser.AstBuilder;
+import com.ets2jsc.infrastructure.transformer.DecoratorTransformer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

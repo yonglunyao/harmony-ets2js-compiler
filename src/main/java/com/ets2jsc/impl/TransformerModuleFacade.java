@@ -4,9 +4,9 @@ import com.ets2jsc.api.ITransformer;
 import com.ets2jsc.domain.model.ast.AstNode;
 import com.ets2jsc.domain.model.ast.SourceFile;
 import com.ets2jsc.domain.model.config.CompilerConfig;
-import com.ets2jsc.factory.DefaultTransformerFactory;
-import com.ets2jsc.factory.TransformerFactory;
-import com.ets2jsc.transformer.AstTransformer;
+import com.ets2jsc.infrastructure.factory.DefaultTransformerFactory;
+import com.ets2jsc.infrastructure.factory.TransformerFactory;
+import com.ets2jsc.infrastructure.transformer.AstTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
