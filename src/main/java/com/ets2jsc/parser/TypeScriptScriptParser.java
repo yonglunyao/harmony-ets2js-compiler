@@ -164,7 +164,7 @@ public class TypeScriptScriptParser {
         Process process = pb.start();
 
         // Use try-with-resources for automatic BufferedReader closure
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
             StringBuilder errorOutput = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {

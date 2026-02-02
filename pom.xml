@@ -16,6 +16,9 @@
     <jackson.version>2.16.1</jackson.version>
     <slf4j.version>2.0.9</slf4j.version>
     <junit.version>5.10.1</junit.version>
+    <spotbugs.maven.version>4.8.3.0</spotbugs.maven.version>
+    <spotbugs.core.version>4.8.3</spotbugs.core.version>
+    <pmd.version>3.21.2</pmd.version>
   </properties>
 
   <dependencies>
@@ -146,6 +149,57 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <!-- SpotBugs for static bug detection -->
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>${spotbugs.maven.version}</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs</artifactId>
+            <version>${spotbugs.core.version}</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>spotbugs-check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <effort>Max</effort>
+          <threshold>Medium</threshold>
+          <xmlOutput>true</xmlOutput>
+          <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
+        </configuration>
+      </plugin>
+      <!-- PMD for static code analysis -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>${pmd.version}</version>
+        <executions>
+          <execution>
+            <id>pmd-check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <rulesets>
+            <ruleset>pmd-ruleset.xml</ruleset>
+          </rulesets>
+          <printFailingErrors>true</printFailingErrors>
+          <failOnViolation>false</failOnViolation>
+          <linkXRef>false</linkXRef>
+        </configuration>
       </plugin>
     </plugins>
   </build>

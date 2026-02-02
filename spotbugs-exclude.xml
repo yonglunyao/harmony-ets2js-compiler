@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude generated code -->
+    <Match>
+        <Class name="~.*\.generated\..*" />
+    </Match>
+
+    <!-- Exclude Lombok generated code -->
+    <Match>
+        <Class name="~.*\$.*" />
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" />
+    </Match>
+
+    <!-- Exclude test classes from certain checks -->
+    <Match>
+        <Class name="~.*Test.*" />
+        <Bug pattern="DM_DEFAULT_ENCODING" />
+    </Match>
+
+    <!-- Exclude EI_EXPOSE_REP and EI_EXPOSE_REP2 - internal representation exposure
+         These are often false positives for AST nodes and DTOs -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Exclude NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE for now
+         These need to be fixed gradually -->
+    <Match>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" />
+    </Match>
+
+    <!-- Exclude DLS_DEAD_LOCAL_STORE - dead local stores
+         These are usually minor issues -->
+    <Match>
+        <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+    </Match>
+
+    <!-- Exclude RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE -->
+    <Match>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" />
+    </Match>
+
+    <!-- Exclude CT_CONSTRUCTOR_THROW - constructor throws exception
+         This is acceptable in some cases like initialization failures -->
+    <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW" />
+    </Match>
+</FindBugsFilter>
