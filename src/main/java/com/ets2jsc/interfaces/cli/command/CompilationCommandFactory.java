@@ -1,4 +1,4 @@
-package com.ets2jsc.command;
+package com.ets2jsc.interfaces.cli.command;
 
 import com.ets2jsc.compiler.ICompiler;
 
