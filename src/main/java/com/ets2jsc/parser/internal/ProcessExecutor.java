@@ -1,5 +1,6 @@
 package com.ets2jsc.parser.internal;
 
+import com.ets2jsc.exception.ParserInitializationException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -166,7 +167,7 @@ public class ProcessExecutor {
                 return extractParserDirectory();
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to locate TypeScript parser script", e);
+            throw new ParserInitializationException("Failed to locate TypeScript parser script", e);
         }
     }
 

@@ -150,12 +150,25 @@ com.ets2jsc/
 
 ## Error Handling
 
-### Custom Exceptions
+### Exception Hierarchy
 
-All custom exceptions must be in the `com.ets2jsc.exception` package:
+All custom exceptions must be in the `com.ets2jsc.exception` package and follow this hierarchy:
+
+```
+RuntimeException (Java)
+└── ParserException (base exception)
+    ├── ParserInitializationException (script location, process execution)
+    ├── SourceReadException (file I/O errors)
+    ├── AstConversionException (AST transformation errors)
+    └── CodeGenerationException (code output errors)
+```
+
+### Exception Class Definitions
 
 ```java
 // Base exception
+package com.ets2jsc.exception;
+
 public class ParserException extends RuntimeException {
     public ParserException(String message) {
         super(message);
@@ -166,9 +179,48 @@ public class ParserException extends RuntimeException {
     }
 }
 
-// Specific exception
+// Parser initialization errors
 public class ParserInitializationException extends ParserException {
-    // Implementation
+    public ParserInitializationException(String message) {
+        super(message);
+    }
+
+    public ParserInitializationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+
+// File I/O errors
+public class SourceReadException extends ParserException {
+    public SourceReadException(String message) {
+        super(message);
+    }
+
+    public SourceReadException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+
+// AST conversion errors
+public class AstConversionException extends ParserException {
+    public AstConversionException(String message) {
+        super(message);
+    }
+
+    public AstConversionException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+
+// Code generation errors
+public class CodeGenerationException extends ParserException {
+    public CodeGenerationException(String message) {
+        super(message);
+    }
+
+    public CodeGenerationException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
 ```
 
@@ -178,8 +230,18 @@ public class ParserInitializationException extends ParserException {
 // ✅ GOOD: Use specific exceptions
 throw new ParserInitializationException("Failed to initialize parser", cause);
 
-// ❌ BAD: Use generic exceptions
+// ❌ BAD: Use generic RuntimeException
 throw new RuntimeException("Failed to initialize parser");
+
+// ✅ GOOD: Log exception before throwing or wrapping
+try {
+    // Operation that may fail
+} catch (IOException e) {
+    LOGGER.error("Failed to read source file: {}", fileName, e);
+    throw new SourceReadException("Cannot read source file: " + fileName, e);
+}
+
+// ✅ GOOD: Throw exception for invalid input
 
 // ✅ GOOD: Throw exception for invalid input
 public String generate(AstNode node) {
@@ -452,6 +514,13 @@ try {
 - Replaced all Chinese comments with English
 - Updated test DisplayName annotations
 - Improved code maintainability for international teams
+
+#### 6. Exception Hierarchy Enhancement (2025-02-02)
+- Added SourceReadException for file I/O errors
+- Added AstConversionException for AST transformation errors
+- Added CodeGenerationException for code output errors
+- Updated CODING_STANDARDS.md with complete exception handling guidelines
+- Fixed RuntimeException usage in ProcessExecutor.java
 
 ### Technical Debt Tracking
 
