@@ -1,8 +1,10 @@
 package com.ets2jsc.cli;
 
-import com.ets2jsc.CompilationResult;
-import com.ets2jsc.EtsCompiler;
+import com.ets2jsc.compiler.CompilerFactory;
+import com.ets2jsc.compiler.ICompiler;
+import com.ets2jsc.compiler.CompilationResult;
 import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.exception.CompilationException;
 import com.ets2jsc.util.SourceFileFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ public class EtsCompilerLauncher {
     // Command line constants
     private static final String MODE_BATCH = "--batch";
     private static final String MODE_PARALLEL = "--parallel";
+    private static final String MODE_PROJECT = "--project";
     private static final int EXIT_SUCCESS = 0;
     private static final int EXIT_ERROR = 1;
     private static final int REQUIRED_ARGS_MIN = 2;
@@ -55,18 +58,17 @@ public class EtsCompilerLauncher {
         }
 
         CompilerConfig config = CompilerConfig.createDefault();
-        EtsCompiler compiler = new EtsCompiler(config);
 
         try {
             Path inputPath = Path.of(args[ARG_INDEX_INPUT]);
             Path outputPath = Path.of(args[ARG_INDEX_OUTPUT]);
 
             if (args.length > ARG_INDEX_MODE) {
-                return executeBatchCompilation(compiler, inputPath, outputPath, args);
+                return executeBatchCompilation(inputPath, outputPath, args);
             } else {
-                return executeSingleFileCompilation(compiler, inputPath, outputPath);
+                return executeSingleFileCompilation(inputPath, outputPath, config);
             }
-        } catch (EtsCompiler.CompilationException e) {
+        } catch (CompilationException e) {
             LOGGER.error("Compilation failed: {}", e.getMessage());
             if (e.getCause() != null) {
                 LOGGER.error("Cause: {}", e.getCause().getMessage());
@@ -79,19 +81,35 @@ public class EtsCompilerLauncher {
     }
 
     /**
-     * Executes batch compilation (sequential or parallel).
+     * Executes single file compilation.
      *
-     * @param compiler the compiler instance
+     * @param inputPath the input file path
+     * @param outputPath the output file path
+     * @param config the compiler configuration
+     * @return exit code
+     */
+    private static int executeSingleFileCompilation(Path inputPath, Path outputPath, CompilerConfig config)
+            throws CompilationException {
+        try (ICompiler compiler = CompilerFactory.createCompiler(config)) {
+            compiler.compile(inputPath, outputPath);
+            System.out.println("Compilation completed: " + inputPath + " -> " + outputPath);
+            return EXIT_SUCCESS;
+        }
+    }
+
+    /**
+     * Executes batch compilation (sequential, parallel, or project mode).
+     *
      * @param inputPath the input directory path
      * @param outputPath the output directory path
      * @param args command line arguments
      * @return exit code
      */
-    private static int executeBatchCompilation(EtsCompiler compiler, Path inputPath,
-            Path outputPath, String[] args) throws EtsCompiler.CompilationException, IOException {
+    private static int executeBatchCompilation(Path inputPath, Path outputPath, String[] args)
+            throws CompilationException {
         String mode = args[ARG_INDEX_MODE];
 
-        if (!MODE_BATCH.equals(mode) && !MODE_PARALLEL.equals(mode)) {
+        if (!MODE_BATCH.equals(mode) && !MODE_PARALLEL.equals(mode) && !MODE_PROJECT.equals(mode)) {
             LOGGER.error("Unknown option: {}", mode);
             printUsage();
             return EXIT_ERROR;
@@ -103,7 +121,12 @@ public class EtsCompilerLauncher {
             return EXIT_ERROR;
         }
 
-        List<Path> sourceFiles = SourceFileFinder.findSourceFiles(inputPath);
+        List<Path> sourceFiles;
+        try {
+            sourceFiles = SourceFileFinder.findSourceFiles(inputPath);
+        } catch (IOException e) {
+            throw new CompilationException("Failed to find source files: " + inputPath, e);
+        }
         if (sourceFiles.isEmpty()) {
             System.out.println("No ETS/TS files found");
             return EXIT_SUCCESS;
@@ -111,67 +134,93 @@ public class EtsCompilerLauncher {
 
         System.out.println("Found " + sourceFiles.size() + " files");
 
-        if (MODE_PARALLEL.equals(mode)) {
-            return executeParallelCompilation(compiler, sourceFiles, outputPath, args);
-        } else {
-            return executeSequentialBatchCompilation(compiler, sourceFiles, outputPath);
+        // Determine compilation mode
+        ICompiler.CompilationMode compilationMode;
+        if (MODE_PROJECT.equals(mode)) {
+            compilationMode = ICompiler.CompilationMode.SEQUENTIAL;
+            return executeProjectCompilation(inputPath, outputPath, compilationMode);
+        }
+
+        compilationMode = MODE_PARALLEL.equals(mode)
+                ? ICompiler.CompilationMode.PARALLEL
+                : ICompiler.CompilationMode.SEQUENTIAL;
+
+        return executeDirectoryCompilation(inputPath, outputPath, sourceFiles, compilationMode, args);
+    }
+
+    /**
+     * Executes directory compilation with specified mode.
+     *
+     * @param inputPath the input directory path
+     * @param outputPath the output directory path
+     * @param sourceFiles list of source files to compile
+     * @param mode the compilation mode
+     * @param args command line arguments
+     * @return exit code
+     */
+    private static int executeDirectoryCompilation(Path inputPath, Path outputPath,
+            List<Path> sourceFiles, ICompiler.CompilationMode mode, String[] args)
+            throws CompilationException {
+        try (ICompiler compiler = createCompilerForMode(mode, args)) {
+            long startTime = System.currentTimeMillis();
+            CompilationResult result = compiler.compileBatch(sourceFiles, outputPath);
+            long duration = System.currentTimeMillis() - startTime;
+
+            printCompilationResults(result, duration, mode);
+            return result.isAllSuccess() ? EXIT_SUCCESS : EXIT_ERROR;
         }
     }
 
     /**
-     * Executes parallel batch compilation.
+     * Executes project compilation with directory structure preservation.
      *
-     * @param compiler the compiler instance
-     * @param sourceFiles list of source files to compile
-     * @param outputPath the output directory path
-     * @param args command line arguments
+     * @param inputPath the input project directory
+     * @param outputPath the output directory
+     * @param mode the compilation mode
      * @return exit code
      */
-    private static int executeParallelCompilation(EtsCompiler compiler, List<Path> sourceFiles,
-            Path outputPath, String[] args) {
-        int threads = parseThreadCount(args);
-        System.out.println("Using parallel compilation mode, threads: " + threads);
+    private static int executeProjectCompilation(Path inputPath, Path outputPath,
+            ICompiler.CompilationMode mode) throws CompilationException {
+        System.out.println("Compiling project: " + inputPath);
+        System.out.println("Output directory: " + outputPath);
+        System.out.println("Mode: " + mode + ", preserve directory structure, copy resources");
 
-        long startTime = System.currentTimeMillis();
-        CompilationResult result = compiler.compileBatchParallel(sourceFiles, outputPath, threads);
-        long duration = System.currentTimeMillis() - startTime;
+        try (ICompiler compiler = CompilerFactory.createCompiler(CompilerConfig.createDefault(), mode)) {
+            long startTime = System.currentTimeMillis();
+            CompilationResult result = compiler.compileProject(inputPath, outputPath, true);
+            long duration = System.currentTimeMillis() - startTime;
 
-        printCompilationResults(result, duration);
-        return result.isAllSuccess() ? EXIT_SUCCESS : EXIT_ERROR;
+            System.out.println();
+            System.out.println("=== Project Compilation Results ===");
+            System.out.println(result.getSummary());
+            System.out.println("Duration: " + duration + "ms");
+
+            if (!result.isAllSuccess()) {
+                System.out.println();
+                System.out.println("Some files failed to compile.");
+                return EXIT_ERROR;
+            }
+
+            return EXIT_SUCCESS;
+        }
     }
 
     /**
-     * Executes sequential batch compilation.
+     * Creates a compiler for the specified mode with optional thread count.
      *
-     * @param compiler the compiler instance
-     * @param sourceFiles list of source files to compile
-     * @param outputPath the output directory path
-     * @return exit code
+     * @param mode the compilation mode
+     * @param args command line arguments (may contain thread count)
+     * @return a new compiler instance
      */
-    private static int executeSequentialBatchCompilation(EtsCompiler compiler,
-            List<Path> sourceFiles, Path outputPath) throws EtsCompiler.CompilationException, IOException {
-        long startTime = System.currentTimeMillis();
-        compiler.compileBatch(sourceFiles, outputPath);
-        long duration = System.currentTimeMillis() - startTime;
+    private static ICompiler createCompilerForMode(ICompiler.CompilationMode mode, String[] args) {
+        CompilerConfig config = CompilerConfig.createDefault();
 
-        System.out.println("Compiled " + sourceFiles.size() + " files to " + outputPath);
-        System.out.println("Duration: " + duration + "ms");
-        return EXIT_SUCCESS;
-    }
+        if (mode == ICompiler.CompilationMode.PARALLEL && args.length > ARG_INDEX_THREADS) {
+            int threads = parseThreadCount(args);
+            return CompilerFactory.createParallelCompiler(config, threads);
+        }
 
-    /**
-     * Executes single file compilation.
-     *
-     * @param compiler the compiler instance
-     * @param inputPath the input file path
-     * @param outputPath the output file path
-     * @return exit code
-     */
-    private static int executeSingleFileCompilation(EtsCompiler compiler,
-            Path inputPath, Path outputPath) throws EtsCompiler.CompilationException {
-        compiler.compile(inputPath, outputPath);
-        System.out.println("Compilation completed: " + inputPath + " -> " + outputPath);
-        return EXIT_SUCCESS;
+        return CompilerFactory.createCompiler(config, mode);
     }
 
     /**
@@ -200,10 +249,12 @@ public class EtsCompilerLauncher {
      *
      * @param result the compilation result
      * @param duration the compilation duration in milliseconds
+     * @param mode the compilation mode
      */
-    private static void printCompilationResults(CompilationResult result, long duration) {
+    private static void printCompilationResults(CompilationResult result, long duration, ICompiler.CompilationMode mode) {
         System.out.println();
         System.out.println("=== Compilation Results ===");
+        System.out.println("Mode: " + mode);
         System.out.println(result.getSummary());
         System.out.println("Throughput: " + (result.getTotalCount() * 1000.0 / duration) + " files/sec");
 
@@ -211,7 +262,7 @@ public class EtsCompilerLauncher {
             System.out.println();
             System.out.println("Failed files:");
             for (CompilationResult.FileResult failure : result.getFailures()) {
-                System.out.println("  - " + failure.getSourcePath());
+                System.out.println("  - " + failure.getSourcePathAsString());
                 System.out.println("    Error: " + failure.getMessage());
             }
         }
@@ -225,13 +276,15 @@ public class EtsCompilerLauncher {
         System.err.println();
         System.err.println("Modes:");
         System.err.println("  (none)      - Compile single file");
-        System.err.println("  " + MODE_BATCH + "   - Batch compile directory (sequential)");
-        System.err.println("  " + MODE_PARALLEL + " - Batch compile directory (parallel)");
+        System.err.println("  " + MODE_BATCH + "    - Batch compile directory (sequential, flat output)");
+        System.err.println("  " + MODE_PARALLEL + " - Batch compile directory (parallel, flat output)");
+        System.err.println("  " + MODE_PROJECT + "  - Compile project (preserve structure, copy resources)");
         System.err.println();
         System.err.println("Examples:");
         System.err.println("  EtsCompiler src/App.ets build/App.js");
         System.err.println("  EtsCompiler src/main/ets build/dist " + MODE_BATCH);
         System.err.println("  EtsCompiler src/main/ets build/dist " + MODE_PARALLEL);
         System.err.println("  EtsCompiler src/main/ets build/dist " + MODE_PARALLEL + " 8");
+        System.err.println("  EtsCompiler src/Project build/Project " + MODE_PROJECT);
     }
 }

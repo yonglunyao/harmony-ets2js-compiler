@@ -1,6 +1,5 @@
 package com.ets2jsc.integration;
 
-import com.ets2jsc.EtsCompiler;
 import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.ast.SourceFile;
 import com.ets2jsc.generator.CodeGenerator;

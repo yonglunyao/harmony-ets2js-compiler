@@ -1,5 +1,7 @@
 package com.ets2jsc.ast;
 
+import lombok.Getter;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,6 +9,7 @@ import java.util.Map;
  * Represents a decorator in ETS.
  * Decorators like @Component, @State, @Prop, @Builder, etc.
  */
+@Getter
 public class Decorator implements AstNode {
     private String name;
     private Map<String, Object> arguments;
@@ -27,16 +30,8 @@ public class Decorator implements AstNode {
         return visitor.visit(this);
     }
 
-    public String getName() {
-        return name;
-    }
-
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Map<String, Object> getArguments() {
-        return arguments;
     }
 
     public void setArgument(String key, Object value) {
@@ -45,10 +40,6 @@ public class Decorator implements AstNode {
 
     public Object getArgument(String key) {
         return arguments.get(key);
-    }
-
-    public String getRawExpression() {
-        return rawExpression;
     }
 
     public void setRawExpression(String rawExpression) {

@@ -1,6 +1,7 @@
 package com.ets2jsc.integration;
 
-import com.ets2jsc.EtsCompiler;
+import com.ets2jsc.compiler.CompilerFactory;
+import com.ets2jsc.compiler.ICompiler;
 import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.ast.SourceFile;
 import com.ets2jsc.generator.CodeGenerator;
@@ -38,12 +39,12 @@ class EmptyOutputDetectionTest {
         String sourceCode = Files.readString(Path.of(sourcePath));
 
         CompilerConfig config = CompilerConfig.createDefault();
-        EtsCompiler compiler = new EtsCompiler(config);
-
         Path outputPath = Path.of("target/test/GlobalContext.js");
         Files.createDirectories(outputPath.getParent());
 
-        compiler.compile(Path.of(sourcePath), outputPath);
+        try (ICompiler compiler = CompilerFactory.createCompiler(config)) {
+            compiler.compile(Path.of(sourcePath), outputPath);
+        }
 
         String output = Files.readString(outputPath);
 

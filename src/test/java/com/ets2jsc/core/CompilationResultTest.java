@@ -1,6 +1,6 @@
 package com.ets2jsc.core;
 
-import com.ets2jsc.CompilationResult;
+import com.ets2jsc.compiler.CompilationResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 

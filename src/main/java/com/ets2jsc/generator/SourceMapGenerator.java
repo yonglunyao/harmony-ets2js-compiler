@@ -1,5 +1,7 @@
 package com.ets2jsc.generator;
 
+import lombok.Getter;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +17,7 @@ public class SourceMapGenerator {
     private int lastOriginalLine = 0;
     private int lastOriginalColumn = 0;
 
+    @Getter
     public static class SourceMapping {
         private final int generatedLine;
         private final int generatedColumn;
@@ -31,25 +34,6 @@ public class SourceMapGenerator {
             this.name = name;
         }
 
-        public int getGeneratedLine() {
-            return generatedLine;
-        }
-
-        public int getGeneratedColumn() {
-            return generatedColumn;
-        }
-
-        public int getOriginalLine() {
-            return originalLine;
-        }
-
-        public int getOriginalColumn() {
-            return originalColumn;
-        }
-
-        public String getName() {
-            return name;
-        }
     }
 
     public SourceMapGenerator() {

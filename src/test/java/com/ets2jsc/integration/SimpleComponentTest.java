@@ -1,7 +1,5 @@
 package com.ets2jsc.integration;
 
-import com.ets2jsc.EtsCompiler;
-import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.ast.AstNode;
 import com.ets2jsc.ast.ClassDeclaration;
 import com.ets2jsc.ast.SourceFile;
@@ -104,9 +102,6 @@ public class SimpleComponentTest {
         );
 
         // Full compilation pipeline
-        CompilerConfig config = CompilerConfig.createDefault();
-        EtsCompiler compiler = new EtsCompiler(config);
-
         // Parse
         AstBuilder parser = new AstBuilder();
         SourceFile sourceFile = parser.build("simple-component.ets", sourceCode);

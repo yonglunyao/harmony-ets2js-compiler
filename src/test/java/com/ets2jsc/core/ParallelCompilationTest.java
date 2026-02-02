@@ -1,8 +1,10 @@
 package com.ets2jsc.core;
 
-import com.ets2jsc.CompilationResult;
-import com.ets2jsc.EtsCompiler;
+import com.ets2jsc.compiler.CompilerFactory;
+import com.ets2jsc.compiler.ICompiler;
+import com.ets2jsc.compiler.CompilationResult;
 import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.exception.CompilationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -51,23 +53,23 @@ class ParallelCompilationTest {
 
         // use parallel compilation
         CompilerConfig config = CompilerConfig.createDefault();
-        EtsCompiler compiler = new EtsCompiler(config);
-
         List<Path> sourceFiles = Files.walk(sourceDir)
             .filter(p -> p.toString().endsWith(".ets"))
             .toList();
 
-        CompilationResult result = compiler.compileBatchParallel(sourceFiles, outputDir, 2);
+        try (ICompiler compiler = CompilerFactory.createParallelCompiler(config, 2)) {
+            CompilationResult result = compiler.compileBatch(sourceFiles, outputDir);
 
-        // verify results
-        assertEquals(5, result.getTotalCount(), "should compile 5 files");
-        assertTrue(result.isAllSuccess(), "all files should compile successfully");
-        assertTrue(result.getDurationMs() >= 0, "duration should be non-negative");
+            // verify results
+            assertEquals(5, result.getTotalCount(), "should compile 5 files");
+            assertTrue(result.isAllSuccess(), "all files should compile successfully");
+            assertTrue(result.getDurationMs() >= 0, "duration should be non-negative");
 
-        // verify output files exist
-        for (int i = 1; i <= 5; i++) {
-            Path outputFile = outputDir.resolve("Test" + i + ".js");
-            assertTrue(Files.exists(outputFile), "output file should exist: " + outputFile);
+            // verify output files exist
+            for (int i = 1; i <= 5; i++) {
+                Path outputFile = outputDir.resolve("Test" + i + ".js");
+                assertTrue(Files.exists(outputFile), "output file should exist: " + outputFile);
+            }
         }
     }
 
@@ -112,31 +114,33 @@ class ParallelCompilationTest {
             .toList();
 
         // sequential compilation
-        EtsCompiler compiler1 = new EtsCompiler(config);
         long sequentialStart = System.currentTimeMillis();
-        for (Path sourceFile : sourceFiles) {
-            String fileName = sourceFile.getFileName().toString();
-            Path outputPath = outputDir1.resolve(fileName.replace(".ets", ".js"));
-            compiler1.compile(sourceFile, outputPath);
+        try (ICompiler compiler1 = CompilerFactory.createSequentialCompiler(config)) {
+            for (Path sourceFile : sourceFiles) {
+                String fileName = sourceFile.getFileName().toString();
+                Path outputPath = outputDir1.resolve(fileName.replace(".ets", ".js"));
+                compiler1.compile(sourceFile, outputPath);
+            }
         }
         long sequentialTime = System.currentTimeMillis() - sequentialStart;
 
         // parallel compilation
-        EtsCompiler compiler2 = new EtsCompiler(config);
         long parallelStart = System.currentTimeMillis();
-        CompilationResult result = compiler2.compileBatchParallel(sourceFiles, outputDir2, 4);
-        long parallelTime = System.currentTimeMillis() - parallelStart;
+        try (ICompiler compiler2 = CompilerFactory.createParallelCompiler(config, 4)) {
+            CompilationResult result = compiler2.compileBatch(sourceFiles, outputDir2);
+            long parallelTime = System.currentTimeMillis() - parallelStart;
 
-        // verify results
-        assertTrue(result.isAllSuccess(), "parallel compilation should succeed");
+            // verify results
+            assertTrue(result.isAllSuccess(), "parallel compilation should succeed");
 
-        // output performance comparison
-        System.out.println("=== Performance Comparison ===");
-        System.out.println("Files: " + fileCount);
-        System.out.println("sequential compilationDuration: " + sequentialTime + "ms");
-        System.out.println("parallel compilationDuration: " + parallelTime + "ms");
-        System.out.println("Performance improvement: " + ((sequentialTime - parallelTime) * 100.0 / sequentialTime) + "%");
-        System.out.println("Throughput: " + (fileCount * 1000.0 / parallelTime) + " files/sec");
+            // output performance comparison
+            System.out.println("=== Performance Comparison ===");
+            System.out.println("Files: " + fileCount);
+            System.out.println("sequential compilationDuration: " + sequentialTime + "ms");
+            System.out.println("parallel compilationDuration: " + parallelTime + "ms");
+            System.out.println("Performance improvement: " + ((sequentialTime - parallelTime) * 100.0 / sequentialTime) + "%");
+            System.out.println("Throughput: " + (fileCount * 1000.0 / parallelTime) + " files/sec");
+        }
     }
 
     /**
@@ -159,21 +163,21 @@ class ParallelCompilationTest {
             "@Component\nstruct Good2 { build() { Column() {} } }");
 
         CompilerConfig config = CompilerConfig.createDefault();
-        EtsCompiler compiler = new EtsCompiler(config);
-
         List<Path> sourceFiles = Files.walk(sourceDir)
             .filter(p -> p.toString().endsWith(".ets"))
             .toList();
 
-        CompilationResult result = compiler.compileBatchParallel(sourceFiles, outputDir, 2);
+        try (ICompiler compiler = CompilerFactory.createParallelCompiler(config, 2)) {
+            CompilationResult result = compiler.compileBatch(sourceFiles, outputDir);
 
-        // verify results - should process all files
-        assertTrue(result.getTotalCount() >= 0, "should process files");
+            // verify results - should process all files
+            assertTrue(result.getTotalCount() >= 0, "should process files");
 
-        // verify results summary is available
-        String summary = result.getSummary();
-        assertNotNull(summary, "summary should not be empty");
-        assertTrue(summary.contains("Total"), "summary should contain total information");
+            // verify results summary is available
+            String summary = result.getSummary();
+            assertNotNull(summary, "summary should not be empty");
+            assertTrue(summary.contains("Total"), "summary should contain total information");
+        }
     }
 
     /**
@@ -215,18 +219,19 @@ class ParallelCompilationTest {
             Path outputDir = tempDir.resolve("output" + threads);
             Files.createDirectories(outputDir);
 
-            EtsCompiler compiler = new EtsCompiler(config);
-            long startTime = System.currentTimeMillis();
-            CompilationResult result = compiler.compileBatchParallel(sourceFiles, outputDir, threads);
-            long duration = System.currentTimeMillis() - startTime;
+            try (ICompiler compiler = CompilerFactory.createParallelCompiler(config, threads)) {
+                long startTime = System.currentTimeMillis();
+                CompilationResult result = compiler.compileBatch(sourceFiles, outputDir);
+                long duration = System.currentTimeMillis() - startTime;
 
-            System.out.println("Threads: " + threads);
-            System.out.println("  Duration: " + duration + "ms");
-            System.out.println("  Throughput: " + (fileCount * 1000.0 / duration) + " files/sec");
-            System.out.println("  Result: " + result.getSummary());
-            System.out.println();
+                System.out.println("Threads: " + threads);
+                System.out.println("  Duration: " + duration + "ms");
+                System.out.println("  Throughput: " + (fileCount * 1000.0 / duration) + " files/sec");
+                System.out.println("  Result: " + result.getSummary());
+                System.out.println();
 
-            assertTrue(result.isAllSuccess(), "compilation should succeed");
+                assertTrue(result.isAllSuccess(), "compilation should succeed");
+            }
         }
     }
 }
