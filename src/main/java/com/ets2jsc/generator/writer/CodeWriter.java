@@ -2,7 +2,6 @@ package com.ets2jsc.generator.writer;
 
 import com.ets2jsc.constant.Symbols;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

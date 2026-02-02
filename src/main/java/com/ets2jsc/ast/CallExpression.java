@@ -10,12 +10,12 @@ public class CallExpression implements AstNode {
     private final List<AstNode> arguments;
     private String functionName;
     private AstNode callee;
-    private boolean isComponentCall;
+    private boolean _isComponentCall;
 
     public CallExpression(String functionName) {
         this.functionName = functionName;
         this.arguments = new ArrayList<>();
-        this.isComponentCall = false;
+        this._isComponentCall = false;
     }
 
     @Override
@@ -53,11 +53,11 @@ public class CallExpression implements AstNode {
     }
 
     public boolean isComponentCall() {
-        return isComponentCall;
+        return _isComponentCall;
     }
 
     public void setComponentCall(boolean componentCall) {
-        isComponentCall = componentCall;
+        _isComponentCall = componentCall;
     }
 
     /**

@@ -4,7 +4,6 @@ import com.ets2jsc.ast.*;
 import com.ets2jsc.ast.ComponentStatement.ComponentPart;
 import com.ets2jsc.ast.ComponentStatement.PartKind;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

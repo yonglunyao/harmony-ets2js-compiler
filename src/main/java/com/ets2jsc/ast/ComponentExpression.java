@@ -10,14 +10,14 @@ import java.util.List;
  */
 public class ComponentExpression implements AstNode {
     private String componentName;
-    private List<AstNode> arguments;
-    private List<MethodCall> chainedCalls;
-    private List<AstNode> children;
+    private final List<AstNode> arguments;
+    private final List<MethodCall> chainedCalls;
+    private final List<AstNode> children;
     private String objectLiteral;
 
     public static class MethodCall {
         private String methodName;
-        private List<AstNode> arguments;
+        private final List<AstNode> arguments;
 
         public MethodCall(String methodName) {
             this.methodName = methodName;

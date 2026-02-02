@@ -13,18 +13,18 @@ package com.ets2jsc.ast;
 public class ExportStatement implements AstNode {
     private final AstNode declarationNode;
     private final String declarationString;
-    private final boolean isTypeExport;
+    private final boolean _isTypeExport;
 
     public ExportStatement(AstNode declaration, boolean isTypeExport) {
         this.declarationNode = declaration;
-        this.declarationString = null;
-        this.isTypeExport = isTypeExport;
+        this.declarationString = "";
+        this._isTypeExport = isTypeExport;
     }
 
     public ExportStatement(AstNode declarationNode, boolean isTypeExport, String declarationString) {
         this.declarationNode = declarationNode;
         this.declarationString = declarationString;
-        this.isTypeExport = isTypeExport;
+        this._isTypeExport = isTypeExport;
     }
 
     public AstNode getDeclarationNode() {
@@ -36,7 +36,7 @@ public class ExportStatement implements AstNode {
     }
 
     public boolean isTypeExport() {
-        return isTypeExport;
+        return _isTypeExport;
     }
 
     @Override
@@ -56,7 +56,7 @@ public class ExportStatement implements AstNode {
     @Override
     public String toString() {
         // Type exports are removed in JS
-        if (isTypeExport) {
+        if (_isTypeExport) {
             return "";
         }
 
@@ -66,11 +66,11 @@ public class ExportStatement implements AstNode {
         }
 
         // Otherwise, use the declaration node
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
         sb.append("export ");
 
         if (declarationNode != null) {
-            String declStr = declarationNode.toString();
+            final String declStr = declarationNode.toString();
             sb.append(declStr);
         }
 

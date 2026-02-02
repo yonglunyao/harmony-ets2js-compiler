@@ -238,10 +238,10 @@ public class CompilationContext {
      */
     public String getSummary() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Source: ").append(sourcePath != null ? sourcePath : "N/A").append("\n");
-        sb.append("Output: ").append(outputPath != null ? outputPath : "N/A").append("\n");
-        sb.append("Warnings: ").append(warnings.size()).append("\n");
-        sb.append("Errors: ").append(errors.size()).append("\n");
+        sb.append("Source: ").append(sourcePath != null ? sourcePath : "N/A").append('\n');
+        sb.append("Output: ").append(outputPath != null ? outputPath : "N/A").append('\n');
+        sb.append("Warnings: ").append(warnings.size()).append('\n');
+        sb.append("Errors: ").append(errors.size()).append('\n');
         sb.append("Time: ").append(getElapsedTime()).append("ms");
         return sb.toString();
     }

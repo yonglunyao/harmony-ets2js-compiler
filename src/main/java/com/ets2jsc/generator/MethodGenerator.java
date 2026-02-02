@@ -2,7 +2,6 @@ package com.ets2jsc.generator;
 
 import com.ets2jsc.ast.MethodDeclaration;
 import com.ets2jsc.ast.*;
-import com.ets2jsc.config.CompilerConfig;
 
 /**
  * Generates code for method declarations.

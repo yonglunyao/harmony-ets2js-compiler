@@ -92,7 +92,7 @@ public final class BuilderMethodTransformer {
         sb.append("const ").append(BUILDER_VAR_NAME).append(" = new ")
           .append(BUILDER_PARAM_TYPE).append("();\n");
 
-        sb.append("this.").append(methodName).append("(").append(BUILDER_VAR_NAME);
+        sb.append("this.").append(methodName).append('(').append(BUILDER_VAR_NAME);
 
         if (!innerArgs.isEmpty()) {
             sb.append(", ").append(innerArgs);

@@ -47,18 +47,18 @@ public class ImportStatement implements AstNode {
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("import ");
+        final StringBuilder sb = new StringBuilder("import ");
 
         if (specifiers.isEmpty()) {
             // Side effect import: import 'module'
-            sb.append("'").append(module).append("'");
+            sb.append('\'').append(module).append('\'');
         } else {
             // Regular import with specifiers
             sb.append(buildImportClause());
-            sb.append(" from '").append(module).append("'");
+            sb.append(" from '").append(module).append('\'');
         }
 
-        sb.append(";");
+        sb.append(';');
         return sb.toString();
     }
 
@@ -67,11 +67,11 @@ public class ImportStatement implements AstNode {
      * CC: 2 (null check + loop)
      */
     private String buildImportClause() {
-        SpecifierClassifier classifier = classifySpecifiers();
-        List<String> parts = new ArrayList<>();
+        final SpecifierClassifier classifier = classifySpecifiers();
+        final List<String> parts = new ArrayList<>();
 
         // Add default imports
-        for (ImportSpecifier spec : classifier.defaultSpecs) {
+        for (final ImportSpecifier spec : classifier.defaultSpecs) {
             parts.add(spec.getLocalName());
         }
 
@@ -81,7 +81,7 @@ public class ImportStatement implements AstNode {
         }
 
         // Add namespace imports
-        for (ImportSpecifier spec : classifier.namespaceSpecs) {
+        for (final ImportSpecifier spec : classifier.namespaceSpecs) {
             parts.add("* as " + spec.getLocalName());
         }
 
@@ -93,9 +93,9 @@ public class ImportStatement implements AstNode {
      * CC: 2 (loop + ternary)
      */
     private String buildNamedImports(List<ImportSpecifier> namedSpecs) {
-        StringBuilder namedPart = new StringBuilder("{ ");
+        final StringBuilder namedPart = new StringBuilder("{ ");
         for (int i = 0; i < namedSpecs.size(); i++) {
-            ImportSpecifier spec = namedSpecs.get(i);
+            final ImportSpecifier spec = namedSpecs.get(i);
             if (i > 0) {
                 namedPart.append(", ");
             }

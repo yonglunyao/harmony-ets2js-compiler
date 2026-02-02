@@ -13,13 +13,13 @@ public class MethodDeclaration implements AstNode {
     private String name;
     private String returnType;
     private AstNode body;
-    private boolean isAsync;
-    private boolean isStatic;
+    private boolean _isAsync;
+    private boolean _isStatic;
 
     public static class Parameter {
         private String name;
         private String type;
-        private boolean hasDefault;
+        private boolean _hasDefault;
         private String defaultValue;
 
         public Parameter(String name) {
@@ -48,11 +48,11 @@ public class MethodDeclaration implements AstNode {
         }
 
         public boolean hasDefault() {
-            return hasDefault;
+            return _hasDefault;
         }
 
         public void setHasDefault(boolean hasDefault) {
-            this.hasDefault = hasDefault;
+            _hasDefault = hasDefault;
         }
 
         public String getDefaultValue() {
@@ -68,8 +68,8 @@ public class MethodDeclaration implements AstNode {
         this.name = name;
         this.parameters = new ArrayList<>();
         this.decorators = new ArrayList<>();
-        this.isAsync = false;
-        this.isStatic = false;
+        this._isAsync = false;
+        this._isStatic = false;
     }
 
     @Override
@@ -123,19 +123,19 @@ public class MethodDeclaration implements AstNode {
     }
 
     public boolean isAsync() {
-        return isAsync;
+        return _isAsync;
     }
 
     public void setAsync(boolean async) {
-        isAsync = async;
+        _isAsync = async;
     }
 
     public boolean isStatic() {
-        return isStatic;
+        return _isStatic;
     }
 
     public void setStatic(boolean staticFlag) {
-        isStatic = staticFlag;
+        _isStatic = staticFlag;
     }
 
     /**

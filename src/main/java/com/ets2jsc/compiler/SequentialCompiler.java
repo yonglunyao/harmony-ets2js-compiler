@@ -4,7 +4,6 @@ import com.ets2jsc.config.CompilerConfig;
 import com.ets2jsc.exception.CompilationException;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

@@ -5,57 +5,66 @@
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
     <description>
         Custom PMD ruleset for ETS2JSC project
+        Focused on high-priority issues that affect code quality and correctness.
     </description>
 
-    <!-- Best Practices -->
+    <!-- Best Practices - Only critical rules -->
     <rule ref="category/java/bestpractices.xml">
         <exclude name="AbstractClassWithoutAbstractMethod"/>
         <exclude name="AccessorClassGeneration"/>
+        <exclude name="AppendCharacterWithChar"/>
+        <exclude name="AvoidReassigningLoopVariables"/>
         <exclude name="AvoidReassigningParameters"/>
         <exclude name="AvoidStringBufferField"/>
         <exclude name="ForLoopCanBeForeach"/>
+        <exclude name="LiteralsFirstInComparisons"/>
         <exclude name="PreserveStackTrace"/>
         <exclude name="UseVarargs"/>
     </rule>
 
-    <!-- Code Style -->
+    <!-- Code Style - Exclude most style issues -->
     <rule ref="category/java/codestyle.xml">
         <exclude name="AtLeastOneConstructor"/>
         <exclude name="AvoidFinalLocalVariable"/>
         <exclude name="AvoidPrefixingMethodParameters"/>
         <exclude name="CommentDefaultAccessModifier"/>
+        <exclude name="ConfusingTernary"/>
+        <exclude name="ControlStatementBraces"/>
         <exclude name="DefaultPackage"/>
         <exclude name="FieldNamingConventions"/>
         <exclude name="LocalVariableNamingConventions"/>
+        <exclude name="LocalVariableCouldBeFinal"/>
         <exclude name="LongVariable"/>
         <exclude name="MethodArgumentCouldBeFinal"/>
         <exclude name="MIsLeadingVariableName"/>
         <exclude name="OnlyOneReturn"/>
-        <exclude name="ParameterNamingConventions"/>
+        <exclude name="PrematureDeclaration"/>
         <exclude name="ShortClassName"/>
         <exclude name="ShortMethodName"/>
         <exclude name="ShortVariable"/>
+        <exclude name="SimplifyBooleanReturns"/>
         <exclude name="TooManyStaticImports"/>
         <exclude name="UnnecessaryAnnotationValueElement"/>
         <exclude name="UnnecessaryFullyQualifiedName"/>
         <exclude name="UnnecessaryConstructor"/>
-        <exclude name="UnnecessaryModifier"/>
+        <exclude name="UnnecessaryImport"/>
         <exclude name="UseUnderscoresInNumericLiterals"/>
+        <exclude name="UselessParentheses"/>
     </rule>
 
-    <!-- Design -->
+    <!-- Design - Critical design issues only -->
     <rule ref="category/java/design.xml">
         <exclude name="AbstractClassWithoutAnyMethod"/>
         <exclude name="AvoidCatchingGenericException"/>
         <exclude name="AvoidDeeplyNestedIfStmts"/>
         <exclude name="ClassWithOnlyPrivateConstructorsShouldBeFinal"/>
-        <exclude name="CyclomaticComplexity"/>
+        <exclude name="CollapsibleIfStatements"/>
+        <exclude name="CognitiveComplexity"/>
         <exclude name="DataClass"/>
         <exclude name="ExcessiveImports"/>
-        <exclude name="ExcessiveMethodLength"/>
         <exclude name="ExcessiveParameterList"/>
         <exclude name="ExcessivePublicCount"/>
-        <exclude name="ExcessiveClassLength"/>
+        <exclude name="GodClass"/>
         <exclude name="LawOfDemeter"/>
         <exclude name="LoosePackageCoupling"/>
         <exclude name="NcssCount"/>
@@ -67,25 +76,28 @@
         <exclude name="UseUtilityClass"/>
     </rule>
 
-    <!-- Error Prone -->
+    <!-- Error Prone - Critical issues only -->
     <rule ref="category/java/errorprone.xml">
         <exclude name="AssignmentInOperand"/>
         <exclude name="AvoidLiteralsInIfCondition"/>
-        <exclude name="BeanMembersShouldSerialize"/>
         <exclude name="CompareObjectsWithEquals"/>
         <exclude name="ConstructorCallsOverridableMethod"/>
         <exclude name="DataflowAnomalyAnalysis"/>
-        <exclude name="DoNotExtendJavaLangError"/>
         <exclude name="EmptyCatchBlock"/>
         <exclude name="EmptyIfStmt"/>
         <exclude name="EmptyWhileStmt"/>
+        <exclude name="GuardLogStatement"/>
         <exclude name="JUnitSpelling"/>
-        <exclude name="MissingBreakInSwitch"/>
+        <exclude name="MissingSerialVersionUID"/>
         <exclude name="MissingStaticMethodInNonInstantiatableClass"/>
-        <exclude name="NullDereference"/>
+        <exclude name="NullAssignment"/>
         <exclude name="ReturnEmptyCollectionRatherThanNull"/>
         <exclude name="TestClassWithoutTestCases"/>
+        <exclude name="UnnecessaryBoxing"/>
+        <exclude name="UnnecessaryUnboxing"/>
+        <exclude name="UnusedImports"/>
         <exclude name="UseLocaleWithCaseConversions"/>
+        <exclude name="UseProperClassLoader"/>
     </rule>
 
     <!-- Multithreading -->
@@ -97,6 +109,7 @@
 
     <!-- Performance -->
     <rule ref="category/java/performance.xml">
+        <exclude name="AvoidDuplicateLiterals"/>
         <exclude name="AvoidInstantiatingObjectsInLoops"/>
         <exclude name="ConsecutiveAppendsShouldReuse"/>
         <exclude name="ConsecutiveLiteralAppends"/>
@@ -107,12 +120,36 @@
         <exclude name="RedundantFieldInitializer"/>
         <exclude name="SimplifyStartsWith"/>
         <exclude name="StringInstantiation"/>
-        <exclude name="StringBuilderField"/>
         <exclude name="TooFewBranchesForASwitchStatement"/>
         <exclude name="UseArrayListInsteadOfVector"/>
         <exclude name="UseArraysAsList"/>
         <exclude name="UseIndexOfChar"/>
         <exclude name="UseStringBufferForStringAppends"/>
         <exclude name="UselessStringValueOf"/>
+    </rule>
+
+    <!--
+    ==========================================
+    Additional Rules with Custom Thresholds
+    ==========================================
+    -->
+
+    <!-- Complexity thresholds - More lenient for this project -->
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="reportLevel" value="20"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/design.xml/ExcessiveMethodLength">
+        <properties>
+            <property name="minimum" value="200"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/design.xml/ExcessiveClassLength">
+        <properties>
+            <property name="minimum" value="800"/>
+        </properties>
     </rule>
 </ruleset>

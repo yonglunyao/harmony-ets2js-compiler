@@ -97,14 +97,14 @@ class EtsCompilerLauncherTest {
         Path inputDir = tempDir.resolve("input");
         Files.createDirectories(inputDir);
 
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(outContent));
+        ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(errContent));
 
         String[] args = {inputDir.toString(), tempDir.resolve("output").toString(), "--batch"};
         int exitCode = EtsCompilerLauncher.execute(args);
 
         assertEquals(0, exitCode);
-        assertTrue(outContent.toString().contains("No ETS/TS files found"));
+        assertTrue(errContent.toString().contains("No ETS/TS files found"));
     }
 
     @Test

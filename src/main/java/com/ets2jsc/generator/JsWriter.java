@@ -26,39 +26,92 @@ public class JsWriter {
      * Writes JavaScript code to a file.
      */
     public void write(Path outputPath, String code) throws IOException {
-        // Ensure parent directory exists
+        ensureParentDirectoryExists(outputPath);
+        byte[] utf8Bytes = sanitizeCodeToUtf8(code);
+        Files.write(outputPath, utf8Bytes);
+    }
+
+    /**
+     * Ensures the parent directory exists, creating it if necessary.
+     *
+     * @param outputPath the output path whose parent directory should exist
+     * @throws IOException if directory creation fails
+     */
+    private void ensureParentDirectoryExists(Path outputPath) throws IOException {
         Path parentDir = outputPath.getParent();
         if (parentDir != null && !Files.exists(parentDir)) {
             Files.createDirectories(parentDir);
         }
+    }
 
-        // Validate and sanitize the string before writing
-        byte[] utf8Bytes;
+    /**
+     * Sanitizes the code to UTF-8 bytes, replacing invalid characters.
+     *
+     * @param code the code to sanitize
+     * @return UTF-8 encoded bytes of the sanitized code
+     */
+    private byte[] sanitizeCodeToUtf8(String code) {
         try {
-            utf8Bytes = code.getBytes(StandardCharsets.UTF_8);
+            return code.getBytes(StandardCharsets.UTF_8);
         } catch (Exception e) {
-            // If getBytes fails, filter out problematic characters
-            StringBuilder sanitized = new StringBuilder();
-            for (int i = 0; i < code.length(); i++) {
-                char c = code.charAt(i);
-                if (Character.isHighSurrogate(c) && i + 1 < code.length() && Character.isLowSurrogate(code.charAt(i + 1))) {
-                    // Valid surrogate pair
-                    sanitized.append(c);
-                    sanitized.append(code.charAt(i + 1));
-                    i += PAIR_SKIP_INCREMENT;
-                } else if (!Character.isHighSurrogate(c) && !Character.isLowSurrogate(c) && c <= BMP_MAX_VALUE) {
-                    // Valid BMP character
-                    sanitized.append(c);
-                } else {
-                    // Invalid character, replace with placeholder
-                    LOGGER.warn("Replacing invalid character at index {}: U+{}", i, Integer.toHexString(c));
-                    sanitized.append(UNICODE_REPLACEMENT_CHARACTER);
-                }
-            }
-            utf8Bytes = sanitized.toString().getBytes(StandardCharsets.UTF_8);
+            return sanitizeInvalidCharacters(code);
         }
+    }
 
-        Files.write(outputPath, utf8Bytes);
+    /**
+     * Filters out problematic characters from the code.
+     *
+     * @param code the code containing potentially invalid characters
+     * @return UTF-8 encoded bytes of the sanitized code
+     */
+    private byte[] sanitizeInvalidCharacters(String code) {
+        StringBuilder sanitized = new StringBuilder();
+        for (int i = 0; i < code.length(); i++) {
+            char c = code.charAt(i);
+            if (isValidSurrogatePair(code, i, c)) {
+                i += PAIR_SKIP_INCREMENT;
+            } else if (isValidBmpCharacter(c)) {
+                sanitized.append(c);
+            } else {
+                logInvalidCharacter(i, c);
+                sanitized.append(UNICODE_REPLACEMENT_CHARACTER);
+            }
+        }
+        return sanitized.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Checks if the character at the given index forms a valid surrogate pair.
+     *
+     * @param code the full code string
+     * @param i the current index
+     * @param c the current character
+     * @return true if this is the high surrogate of a valid pair
+     */
+    private boolean isValidSurrogatePair(String code, int i, char c) {
+        return Character.isHighSurrogate(c)
+                && i + 1 < code.length()
+                && Character.isLowSurrogate(code.charAt(i + 1));
+    }
+
+    /**
+     * Checks if the character is a valid BMP character.
+     *
+     * @param c the character to validate
+     * @return true if valid BMP character
+     */
+    private boolean isValidBmpCharacter(char c) {
+        return !Character.isHighSurrogate(c) && !Character.isLowSurrogate(c) && c <= BMP_MAX_VALUE;
+    }
+
+    /**
+     * Logs a warning about an invalid character.
+     *
+     * @param index the index of the invalid character
+     * @param c the invalid character
+     */
+    private void logInvalidCharacter(int index, char c) {
+        LOGGER.warn("Replacing invalid character at index {}: U+{}", index, Integer.toHexString(c));
     }
 
     /**

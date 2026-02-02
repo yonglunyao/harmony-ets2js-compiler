@@ -12,9 +12,9 @@ public class PropertyDeclaration implements AstNode {
     private String name;
     private String type;
     private String initializer;
-    private List<Decorator> decorators;
+    private final List<Decorator> decorators;
     private Visibility visibility;
-    private boolean isReadOnly;
+    private boolean _isReadOnly;
 
     public enum Visibility {
         PUBLIC, PRIVATE, PROTECTED, INTERNAL
@@ -24,7 +24,7 @@ public class PropertyDeclaration implements AstNode {
         this.name = name;
         this.decorators = new ArrayList<>();
         this.visibility = Visibility.INTERNAL;
-        this.isReadOnly = false;
+        this._isReadOnly = false;
     }
 
     @Override
@@ -95,11 +95,11 @@ public class PropertyDeclaration implements AstNode {
     }
 
     public boolean isReadOnly() {
-        return isReadOnly;
+        return _isReadOnly;
     }
 
     public void setReadOnly(boolean readOnly) {
-        isReadOnly = readOnly;
+        _isReadOnly = readOnly;
     }
 
     /**

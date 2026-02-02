@@ -133,7 +133,7 @@ public class BuildMethodTransformer implements AstTransformer {
         String lines[] = body.split("\\n");
         for (String line : lines) {
             String transformed = transformLine(line);
-            result.append(transformed).append("\n");
+            result.append(transformed).append('\n');
         }
 
         return result.toString();
@@ -180,7 +180,7 @@ public class BuildMethodTransformer implements AstTransformer {
         result.append(");");
 
         // Pop component
-        result.append("\n").append(componentName).append(".pop();");
+        result.append('\n').append(componentName).append(".pop();");
 
         return result.toString();
     }

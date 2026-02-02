@@ -52,22 +52,22 @@ public abstract class BaseCompiler implements ICompiler {
             outputPath = outputPath.normalize();
 
             // Step 1: Read source file
-            String sourceCode = Files.readString(sourcePath);
+            final String sourceCode = Files.readString(sourcePath);
 
             // Step 2: Parse source to AST
-            AstBuilder astBuilder = new AstBuilder();
-            SourceFile sourceFile = astBuilder.build(sourcePath.toString(), sourceCode);
+            final AstBuilder astBuilder = new AstBuilder();
+            final SourceFile sourceFile = astBuilder.build(sourcePath.toString(), sourceCode);
 
             // Step 3: Transform AST
-            AstNode transformedAst = transformAst(sourceFile);
+            final AstNode transformedAst = transformAst(sourceFile);
 
             // Step 4: Generate JavaScript code
-            String jsCode = generateCode(transformedAst);
+            final String jsCode = generateCode(transformedAst);
 
             // Step 5: Write output
             if (config.isGenerateSourceMap()) {
-                String sourceMap = generateSourceMap(sourceFile);
-                Path sourceMapPath = Path.of(outputPath + ".map");
+                final String sourceMap = generateSourceMap(sourceFile);
+                final Path sourceMapPath = Path.of(outputPath + ".map");
                 jsWriter.writeWithSourceMap(outputPath, jsCode, sourceMapPath.getFileName().toString());
                 jsWriter.write(sourceMapPath, sourceMap);
             } else {
@@ -82,27 +82,27 @@ public abstract class BaseCompiler implements ICompiler {
     @Override
     public CompilationResult compileBatchWithStructure(List<Path> sourceFiles, Path baseDir, Path outputDir)
             throws CompilationException {
-        List<CompilationResult.FileResult> results = new ArrayList<>();
+        final List<CompilationResult.FileResult> results = new ArrayList<>();
         int successCount = 0;
         int failureCount = 0;
 
-        for (Path sourceFile : sourceFiles) {
+        for (final Path sourceFile : sourceFiles) {
             try {
                 // Calculate relative path from base directory
-                Path relativePath = baseDir.relativize(sourceFile);
+                final Path relativePath = baseDir.relativize(sourceFile);
 
                 // Transform source file extension to .js
-                String relativePathStr = relativePath.toString();
-                String outputPathStr = relativePathStr
+                final String relativePathStr = relativePath.toString();
+                final String outputPathStr = relativePathStr
                         .replace(".ets", ".js")
                         .replace(".ts", ".js")
                         .replace(".tsx", ".js")
                         .replace(".jsx", ".js");
 
-                Path outputPath = outputDir.resolve(outputPathStr);
+                final Path outputPath = outputDir.resolve(outputPathStr);
 
                 // Create parent directories if needed
-                Path parentDir = outputPath.getParent();
+                final Path parentDir = outputPath.getParent();
                 if (parentDir != null && !Files.exists(parentDir)) {
                     Files.createDirectories(parentDir);
                 }
@@ -140,10 +140,10 @@ public abstract class BaseCompiler implements ICompiler {
             }
 
             // Find all source files in the project
-            List<Path> sourceFiles = com.ets2jsc.util.SourceFileFinder.findSourceFiles(sourceDir);
+            final List<Path> sourceFiles = com.ets2jsc.util.SourceFileFinder.findSourceFiles(sourceDir);
 
             // Compile source files while preserving directory structure
-            CompilationResult compileResult;
+            final CompilationResult compileResult;
             if (!sourceFiles.isEmpty()) {
                 compileResult = compileBatchWithStructure(sourceFiles, sourceDir, outputDir);
             } else {
@@ -204,7 +204,7 @@ public abstract class BaseCompiler implements ICompiler {
     protected AstNode transformNode(AstNode node) {
         AstNode current = node;
 
-        for (AstTransformer transformer : transformers) {
+        for (final AstTransformer transformer : transformers) {
             if (transformer.canTransform(current)) {
                 current = transformer.transform(current);
             }
@@ -228,7 +228,7 @@ public abstract class BaseCompiler implements ICompiler {
      * Generates source map for the compiled file.
      */
     protected String generateSourceMap(SourceFile sourceFile) {
-        SourceMapGenerator generator = new SourceMapGenerator();
+        final SourceMapGenerator generator = new SourceMapGenerator();
         // In production, would track all mappings during transformation
         return generator.generate();
     }

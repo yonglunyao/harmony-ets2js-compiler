@@ -77,7 +77,7 @@ public class CompilerConfig {
      * Creates a default configuration for development.
      */
     public static CompilerConfig createDefault() {
-        CompilerConfig config = new CompilerConfig();
+        final CompilerConfig config = new CompilerConfig();
         String userDir = System.getProperty("user.dir");
         if (userDir == null || userDir.isEmpty()) {
             userDir = "."; // Fallback to current directory

@@ -10,19 +10,19 @@ import java.util.Objects;
  */
 public class ClassDeclaration implements AstNode {
     private String name;
-    private List<Decorator> decorators;
-    private List<AstNode> members;
-    private boolean isStruct;
+    private final List<Decorator> decorators;
+    private final List<AstNode> members;
+    private boolean _isStruct;
     private String superClass;
     private String heritageClause;
-    private boolean isExport; // Track if this class is exported
+    private boolean _isExport; // Track if this class is exported
 
     public ClassDeclaration(String name) {
         this.name = name;
         this.decorators = new ArrayList<>();
         this.members = new ArrayList<>();
-        this.isStruct = false;
-        this.isExport = false;
+        this._isStruct = false;
+        this._isExport = false;
     }
 
     @Override
@@ -82,11 +82,11 @@ public class ClassDeclaration implements AstNode {
     }
 
     public boolean isStruct() {
-        return isStruct;
+        return _isStruct;
     }
 
     public void setStruct(boolean struct) {
-        isStruct = struct;
+        _isStruct = struct;
     }
 
     public String getSuperClass() {
@@ -106,19 +106,19 @@ public class ClassDeclaration implements AstNode {
     }
 
     public boolean isExport() {
-        return isExport;
+        return _isExport;
     }
 
     public void setExport(boolean export) {
-        isExport = export;
+        _isExport = export;
     }
 
     /**
      * Returns all properties from this class declaration.
      */
     public List<PropertyDeclaration> getProperties() {
-        List<PropertyDeclaration> properties = new ArrayList<>();
-        for (AstNode member : members) {
+        final List<PropertyDeclaration> properties = new ArrayList<>();
+        for (final AstNode member : members) {
             if (member instanceof PropertyDeclaration) {
                 properties.add((PropertyDeclaration) member);
             }
@@ -130,8 +130,8 @@ public class ClassDeclaration implements AstNode {
      * Returns all methods from this class declaration.
      */
     public List<MethodDeclaration> getMethods() {
-        List<MethodDeclaration> methods = new ArrayList<>();
-        for (AstNode member : members) {
+        final List<MethodDeclaration> methods = new ArrayList<>();
+        for (final AstNode member : members) {
             if (member instanceof MethodDeclaration) {
                 methods.add((MethodDeclaration) member);
             }
@@ -144,12 +144,10 @@ public class ClassDeclaration implements AstNode {
      * Used for transforming @Builder method call sites.
      */
     public List<String> getBuilderMethodNames() {
-        List<String> builderMethodNames = new ArrayList<>();
-        for (AstNode member : members) {
-            if (member instanceof MethodDeclaration method) {
-                if (method.isBuilderMethod()) {
-                    builderMethodNames.add(method.getName());
-                }
+        final List<String> builderMethodNames = new ArrayList<>();
+        for (final AstNode member : members) {
+            if (member instanceof MethodDeclaration method && method.isBuilderMethod()) {
+                builderMethodNames.add(method.getName());
             }
         }
         return builderMethodNames;
