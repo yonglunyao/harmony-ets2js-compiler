@@ -1,9 +1,9 @@
 package com.ets2jsc.transformer;
 
 import com.ets2jsc.ast.*;
-import com.ets2jsc.constant.Decorators;
-import com.ets2jsc.constant.RuntimeFunctions;
-import com.ets2jsc.constant.Symbols;
+import com.ets2jsc.shared.constant.Decorators;
+import com.ets2jsc.shared.constant.RuntimeFunctions;
+import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.transformer.decorators.PropertyTransformer;
 import com.ets2jsc.transformer.decorators.impl.*;
 import org.slf4j.Logger;

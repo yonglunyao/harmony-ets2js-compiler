@@ -1,6 +1,6 @@
 package com.ets2jsc.generator.writer;
 
-import com.ets2jsc.constant.Symbols;
+import com.ets2jsc.shared.constant.Symbols;
 
 import java.util.List;
 

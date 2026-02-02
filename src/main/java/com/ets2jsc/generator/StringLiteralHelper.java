@@ -1,6 +1,6 @@
 package com.ets2jsc.generator;
 
-import com.ets2jsc.constant.Symbols;
+import com.ets2jsc.shared.constant.Symbols;
 
 /**
  * Helper class for string literal operations in code generation.

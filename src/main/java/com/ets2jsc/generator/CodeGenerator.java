@@ -2,7 +2,7 @@ package com.ets2jsc.generator;
 
 import com.ets2jsc.ast.*;
 import com.ets2jsc.config.CompilerConfig;
-import com.ets2jsc.constant.Symbols;
+import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.transformer.ComponentExpressionTransformer;
 
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
 package com.ets2jsc.command;
 
 import com.ets2jsc.compiler.CompilationResult;
-import com.ets2jsc.exception.CompilationException;
+import com.ets2jsc.shared.exception.CompilationException;
 
 import java.nio.file.Path;
 

@@ -1,9 +1,9 @@
 package com.ets2jsc.compiler;
 
 import com.ets2jsc.config.CompilerConfig;
-import com.ets2jsc.constant.Symbols;
+import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.factory.TransformerFactory;
-import com.ets2jsc.exception.CompilationException;
+import com.ets2jsc.shared.exception.CompilationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

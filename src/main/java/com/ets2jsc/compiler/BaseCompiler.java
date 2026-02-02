@@ -1,15 +1,15 @@
 package com.ets2jsc.compiler;
 
-import com.ets2jsc.ast.AstNode;
+import com.ets2jsc.api.ICodeGenerator;
+import com.ets2jsc.api.IModuleFactory;
+import com.ets2jsc.api.IParser;
+import com.ets2jsc.api.ITransformer;
 import com.ets2jsc.ast.SourceFile;
 import com.ets2jsc.config.CompilerConfig;
+import com.ets2jsc.di.ModuleServiceProvider;
+import com.ets2jsc.shared.exception.CompilationException;
 import com.ets2jsc.factory.TransformerFactory;
 import com.ets2jsc.factory.DefaultTransformerFactory;
-import com.ets2jsc.exception.CompilationException;
-import com.ets2jsc.generator.CodeGenerator;
-import com.ets2jsc.generator.JsWriter;
-import com.ets2jsc.generator.SourceMapGenerator;
-import com.ets2jsc.parser.AstBuilder;
 import com.ets2jsc.transformer.AstTransformer;
 
 import java.io.IOException;
@@ -21,13 +21,17 @@ import java.util.List;
 /**
  * Base compiler implementation containing common compilation logic.
  * Provides the core compilation pipeline that can be extended with different execution strategies.
+ * <p>
+ * This class now uses facade interfaces for modular architecture, enabling better testability
+ * and separation of concerns.
  */
 public abstract class BaseCompiler implements ICompiler {
 
     protected final CompilerConfig config;
+    protected final IParser parser;
+    protected final ITransformer transformer;
+    protected final ICodeGenerator codeGenerator;
     protected final List<AstTransformer> transformers;
-    protected final CodeGenerator codeGenerator;
-    protected final JsWriter jsWriter;
     protected final TransformerFactory transformerFactory;
 
     /**
@@ -49,8 +53,12 @@ public abstract class BaseCompiler implements ICompiler {
         this.config = config;
         this.transformerFactory = transformerFactory;
         this.transformers = transformerFactory.createTransformers(config);
-        this.codeGenerator = new CodeGenerator(config);
-        this.jsWriter = new JsWriter();
+
+        // Create module facades using the service provider
+        IModuleFactory moduleFactory = ModuleServiceProvider.getInstance().getModuleFactory();
+        this.parser = moduleFactory.createParser();
+        this.transformer = moduleFactory.createTransformer(config);
+        this.codeGenerator = moduleFactory.createCodeGenerator(config);
     }
 
     @Override
@@ -60,30 +68,21 @@ public abstract class BaseCompiler implements ICompiler {
             sourcePath = sourcePath.normalize();
             outputPath = outputPath.normalize();
 
-            // Step 1: Read source file
-            final String sourceCode = Files.readString(sourcePath);
+            // Step 1: Parse source to AST using parser facade
+            final SourceFile sourceFile = parser.parseFile(sourcePath);
 
-            // Step 2: Parse source to AST
-            final AstBuilder astBuilder = new AstBuilder();
-            final SourceFile sourceFile = astBuilder.build(sourcePath.toString(), sourceCode);
+            // Step 2: Transform AST using transformer facade
+            final SourceFile transformedSource = transformer.transform(sourceFile);
 
-            // Step 3: Transform AST
-            final AstNode transformedAst = transformAst(sourceFile);
-
-            // Step 4: Generate JavaScript code
-            final String jsCode = generateCode(transformedAst);
-
-            // Step 5: Write output
+            // Step 3: Generate JavaScript code using code generator facade
             if (config.isGenerateSourceMap()) {
-                final String sourceMap = generateSourceMap(sourceFile);
                 final Path sourceMapPath = Path.of(outputPath + ".map");
-                jsWriter.writeWithSourceMap(outputPath, jsCode, sourceMapPath.getFileName().toString());
-                jsWriter.write(sourceMapPath, sourceMap);
+                codeGenerator.generateWithSourceMap(transformedSource, outputPath, sourceMapPath);
             } else {
-                jsWriter.write(outputPath, jsCode);
+                codeGenerator.generateToFile(transformedSource, outputPath);
             }
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new CompilationException("Failed to compile file: " + sourcePath, e);
         }
     }
@@ -149,7 +148,7 @@ public abstract class BaseCompiler implements ICompiler {
             }
 
             // Find all source files in the project
-            final List<Path> sourceFiles = com.ets2jsc.util.SourceFileFinder.findSourceFiles(sourceDir);
+            final List<Path> sourceFiles = com.ets2jsc.shared.util.SourceFileFinder.findSourceFiles(sourceDir);
 
             // Compile source files while preserving directory structure
             final CompilationResult compileResult;
@@ -163,7 +162,7 @@ public abstract class BaseCompiler implements ICompiler {
             // Copy resource files if requested
             int copiedResourceCount = 0;
             if (copyResources) {
-                copiedResourceCount = com.ets2jsc.util.ResourceFileCopier.copyResourceFiles(sourceDir, outputDir);
+                copiedResourceCount = com.ets2jsc.shared.util.ResourceFileCopier.copyResourceFiles(sourceDir, outputDir);
             }
 
             return new CompilationResult(
@@ -183,63 +182,23 @@ public abstract class BaseCompiler implements ICompiler {
         return config;
     }
 
-    /**
-     * Initializes the transformation pipeline.
-     * Subclasses can override to add custom transformers.
-     *
-     * @deprecated Use {@link TransformerFactory} instead. This method is kept for backward compatibility.
-     */
-    @Deprecated
-    protected void initializeTransformers() {
-        // Transformers are now initialized via TransformerFactory in the constructor
-    }
-
-    /**
-     * Transforms the AST using the registered transformers.
-     * Recursively transforms nested nodes.
-     */
-    protected AstNode transformAst(AstNode ast) {
-        // If this is a SourceFile, transform its statements
-        if (ast instanceof SourceFile sourceFile) {
-            sourceFile.getStatements().replaceAll(this::transformNode);
-            return sourceFile;
+    @Override
+    public void close() {
+        // Clean up module resources
+        try {
+            parser.close();
+        } catch (Exception e) {
+            // Log and continue
         }
-
-        return transformNode(ast);
-    }
-
-    /**
-     * Transforms a single AST node through all transformers.
-     */
-    protected AstNode transformNode(AstNode node) {
-        AstNode current = node;
-
-        for (final AstTransformer transformer : transformers) {
-            if (transformer.canTransform(current)) {
-                current = transformer.transform(current);
-            }
+        try {
+            transformer.close();
+        } catch (Exception e) {
+            // Log and continue
         }
-
-        return current;
-    }
-
-    /**
-     * Generates JavaScript code from the transformed AST.
-     */
-    protected String generateCode(AstNode ast) {
-        if (ast instanceof SourceFile) {
-            return codeGenerator.generate((SourceFile) ast);
-        } else {
-            return codeGenerator.generate(ast);
+        try {
+            codeGenerator.close();
+        } catch (Exception e) {
+            // Log and continue
         }
-    }
-
-    /**
-     * Generates source map for the compiled file.
-     */
-    protected String generateSourceMap(SourceFile sourceFile) {
-        final SourceMapGenerator generator = new SourceMapGenerator();
-        // In production, would track all mappings during transformation
-        return generator.generate();
     }
 }

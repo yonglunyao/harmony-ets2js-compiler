@@ -1,6 +1,6 @@
 package com.ets2jsc.parser;
 
-import com.ets2jsc.exception.ParserInitializationException;
+import com.ets2jsc.shared.exception.ParserInitializationException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;

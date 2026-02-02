@@ -2,7 +2,7 @@ package com.ets2jsc.transformer.decorators;
 
 import com.ets2jsc.ast.ClassDeclaration;
 import com.ets2jsc.ast.PropertyDeclaration;
-import com.ets2jsc.constant.Decorators;
+import com.ets2jsc.shared.constant.Decorators;
 
 /**
  * Context class for property transformation.

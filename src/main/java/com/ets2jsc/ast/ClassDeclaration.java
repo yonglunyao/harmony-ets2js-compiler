@@ -63,7 +63,7 @@ public class ClassDeclaration implements AstNode {
     }
 
     public Decorator getDecorator(String decoratorName) {
-        if (decorators == null || decoratorName == null) {
+        if (decoratorName == null) {
             return null;
         }
         return decorators.stream()

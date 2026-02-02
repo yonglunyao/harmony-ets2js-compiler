@@ -4,8 +4,8 @@ import com.ets2jsc.compiler.CompilerFactory;
 import com.ets2jsc.compiler.ICompiler;
 import com.ets2jsc.compiler.CompilationResult;
 import com.ets2jsc.config.CompilerConfig;
-import com.ets2jsc.exception.CompilationException;
-import com.ets2jsc.util.SourceFileFinder;
+import com.ets2jsc.shared.exception.CompilationException;
+import com.ets2jsc.shared.util.SourceFileFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

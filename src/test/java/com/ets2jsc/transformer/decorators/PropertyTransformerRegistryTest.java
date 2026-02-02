@@ -3,7 +3,7 @@ package com.ets2jsc.transformer.decorators;
 import com.ets2jsc.ast.ClassDeclaration;
 import com.ets2jsc.ast.Decorator;
 import com.ets2jsc.ast.PropertyDeclaration;
-import com.ets2jsc.constant.Decorators;
+import com.ets2jsc.shared.constant.Decorators;
 import com.ets2jsc.transformer.decorators.impl.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

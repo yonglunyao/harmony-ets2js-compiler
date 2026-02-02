@@ -3,8 +3,8 @@ package com.ets2jsc.transformer.decorators;
 import com.ets2jsc.ast.ClassDeclaration;
 import com.ets2jsc.ast.MethodDeclaration;
 import com.ets2jsc.ast.PropertyDeclaration;
-import com.ets2jsc.constant.RuntimeFunctions;
-import com.ets2jsc.constant.Symbols;
+import com.ets2jsc.shared.constant.RuntimeFunctions;
+import com.ets2jsc.shared.constant.Symbols;
 
 /**
  * Abstract base class for property transformers.

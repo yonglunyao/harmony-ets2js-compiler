@@ -1,7 +1,7 @@
 package com.ets2jsc.transformer;
 
 import com.ets2jsc.ast.*;
-import com.ets2jsc.constant.Decorators;
+import com.ets2jsc.shared.constant.Decorators;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

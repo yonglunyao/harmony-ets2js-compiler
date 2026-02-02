@@ -4,8 +4,8 @@ import com.ets2jsc.ast.AstNode;
 import com.ets2jsc.ast.Decorator;
 import com.ets2jsc.ast.ExpressionStatement;
 import com.ets2jsc.ast.SourceFile;
-import com.ets2jsc.exception.ParserException;
-import com.ets2jsc.exception.ParserInitializationException;
+import com.ets2jsc.shared.exception.ParserException;
+import com.ets2jsc.shared.exception.ParserInitializationException;
 
 import com.ets2jsc.parser.ConversionContext;
 import com.fasterxml.jackson.databind.JsonNode;

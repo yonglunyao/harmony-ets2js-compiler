@@ -5,7 +5,7 @@ import com.ets2jsc.ast.Block;
 import com.ets2jsc.ast.ComponentRegistry;
 import com.ets2jsc.ast.ComponentStatement;
 import com.ets2jsc.ast.ExpressionStatement;
-import com.ets2jsc.constant.Symbols;
+import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.parser.ConversionContext;
 import com.ets2jsc.parser.NodeConverter;
 import com.ets2jsc.transformer.ComponentExpressionTransformer;

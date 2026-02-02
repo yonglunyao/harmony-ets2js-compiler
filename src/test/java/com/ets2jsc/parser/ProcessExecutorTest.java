@@ -1,7 +1,7 @@
 package com.ets2jsc.parser;
 
 import com.ets2jsc.parser.ProcessExecutor;
-import com.ets2jsc.exception.ParserInitializationException;
+import com.ets2jsc.shared.exception.ParserInitializationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

@@ -1,6 +1,6 @@
 package com.ets2jsc.parser.converters.expr;
 
-import com.ets2jsc.constant.RuntimeFunctions;
+import com.ets2jsc.shared.constant.RuntimeFunctions;
 import com.ets2jsc.parser.ConversionContext;
 import com.ets2jsc.parser.NodeConverter;
 import com.fasterxml.jackson.databind.JsonNode;

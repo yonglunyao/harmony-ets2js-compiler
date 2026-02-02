@@ -1,8 +1,8 @@
 package com.ets2jsc.transformer;
 
 import com.ets2jsc.ast.*;
-import com.ets2jsc.constant.Components;
-import com.ets2jsc.constant.RuntimeFunctions;
+import com.ets2jsc.shared.constant.Components;
+import com.ets2jsc.shared.constant.RuntimeFunctions;
 
 import java.util.ArrayList;
 import java.util.List;

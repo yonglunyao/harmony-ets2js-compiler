@@ -2,7 +2,7 @@ package com.ets2jsc.parser.converters.stmt;
 
 import com.ets2jsc.ast.AstNode;
 import com.ets2jsc.ast.ExpressionStatement;
-import com.ets2jsc.constant.Symbols;
+import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.parser.ConversionContext;
 import com.ets2jsc.parser.NodeConverter;
 import com.fasterxml.jackson.databind.JsonNode;
