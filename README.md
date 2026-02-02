@@ -34,11 +34,25 @@ HarmonyOS ArkTS/ETS 转 JavaScript 编译器。该编译器将 ArkTS（扩展 Ty
   - SourceMap 生成
   - 代码格式化支持
 
+## 技术栈
+
+### 后端
+
+- **Java 17** - 主要开发语言
+- **Maven 3.8.3+** - 项目构建和依赖管理
+- **GraalVM JavaScript Engine** - JavaScript 执行引擎（嵌入式依赖）
+
+### TypeScript 解析器
+
+- **TypeScript 5.9.3** - AST 解析
+- **npm SDK 风格模块化架构** - 可维护的代码组织
+- **参数传递模式** - 避免循环依赖的递归转换
+
 ## 环境要求
 
 - Java 17
 - Maven 3.8.3+
-- GraalVM JavaScript 引擎（作为依赖包含）
+- Node.js 14+ (用于 TypeScript 解析器)
 
 ## 安装
 
@@ -255,6 +269,24 @@ src/main/java/com/ets2jsc/
     ├── StringUtils.java
     └── ValidationUtils.java
 
+src/main/resources/typescript-parser/  # TypeScript 解析器模块
+├── index.js                          # npm 标准入口 (CLI + 库)
+└── src/
+    └── javascript/                   # JavaScript 源码模块
+        ├── ast/                      # AST 处理模块
+        │   ├── preprocessor.js       # ETS 预处理
+        │   ├── converter.js          # 主 AST 转换器
+        │   └── converters/           # 节点类型转换器
+        │       ├── literals.js       # 字面量节点
+        │       ├── statements.js     # 语句节点
+        │       ├── declarations.js   # 声明节点
+        │       └── expressions.js    # 表达式节点
+        ├── codegen/                  # 代码生成模块
+        │   └── index.js              # JSON → 代码
+        └── common/                   # 公共工具模块
+            ├── constants.js          # 常量定义
+            └── utils.js              # 工具函数
+
 src/test/java/com/ets2jsc/
 ├── ast/                           # AST 节点单元测试
 │   ├── DecoratorTest.java
@@ -289,7 +321,8 @@ src/test/java/com/ets2jsc/
 │   ├── SimpleComponentTest.java
 │   ├── ForEachTest.java
 │   ├── Iteration4Test.java
-│   └── PureJavaScriptTest.java
+│   ├── PureJavaScriptTest.java
+│   └── TsJsAutoValidationTestOptimizedTest.java  # 自动化验证测试
 │
 ├── transformer/                    # 转换器测试
 │   ├── DecoratorTransformerTest.java
@@ -304,6 +337,39 @@ src/test/java/com/ets2jsc/
     ├── CompilerRunner.java
     ├── EnhancedSimpleParser.java
     └── DebugTest.java
+```
+
+## TypeScript 解析器架构
+
+TypeScript 解析器采用 **npm SDK 风格模块化架构**，具有以下特点：
+
+### 架构原则
+
+1. **按功能域分层** - `ast/`、`codegen/`、`common/`
+2. **语言分层** - `src/javascript/` 支持多语言扩展
+3. **单一职责** - 每个模块功能单一明确
+4. **参数传递模式** - 避免循环依赖
+5. **零魔法数字** - 所有常量提取到 `common/constants.js`
+
+### 模块说明
+
+| 模块 | 行数 | 职责 |
+|------|------|------|
+| `index.js` | 111 | CLI + 库统一入口 |
+| `src/javascript/ast/` | 2,187 | AST 转换处理 |
+| `src/javascript/codegen/` | 456 | 代码生成 |
+| `src/javascript/common/` | 317 | 公共工具 |
+| **总计** | **3,071** | 完整实现 |
+
+### 使用方式
+
+```bash
+# CLI 使用
+node src/main/resources/typescript-parser/index.js <input.ets> <output.json>
+
+# 库使用 (JavaScript)
+const { parse, parseFile } = require('./src/main/resources/typescript-parser/index');
+const ast = parse('const x = 42;');
 ```
 
 ## 文档
@@ -326,6 +392,15 @@ src/test/java/com/ets2jsc/
 3. 在 `transformer/` 中创建转换器
 4. 在 `generator/` 中生成代码
 5. 在 `src/test/java/com/ets2jsc/` 对应包中添加测试
+
+### TypeScript 解析器扩展
+
+如需扩展 TypeScript 解析器功能：
+
+1. **添加新的节点转换器** - 在 `src/javascript/ast/converters/` 中添加
+2. **添加新的代码生成器** - 在 `src/javascript/codegen/index.js` 中添加
+3. **添加新的常量** - 在 `src/javascript/common/constants.js` 中添加
+4. **添加新的工具函数** - 在 `src/javascript/common/utils.js` 中添加
 
 ### 测试组织规范
 
@@ -358,6 +433,15 @@ mvn test -Dtest="com.ets2jsc.ast.*"
 mvn test -X
 ```
 
+## 测试覆盖
+
+项目采用自动化测试验证 TypeScript → JavaScript 转换的正确性：
+
+- **测试通过率**: 75.0% (75/100 测试用例)
+- **测试文件**: TsJsAutoValidationTestOptimizedTest
+- **测试框架**: JUnit 5
+- **覆盖范围**: 基础语法、装饰器、组件、表达式、语句等
+
 ## 许可证
 
 本项目采用 MIT 许可证。
@@ -365,6 +449,18 @@ mvn test -X
 ## 贡献
 
 欢迎贡献！请随时提交 Pull Request。
+
+### 代码规范
+
+在提交代码前，请确保：
+
+- 遵循 [CODING_STANDARDS.md](docs/CODING_STANDARDS.md) 中的编码规范
+- 无魔法数字（所有常量已提取）
+- 避免返回 null（优先使用异常或 Optional）
+- 使用自定义异常类
+- 使用 SLF4J 进行日志记录
+- 控制圈复杂度 ≤ 10
+- 所有注释和命名使用英文
 
 ## 作者
 
