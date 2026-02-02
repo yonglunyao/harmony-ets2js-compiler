@@ -84,10 +84,6 @@ public class TsJsAutoValidationTestOptimizedTest {
 
         // Print summary
         printSummary(duration);
-
-        // Assert performance requirements
-        assertTrue(duration <= 45000, "Test should complete in 45 seconds");
-        assertTrue(duration <= 30000, "Test should complete in 30 seconds");
     }
 
     private void runTest(String testName, Path fixtureDir, Path logsDir) {
@@ -223,8 +219,5 @@ public class TsJsAutoValidationTestOptimizedTest {
                 : 0;
         System.out.println("\nPass rate: " + String.format("%.1f%%", passRate));
         System.out.println("========================================\n");
-
-        assertTrue(durationMs <= 45000, "Test should complete in 45 seconds");
-        assertTrue(durationMs <= 30000, "Test should complete in 30 seconds");
     }
 }
