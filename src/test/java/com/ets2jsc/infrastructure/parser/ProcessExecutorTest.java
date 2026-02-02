@@ -1,4 +1,4 @@
-package com.ets2jsc.parser;
+package com.ets2jsc.infrastructure.parser;
 
 import com.ets2jsc.infrastructure.parser.ProcessExecutor;
 import com.ets2jsc.shared.exception.ParserInitializationException;

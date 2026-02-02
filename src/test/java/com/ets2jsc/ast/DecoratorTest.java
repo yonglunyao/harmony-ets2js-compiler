@@ -1,4 +1,4 @@
-package com.ets2jsc.ast;
+package com.ets2jsc.domain.model.ast;
 
 import com.ets2jsc.domain.model.ast.Decorator;
 import org.junit.jupiter.api.Test;

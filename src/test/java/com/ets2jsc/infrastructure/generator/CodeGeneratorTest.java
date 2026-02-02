@@ -1,4 +1,4 @@
-package com.ets2jsc.generator;
+package com.ets2jsc.infrastructure.generator;
 
 import com.ets2jsc.domain.model.ast.*;
 import com.ets2jsc.domain.model.config.CompilerConfig;

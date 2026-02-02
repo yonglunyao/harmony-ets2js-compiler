@@ -1,4 +1,4 @@
-package com.ets2jsc.ast;
+package com.ets2jsc.domain.model.ast;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;

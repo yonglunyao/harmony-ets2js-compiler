@@ -1,4 +1,4 @@
-package com.ets2jsc.parser;
+package com.ets2jsc.infrastructure.parser;
 
 import com.ets2jsc.infrastructure.parser.ConversionContext;
 import com.ets2jsc.domain.model.ast.AstNode;

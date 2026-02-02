@@ -1,4 +1,4 @@
-package com.ets2jsc.transformer;
+package com.ets2jsc.infrastructure.transformer;
 
 import com.ets2jsc.domain.model.ast.AstNode;
 import com.ets2jsc.domain.model.ast.ComponentStatement;
