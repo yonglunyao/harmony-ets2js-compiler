@@ -55,12 +55,18 @@ src/main/java/com/ets2jsc/
 │       └── GeneratorFactory.java
 │
 ├── interfaces/             # 接口层 - 外部交互
-│   └── cli/               # 命令行接口
-│       ├── EtsCompilerLauncher.java
-│       └── command/       # 命令模式实现
-│           ├── SingleFileCompilationCommand.java
-│           ├── BatchCompilationCommand.java
-│           └── ProjectCompilationCommand.java
+│   ├── cli/               # 命令行接口
+│   │   ├── EtsCompilerLauncher.java
+│   │   └── command/       # 命令模式实现
+│   │       ├── SingleFileCompilationCommand.java
+│   │       ├── BatchCompilationCommand.java
+│   │       └── ProjectCompilationCommand.java
+│   └── publicapi/         # 公共API - 外部库依赖接口
+│       ├── EtsCompiler.java              # 编译器主入口
+│       ├── EtsCompilerBuilder.java       # 编译器构建器
+│       └── model/                       # 公共模型
+│           ├── CompilationMode.java     # 编译模式枚举
+│           └── PublicCompilationResult.java  # 编译结果
 │
 └── shared/                # 共享层 - 跨层通用组件
     ├── constant/          # 常量定义
@@ -180,7 +186,43 @@ src/main/java/com/ets2jsc/
   }
   ```
 
+- **publicapi/**：公共API - 供外部应用依赖的稳定接口
+  ```java
+  // 编译器主入口
+  public class EtsCompiler implements AutoCloseable {
+      public static EtsCompiler create();
+      public static EtsCompilerBuilder builder();
+      public PublicCompilationResult compileFile(Path sourcePath, Path outputPath);
+      public PublicCompilationResult compileBatch(List<Path> sourceFiles, Path outputDir);
+      public PublicCompilationResult compileProject(Path sourceDir, Path outputDir, boolean copyResources);
+      public void close();
+  }
+
+  // 编译器构建器
+  public class EtsCompilerBuilder {
+      public EtsCompilerBuilder projectPath(Path projectPath);
+      public EtsCompilerBuilder parallelMode(boolean parallel);
+      public EtsCompilerBuilder threadCount(int threadCount);
+      public EtsCompiler build();
+  }
+
+  // 公共编译结果
+  public class PublicCompilationResult {
+      public boolean isSuccess();
+      public int getTotalCount();
+      public int getSuccessCount();
+      public List<FileResult> getFileResults();
+      public String getSummary();
+  }
+  ```
+
 **依赖规则**：只能依赖 `application/` 和 `shared/`
+
+**公共API设计原则**：
+1. **稳定性**：公共API版本稳定，不轻易变更
+2. **简洁性**：只暴露必要的功能，隐藏内部复杂性
+3. **易用性**：提供Builder模式和合理的默认值
+4. **向后兼容**：新增功能不破坏现有API
 
 ---
 
@@ -329,6 +371,113 @@ src/main/java/com/ets2jsc/
          │  · AstTransformer chain              │
          │  · CodeGenerator                     │
          └──────────────────────────────────────┘
+```
+
+---
+
+## 公共API使用示例
+
+### 基本用法
+
+```java
+// 1. 创建默认编译器
+try (EtsCompiler compiler = EtsCompiler.create()) {
+    PublicCompilationResult result = compiler.compileFile(
+        Path.of("src/Main.ets"),
+        Path.of("build/Main.js")
+    );
+    if (result.isSuccess()) {
+        System.out.println("Compilation succeeded!");
+    }
+}
+```
+
+### 使用Builder自定义配置
+
+```java
+// 2. 使用Builder自定义配置
+try (EtsCompiler compiler = EtsCompiler.builder()
+        .parallelMode(true)      // 并行编译
+        .threadCount(4)          // 使用4个线程
+        .sourcePath("src/ets")   // 源码目录
+        .buildPath("build")      // 输出目录
+        .generateSourceMap(true) // 生成source map
+        .build()) {
+    PublicCompilationResult result = compiler.compileProject(
+        Path.of("src/ets"),
+        Path.of("build"),
+        false  // 不复制资源文件
+    );
+    System.out.println(result.getSummary());
+}
+```
+
+### 批量编译
+
+```java
+// 3. 批量编译多个文件
+try (EtsCompiler compiler = EtsCompiler.builder()
+        .parallelMode(true)
+        .threadCount(8)
+        .build()) {
+    List<Path> sourceFiles = List.of(
+        Path.of("src/App.ets"),
+        Path.of("src/pages/Index.ets"),
+        Path.of("src/components/Button.ets")
+    );
+    PublicCompilationResult result = compiler.compileBatch(
+        sourceFiles,
+        Path.of("build")
+    );
+
+    // 处理结果
+    for (var fileResult : result.getFileResults()) {
+        if (fileResult.isFailure()) {
+            System.err.println("Failed: " + fileResult.getSourcePath());
+            System.err.println("Error: " + fileResult.getMessage());
+        }
+    }
+}
+```
+
+### 处理编译错误
+
+```java
+// 4. 处理编译错误
+try (EtsCompiler compiler = EtsCompiler.create()) {
+    PublicCompilationResult result = compiler.compileFile(
+        Path.of("src/Test.ets"),
+        Path.of("build/Test.js")
+    );
+
+    if (!result.isSuccess()) {
+        for (var failure : result.getFailures()) {
+            System.err.println("Compilation failed: " + failure.getSourcePath());
+            System.err.println("Message: " + failure.getMessage());
+            if (failure.getError() != null) {
+                failure.getError().printStackTrace();
+            }
+        }
+    }
+} catch (CompilationException e) {
+    System.err.println("Compilation error: " + e.getMessage());
+}
+```
+
+### 使用现有配置
+
+```java
+// 5. 从现有配置创建编译器
+CompilerConfig existingConfig = CompilerConfig.createDefault();
+existingConfig.setProjectPath("/my/project");
+existingConfig.setSourcePath("src/main/ets");
+
+try (EtsCompiler compiler = EtsCompilerBuilder.fromConfig(existingConfig)
+        .parallelMode(true)
+        .threadCount(4)
+        .build()) {
+    // 使用编译器
+}
 ```
 
 ---
