@@ -124,8 +124,10 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
     @Override
     public CompilationResult compileBatchWithStructure(List<Path> sourceFiles, Path baseDir, Path outputDir) {
         CompilationResult result = new CompilationResult();
-        int successCount = 0;
-        int failureCount = 0;
+
+        TypeScriptCompilerService tsCompiler = new TypeScriptCompilerService();
+        boolean tscAvailable = tsCompiler.isTscAvailable();
+
         for (Path sourceFile : sourceFiles) {
             try {
                 // Calculate relative path from base directory
@@ -142,14 +144,27 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
                 if (parentDir != null && !Files.exists(parentDir)) {
                     Files.createDirectories(parentDir);
                 }
-                // Compile file using pipeline
-                pipeline.execute(sourceFile, outputPath);
-                result.addFileResult(sourceFile, FileResult.success(sourceFile, outputPath, 0));
-                successCount++;
+
+                // Choose compiler based on file extension
+                if (SourceFileFinder.isTsFile(sourceFile) && !SourceFileFinder.isEtsFile(sourceFile)) {
+                    // Pure .ts file - use tsc
+                    if (tscAvailable) {
+                        tsCompiler.compileFile(sourceFile, outputPath);
+                        result.addFileResult(sourceFile, FileResult.success(sourceFile, outputPath, 0));
+                    } else {
+                        // tsc not available, skip with warning
+                        LOGGER.warn("tsc not available, skipping TypeScript file: {}", sourceFile);
+                        result.addFileResult(sourceFile,
+                            FileResult.skipped(sourceFile, "tsc compiler not available"));
+                    }
+                } else {
+                    // .ets file - use ETS pipeline
+                    pipeline.execute(sourceFile, outputPath);
+                    result.addFileResult(sourceFile, FileResult.success(sourceFile, outputPath, 0));
+                }
             } catch (Exception e) {
                 result.addFileResult(sourceFile, FileResult.failure(sourceFile, null,
                         "Compilation failed: " + e.getMessage(), e, 0));
-                failureCount++;
             }
         }
         result.markCompleted();

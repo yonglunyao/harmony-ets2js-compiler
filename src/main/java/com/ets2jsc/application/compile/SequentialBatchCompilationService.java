@@ -4,6 +4,11 @@ import lombok.Getter;
 
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.shared.exception.CompilationException;
+import com.ets2jsc.shared.util.ResourceFileCopier;
+import com.ets2jsc.shared.util.SourceFileFinder;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +21,8 @@ import java.util.List;
  */
 @Getter
 public class SequentialBatchCompilationService implements BatchCompilationService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SequentialBatchCompilationService.class);
 
     private final CompilationPipeline pipeline;
     private final CompilerConfig config;
@@ -73,6 +80,9 @@ public class SequentialBatchCompilationService implements BatchCompilationServic
         com.ets2jsc.domain.model.compilation.CompilationResult result =
                 new com.ets2jsc.domain.model.compilation.CompilationResult();
 
+        TypeScriptCompilerService tsCompiler = new TypeScriptCompilerService();
+        boolean tscAvailable = tsCompiler.isTscAvailable();
+
         for (Path sourceFile : sourceFiles) {
             String relativePathStr = baseDir.relativize(sourceFile).toString();
             String outputPathStr = relativePathStr
@@ -89,11 +99,31 @@ public class SequentialBatchCompilationService implements BatchCompilationServic
                     Files.createDirectories(parentDir);
                 }
 
-                pipeline.execute(sourceFile, outputPath);
-                result.addFileResult(sourceFile, com.ets2jsc.domain.model.compilation.CompilationResult.FileResult.success(
-                        sourceFile, outputPath, 0));
+                // Choose compiler based on file extension
+                if (SourceFileFinder.isTsFile(sourceFile) && !SourceFileFinder.isEtsFile(sourceFile)) {
+                    // Pure .ts file - use tsc
+                    if (tscAvailable) {
+                        tsCompiler.compileFile(sourceFile, outputPath);
+                        result.addFileResult(sourceFile,
+                            com.ets2jsc.domain.model.compilation.CompilationResult.FileResult.success(
+                                sourceFile, outputPath, 0));
+                    } else {
+                        // tsc not available, skip with warning
+                        LOGGER.warn("tsc not available, skipping TypeScript file: {}", sourceFile);
+                        result.addFileResult(sourceFile,
+                            com.ets2jsc.domain.model.compilation.CompilationResult.FileResult.skipped(
+                                sourceFile, "tsc compiler not available"));
+                    }
+                } else {
+                    // .ets file - use ETS pipeline
+                    pipeline.execute(sourceFile, outputPath);
+                    result.addFileResult(sourceFile,
+                        com.ets2jsc.domain.model.compilation.CompilationResult.FileResult.success(
+                            sourceFile, outputPath, 0));
+                }
             } catch (Exception e) {
-                result.addFileResult(sourceFile, com.ets2jsc.domain.model.compilation.CompilationResult.FileResult.failure(
+                result.addFileResult(sourceFile,
+                    com.ets2jsc.domain.model.compilation.CompilationResult.FileResult.failure(
                         sourceFile, outputPath, "Compilation failed: " + e.getMessage(), e, 0));
             }
         }
