@@ -246,28 +246,8 @@ public class TypeScriptScriptParser {
                 return new ExpressionStatement(convertExpressionToString(json));
             default:
                 // Use the new converter architecture for all other cases
-                try {
-                    return conversionContext.convertStatement(json);
-                } catch (Exception e) {
-                    // Log the exception for debugging
-                    LOGGER.warn("Failed to convert {} using new converter, trying fallback: {}", kindName, e.getMessage());
-                    // Fallback to legacy methods if converter fails
-                    return convertJsonNodeLegacy(json, kindName);
-                }
+                return conversionContext.convertStatement(json);
         }
-    }
-
-    /**
-     * Legacy fallback for JSON node conversion.
-     * Used only if the new converter architecture fails.
-     */
-    @Deprecated
-    private AstNode convertJsonNodeLegacy(JsonNode json, String kindName) {
-        // Simplified fallback - just handle expression statements as strings
-        if (kindName.endsWith("Expression")) {
-            return new ExpressionStatement(convertExpressionToString(json));
-        }
-        return null;
     }
 
     private SourceFile convertSourceFile(JsonNode json) {

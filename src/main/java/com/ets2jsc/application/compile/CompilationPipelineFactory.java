@@ -27,6 +27,15 @@ import java.nio.file.Path;
 public class CompilationPipelineFactory {
 
     /**
+     * Creates a new compilation pipeline with default configuration.
+     *
+     * @return a new compilation pipeline with default configuration
+     */
+    public static CompilationPipeline createDefault() {
+        return createPipeline(CompilerConfig.createDefault());
+    }
+
+    /**
      * Creates a new compilation pipeline with the given configuration.
      *
      * @param config the compiler configuration
@@ -91,10 +100,11 @@ public class CompilationPipelineFactory {
     private static TransformerService createTransformerService(CompilerConfig config) {
         TransformerFactory transformerFactory = new DefaultTransformerFactory();
         var transformers = transformerFactory.createTransformers(config);
+        var currentConfig = config; // Capture for closure
 
         return new TransformerService() {
             @Override
-            public SourceFile transform(SourceFile sourceFile, CompilerConfig config) throws CompilationException {
+            public SourceFile transform(SourceFile sourceFile) throws CompilationException {
                 sourceFile.getStatements().replaceAll(statement -> {
                     AstNode current = statement;
                     for (var transformer : transformers) {
@@ -108,7 +118,7 @@ public class CompilationPipelineFactory {
             }
 
             @Override
-            public AstNode transformNode(AstNode node, CompilerConfig config) throws CompilationException {
+            public AstNode transformNode(AstNode node) throws CompilationException {
                 AstNode current = node;
                 for (var transformer : transformers) {
                     if (transformer.canTransform(current)) {
@@ -119,7 +129,7 @@ public class CompilationPipelineFactory {
             }
 
             @Override
-            public boolean canTransform(AstNode node, CompilerConfig config) {
+            public boolean canTransform(AstNode node) {
                 return transformers.stream().anyMatch(t -> t.canTransform(node));
             }
 
@@ -147,15 +157,19 @@ public class CompilationPipelineFactory {
 
         return new GeneratorService() {
             @Override
-            public com.ets2jsc.domain.model.compilation.CompilationOutput generate(SourceFile sourceFile, CompilerConfig config)
+            public com.ets2jsc.domain.model.compilation.CompilationOutput generate(SourceFile sourceFile)
                     throws CodeGenerationException {
                 String jsCode = codeGenerator.generate(sourceFile);
                 return new com.ets2jsc.domain.model.compilation.CompilationOutput(jsCode, null);
             }
 
             @Override
-            public void generateToFile(SourceFile sourceFile, Path outputPath, CompilerConfig config)
-                    throws CodeGenerationException {
+            public String generate(AstNode node) throws CodeGenerationException {
+                return codeGenerator.generate(node);
+            }
+
+            @Override
+            public void generateToFile(SourceFile sourceFile, Path outputPath) throws CodeGenerationException {
                 String jsCode = codeGenerator.generate(sourceFile);
                 try {
                     jsWriter.write(outputPath, jsCode);
@@ -165,8 +179,8 @@ public class CompilationPipelineFactory {
             }
 
             @Override
-            public void generateWithSourceMap(SourceFile sourceFile, Path outputPath, Path sourceMapPath,
-                                             CompilerConfig config) throws CodeGenerationException {
+            public void generateWithSourceMap(SourceFile sourceFile, Path outputPath, Path sourceMapPath)
+                    throws CodeGenerationException {
                 String jsCode = codeGenerator.generate(sourceFile);
                 try {
                     jsWriter.writeWithSourceMap(outputPath, jsCode, sourceMapPath.getFileName().toString());

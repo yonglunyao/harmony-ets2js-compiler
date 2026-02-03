@@ -1,11 +1,10 @@
 package com.ets2jsc.interfaces.cli.command;
 
-import com.ets2jsc.compiler.CompilationResult;
-import com.ets2jsc.compiler.ICompiler;
+import com.ets2jsc.application.compile.CompilationPipeline;
+import com.ets2jsc.domain.model.compilation.CompilationResult;
 import com.ets2jsc.shared.exception.CompilationException;
 
 import java.nio.file.Path;
-import java.util.Collections;
 
 /**
  * Command for compiling a single source file.
@@ -18,21 +17,21 @@ import java.util.Collections;
  */
 public class SingleFileCompilationCommand implements CompilationCommand {
 
-    private final ICompiler compiler;
+    private final CompilationPipeline pipeline;
     private final Path sourcePath;
     private final Path outputPath;
 
     /**
      * Creates a new single file compilation command.
      *
-     * @param compiler the compiler to use
+     * @param pipeline the compilation pipeline to use
      * @param sourcePath the source file path
      * @param outputPath the output file path
      * @throws IllegalArgumentException if any parameter is null
      */
-    public SingleFileCompilationCommand(ICompiler compiler, Path sourcePath, Path outputPath) {
-        if (compiler == null) {
-            throw new IllegalArgumentException("Compiler cannot be null");
+    public SingleFileCompilationCommand(CompilationPipeline pipeline, Path sourcePath, Path outputPath) {
+        if (pipeline == null) {
+            throw new IllegalArgumentException("Compilation pipeline cannot be null");
         }
         if (sourcePath == null) {
             throw new IllegalArgumentException("Source path cannot be null");
@@ -41,19 +40,14 @@ public class SingleFileCompilationCommand implements CompilationCommand {
             throw new IllegalArgumentException("Output path cannot be null");
         }
 
-        this.compiler = compiler;
+        this.pipeline = pipeline;
         this.sourcePath = sourcePath;
         this.outputPath = outputPath;
     }
 
     @Override
     public CompilationResult execute() throws CompilationException {
-        compiler.compile(sourcePath, outputPath);
-
-        CompilationResult result = new CompilationResult();
-        result.addFileResult(sourcePath, CompilationResult.FileResult.success(sourcePath, outputPath, 0));
-        result.markCompleted();
-        return result;
+        return pipeline.execute(sourcePath, outputPath);
     }
 
     @Override

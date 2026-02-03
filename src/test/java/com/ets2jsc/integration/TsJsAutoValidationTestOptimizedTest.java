@@ -1,7 +1,7 @@
 package com.ets2jsc.integration;
 
-import com.ets2jsc.compiler.CompilerFactory;
-import com.ets2jsc.compiler.ICompiler;
+import com.ets2jsc.application.compile.CompilationPipeline;
+import com.ets2jsc.application.compile.CompilationPipelineFactory;
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -96,8 +96,8 @@ public class TsJsAutoValidationTestOptimizedTest {
 
             // Compile TS to JS
             CompilerConfig config = CompilerConfig.createDefault();
-            try (ICompiler compiler = CompilerFactory.createCompiler(config)) {
-                compiler.compile(tsFile, jsFile);
+            try (CompilationPipeline pipeline = CompilationPipelineFactory.createPipeline(config)) {
+                pipeline.execute(tsFile, jsFile);
             }
 
             // Execute TypeScript

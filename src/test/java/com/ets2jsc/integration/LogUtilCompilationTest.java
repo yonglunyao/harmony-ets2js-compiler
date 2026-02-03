@@ -2,8 +2,8 @@ package com.ets2jsc.integration;
 
 import com.ets2jsc.domain.model.ast.ClassDeclaration;
 import com.ets2jsc.domain.model.ast.SourceFile;
-import com.ets2jsc.compiler.CompilerFactory;
-import com.ets2jsc.compiler.ICompiler;
+import com.ets2jsc.application.compile.CompilationPipeline;
+import com.ets2jsc.application.compile.CompilationPipelineFactory;
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.infrastructure.parser.AstBuilder;
 import org.junit.jupiter.api.Test;
@@ -57,8 +57,8 @@ class LogUtilCompilationTest {
 
         System.out.println("\n=== Compile Phase ===");
         CompilerConfig config = CompilerConfig.createDefault();
-        try (ICompiler compiler = CompilerFactory.createCompiler(config)) {
-            compiler.compile(Path.of(sourcePath), outputPath);
+        try (CompilationPipeline pipeline = CompilationPipelineFactory.createPipeline(config)) {
+            pipeline.execute(Path.of(sourcePath), outputPath);
         }
 
         String output = Files.readString(outputPath);

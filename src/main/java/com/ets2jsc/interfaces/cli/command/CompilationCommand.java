@@ -1,6 +1,6 @@
 package com.ets2jsc.interfaces.cli.command;
 
-import com.ets2jsc.compiler.CompilationResult;
+import com.ets2jsc.domain.model.compilation.CompilationResult;
 import com.ets2jsc.shared.exception.CompilationException;
 
 import java.nio.file.Path;

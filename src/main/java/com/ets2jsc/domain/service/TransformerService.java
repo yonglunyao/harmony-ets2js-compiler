@@ -10,6 +10,8 @@ import com.ets2jsc.shared.exception.CompilationException;
  * <p>
  * This service applies transformations to AST nodes, such as decorator
  * processing, component transformation, and build method handling.
+ * <p>
+ * The configuration is injected at construction time, not passed with each method call.
  */
 public interface TransformerService extends AutoCloseable {
 
@@ -17,30 +19,27 @@ public interface TransformerService extends AutoCloseable {
      * Transforms a complete source file AST.
      *
      * @param sourceFile the source file to transform
-     * @param config the compiler configuration
      * @return the transformed source file
      * @throws CompilationException if transformation fails
      */
-    SourceFile transform(SourceFile sourceFile, CompilerConfig config) throws CompilationException;
+    SourceFile transform(SourceFile sourceFile) throws CompilationException;
 
     /**
      * Transforms a single AST node.
      *
      * @param node the node to transform
-     * @param config the compiler configuration
      * @return the transformed node
      * @throws CompilationException if transformation fails
      */
-    AstNode transformNode(AstNode node, CompilerConfig config) throws CompilationException;
+    AstNode transformNode(AstNode node) throws CompilationException;
 
     /**
      * Checks if this transformer can handle the given node.
      *
      * @param node the node to check
-     * @param config the compiler configuration
      * @return true if this transformer can transform the node, false otherwise
      */
-    boolean canTransform(AstNode node, CompilerConfig config);
+    boolean canTransform(AstNode node);
 
     /**
      * Reconfigures the transformer with a new configuration.

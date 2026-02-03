@@ -1,6 +1,7 @@
 package com.ets2jsc.application.compile;
 
 import com.ets2jsc.domain.model.ast.SourceFile;
+import com.ets2jsc.domain.model.compilation.CompilationResult;
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.domain.service.GeneratorService;
 import com.ets2jsc.domain.service.ParserService;
@@ -71,14 +72,14 @@ public class CompilationPipeline implements AutoCloseable {
             SourceFile sourceFile = parser.parseFile(sourcePath);
 
             // Stage 2: Transform
-            SourceFile transformedFile = transformer.transform(sourceFile, config);
+            SourceFile transformedFile = transformer.transform(sourceFile);
 
             // Stage 3: Generate
             if (config.isGenerateSourceMap()) {
                 Path sourceMapPath = Path.of(outputPath + ".map");
-                generator.generateWithSourceMap(transformedFile, outputPath, sourceMapPath, config);
+                generator.generateWithSourceMap(transformedFile, outputPath, sourceMapPath);
             } else {
-                generator.generateToFile(transformedFile, outputPath, config);
+                generator.generateToFile(transformedFile, outputPath);
             }
 
             long duration = System.currentTimeMillis() - startTime;
@@ -185,43 +186,6 @@ public class CompilationPipeline implements AutoCloseable {
     private void checkNotClosed() {
         if (closed) {
             throw new IllegalStateException("CompilationPipeline is closed");
-        }
-    }
-
-    /**
-     * Inner class for compilation results.
-     */
-    public static class CompilationResult {
-        private final boolean success;
-        private final Path sourcePath;
-        private final Path outputPath;
-        private final long durationMs;
-
-        private CompilationResult(boolean success, Path sourcePath, Path outputPath, long durationMs) {
-            this.success = success;
-            this.sourcePath = sourcePath;
-            this.outputPath = outputPath;
-            this.durationMs = durationMs;
-        }
-
-        public static CompilationResult success(Path sourcePath, Path outputPath, long durationMs) {
-            return new CompilationResult(true, sourcePath, outputPath, durationMs);
-        }
-
-        public boolean isSuccess() {
-            return success;
-        }
-
-        public Path getSourcePath() {
-            return sourcePath;
-        }
-
-        public Path getOutputPath() {
-            return outputPath;
-        }
-
-        public long getDurationMs() {
-            return durationMs;
         }
     }
 }

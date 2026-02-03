@@ -1,7 +1,7 @@
 package com.ets2jsc.interfaces.cli.command;
 
-import com.ets2jsc.compiler.CompilationResult;
-import com.ets2jsc.compiler.ICompiler;
+import com.ets2jsc.application.compile.BatchCompilationService;
+import com.ets2jsc.domain.model.compilation.CompilationResult;
 import com.ets2jsc.shared.exception.CompilationException;
 
 import java.nio.file.Path;
@@ -19,21 +19,21 @@ import java.util.stream.Collectors;
  */
 public class BatchCompilationCommand implements CompilationCommand {
 
-    private final ICompiler compiler;
+    private final BatchCompilationService batchService;
     private final List<Path> sourceFiles;
     private final Path outputDir;
 
     /**
      * Creates a new batch compilation command.
      *
-     * @param compiler the compiler to use
+     * @param batchService the batch compilation service to use
      * @param sourceFiles the list of source files to compile
      * @param outputDir the output directory
      * @throws IllegalArgumentException if any parameter is null or sourceFiles is empty
      */
-    public BatchCompilationCommand(ICompiler compiler, List<Path> sourceFiles, Path outputDir) {
-        if (compiler == null) {
-            throw new IllegalArgumentException("Compiler cannot be null");
+    public BatchCompilationCommand(BatchCompilationService batchService, List<Path> sourceFiles, Path outputDir) {
+        if (batchService == null) {
+            throw new IllegalArgumentException("Batch compilation service cannot be null");
         }
         if (sourceFiles == null || sourceFiles.isEmpty()) {
             throw new IllegalArgumentException("Source files cannot be null or empty");
@@ -42,14 +42,14 @@ public class BatchCompilationCommand implements CompilationCommand {
             throw new IllegalArgumentException("Output directory cannot be null");
         }
 
-        this.compiler = compiler;
+        this.batchService = batchService;
         this.sourceFiles = List.copyOf(sourceFiles);
         this.outputDir = outputDir;
     }
 
     @Override
     public CompilationResult execute() throws CompilationException {
-        return compiler.compileBatch(sourceFiles, outputDir);
+        return batchService.compileBatch(sourceFiles, outputDir);
     }
 
     @Override
