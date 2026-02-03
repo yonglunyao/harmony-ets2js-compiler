@@ -1,5 +1,8 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +10,8 @@ import java.util.List;
  * Represents a component statement after create/pop transformation.
  * Example: Text.create('Hello'); Text.fontSize(16); Text.pop();
  */
+@Getter
+@Setter
 public class ComponentStatement implements AstNode {
     private final String componentName;
     private final List<ComponentPart> parts;
@@ -17,24 +22,8 @@ public class ComponentStatement implements AstNode {
         this.parts = new ArrayList<>();
     }
 
-    public String getComponentName() {
-        return componentName;
-    }
-
     public void addPart(ComponentPart part) {
         parts.add(part);
-    }
-
-    public List<ComponentPart> getParts() {
-        return parts;
-    }
-
-    public Block getChildren() {
-        return children;
-    }
-
-    public void setChildren(Block children) {
-        this.children = children;
     }
 
     public boolean hasChildren() {

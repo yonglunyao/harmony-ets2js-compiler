@@ -1,5 +1,7 @@
 package com.ets2jsc.application.compile;
 
+import lombok.Getter;
+
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.shared.exception.CompilationException;
@@ -18,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Parallel batch compilation service implementation.
  * Compiles source files concurrently using a thread pool.
  */
+@Getter
 public class ParallelBatchCompilationService implements BatchCompilationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelBatchCompilationService.class);
@@ -122,7 +125,7 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
 
     @Override
     public com.ets2jsc.domain.model.compilation.CompilationResult compileBatchWithStructure(
-            List<Path> sourceFiles, Path baseDir, Path outputDir) throws CompilationException {
+            List<Path> sourceFiles, Path baseDir, Path outputDir) {
         com.ets2jsc.domain.model.compilation.CompilationResult result =
                 new com.ets2jsc.domain.model.compilation.CompilationResult();
         int successCount = 0;
@@ -215,11 +218,6 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
     }
 
     @Override
-    public CompilerConfig getConfig() {
-        return config;
-    }
-
-    @Override
     public CompilationMode getMode() {
         return CompilationMode.PARALLEL;
     }
@@ -241,15 +239,6 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
         }
 
         closed = true;
-    }
-
-    /**
-     * Gets the thread pool size.
-     *
-     * @return the thread pool size
-     */
-    public int getThreadPoolSize() {
-        return threadPoolSize;
     }
 
     /**

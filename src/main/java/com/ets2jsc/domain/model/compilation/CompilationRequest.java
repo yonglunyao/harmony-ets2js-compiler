@@ -1,5 +1,7 @@
 package com.ets2jsc.domain.model.compilation;
 
+import lombok.Getter;
+
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.shared.exception.CompilationException;
 
@@ -10,6 +12,7 @@ import java.util.List;
  * Represents a request to compile source code.
  * Contains all information needed for a compilation operation.
  */
+@Getter
 public class CompilationRequest {
 
     private final Path sourcePath;
@@ -50,21 +53,5 @@ public class CompilationRequest {
         this.outputPath = outputPath;
         this.config = config;
         this.mode = mode;
-    }
-
-    public Path getSourcePath() {
-        return sourcePath;
-    }
-
-    public Path getOutputPath() {
-        return outputPath;
-    }
-
-    public CompilerConfig getConfig() {
-        return config;
-    }
-
-    public CompilationMode getMode() {
-        return mode;
     }
 }

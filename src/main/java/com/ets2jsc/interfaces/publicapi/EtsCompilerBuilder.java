@@ -29,7 +29,6 @@ import java.nio.file.Path;
 public class EtsCompilerBuilder {
 
     private final CompilerConfig config;
-    private CompilationMode mode = CompilationMode.SEQUENTIAL;
     private int threadCount = 1;
     private Boolean parallelMode;
 

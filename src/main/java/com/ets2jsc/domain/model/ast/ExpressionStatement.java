@@ -1,17 +1,16 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.Getter;
+
 /**
  * Expression statement node.
  */
+@Getter
 public class ExpressionStatement implements AstNode {
     private final String expression;
 
     public ExpressionStatement(String expression) {
         this.expression = expression;
-    }
-
-    public String getExpression() {
-        return expression;
     }
 
     @Override

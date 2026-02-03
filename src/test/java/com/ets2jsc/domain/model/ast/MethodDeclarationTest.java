@@ -223,10 +223,10 @@ class MethodDeclarationTest {
     void testParameterHasDefault() {
         MethodDeclaration.Parameter param = new MethodDeclaration.Parameter("value");
 
-        assertFalse(param.hasDefault());
+        assertFalse(param.isHasDefault());
 
         param.setHasDefault(true);
-        assertTrue(param.hasDefault());
+        assertTrue(param.isHasDefault());
     }
 
     @Test
@@ -246,7 +246,7 @@ class MethodDeclarationTest {
         param.setHasDefault(true);
 
         assertEquals("default", param.getDefaultValue());
-        assertTrue(param.hasDefault());
+        assertTrue(param.isHasDefault());
     }
 
     @Test
@@ -295,7 +295,7 @@ class MethodDeclarationTest {
         param.setHasDefault(true);
 
         assertEquals("10", param.getDefaultValue());
-        assertTrue(param.hasDefault());
+        assertTrue(param.isHasDefault());
     }
 
     @Test

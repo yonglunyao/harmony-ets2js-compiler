@@ -1,5 +1,7 @@
 package com.ets2jsc.infrastructure.generator.writer;
 
+import lombok.Getter;
+
 import com.ets2jsc.shared.constant.Symbols;
 
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.List;
  * This class provides a fluent API for writing code with proper
  * indentation. It manages line tracking and indentation automatically.
  */
+@Getter
 public class CodeWriter {
 
     private final StringBuilder output;
@@ -25,19 +28,19 @@ public class CodeWriter {
     }
 
     /**
-     * Creates a new code writer with the specified indentation manager.
+     * Creates a new code writer with specified indentation manager.
      *
-     * @param indentation the indentation manager
+     * @param indentation indentation manager
      */
     public CodeWriter(IndentationManager indentation) {
         this(indentation, System.lineSeparator());
     }
 
     /**
-     * Creates a new code writer with the specified indentation manager and line separator.
+     * Creates a new code writer with specified indentation manager and line separator.
      *
-     * @param indentation the indentation manager
-     * @param lineSeparator the line separator string
+     * @param indentation indentation manager
+     * @param lineSeparator line separator string
      */
     public CodeWriter(IndentationManager indentation, String lineSeparator) {
         this.output = new StringBuilder();
@@ -47,9 +50,9 @@ public class CodeWriter {
     }
 
     /**
-     * Writes text to the output.
+     * Writes text to output.
      *
-     * @param text the text to write
+     * @param text text to write
      * @return this writer for chaining
      */
     public CodeWriter write(String text) {
@@ -72,7 +75,7 @@ public class CodeWriter {
     /**
      * Writes text followed by a newline.
      *
-     * @param text the text to write
+     * @param text text to write
      * @return this writer for chaining
      */
     public CodeWriter writeLine(String text) {
@@ -92,9 +95,9 @@ public class CodeWriter {
     }
 
     /**
-     * Writes text with the current indentation.
+     * Writes text with current indentation.
      *
-     * @param text the text to write
+     * @param text text to write
      * @return this writer for chaining
      */
     public CodeWriter writeIndented(String text) {
@@ -108,7 +111,7 @@ public class CodeWriter {
     /**
      * Writes text followed by a newline, with current indentation.
      *
-     * @param text the text to write
+     * @param text text to write
      * @return this writer for chaining
      */
     public CodeWriter writeIndentedLine(String text) {
@@ -149,6 +152,24 @@ public class CodeWriter {
     }
 
     /**
+     * Gets the current indentation level.
+     *
+     * @return current indentation level
+     */
+    public int getCurrentLevel() {
+        return indentation.getCurrentLevel();
+    }
+
+    /**
+     * Gets the output as a string.
+     *
+     * @return the output string
+     */
+    public String getOutput() {
+        return output.toString();
+    }
+
+    /**
      * Executes a block with increased indentation.
      *
      * @param runnable the code to execute
@@ -160,43 +181,16 @@ public class CodeWriter {
     }
 
     /**
-     * Gets the indentation manager.
+     * Gets length of current output.
      *
-     * @return the indentation manager
-     */
-    public IndentationManager getIndentation() {
-        return indentation;
-    }
-
-    /**
-     * Gets the current indentation level.
-     *
-     * @return the current level
-     */
-    public int getCurrentLevel() {
-        return indentation.getCurrentLevel();
-    }
-
-    /**
-     * Gets the current output as a string.
-     *
-     * @return the generated code
-     */
-    public String getOutput() {
-        return output.toString();
-    }
-
-    /**
-     * Gets the length of the current output.
-     *
-     * @return the output length
+     * @return output length
      */
     public int getLength() {
         return output.length();
     }
 
     /**
-     * Checks if the output is empty.
+     * Checks if output is empty.
      *
      * @return true if empty
      */
@@ -217,9 +211,9 @@ public class CodeWriter {
     }
 
     /**
-     * Writes text at the beginning of the output.
+     * Writes text at the beginning of output.
      *
-     * @param text the text to prepend
+     * @param text text to prepend
      * @return this writer for chaining
      */
     public CodeWriter prepend(String text) {
@@ -231,7 +225,7 @@ public class CodeWriter {
     /**
      * Writes multiple lines.
      *
-     * @param lines the lines to write
+     * @param lines lines to write
      * @return this writer for chaining
      */
     public CodeWriter writeLines(String... lines) {
@@ -244,7 +238,7 @@ public class CodeWriter {
     /**
      * Writes multiple lines with indentation.
      *
-     * @param lines the lines to write
+     * @param lines lines to write
      * @return this writer for chaining
      */
     public CodeWriter writeIndentedLines(String... lines) {
@@ -257,7 +251,7 @@ public class CodeWriter {
     /**
      * Writes a code block enclosed in braces.
      *
-     * @param content the content to write inside the block
+     * @param content content to write inside block
      * @return this writer for chaining
      */
     public CodeWriter writeBlock(String content) {
@@ -270,9 +264,9 @@ public class CodeWriter {
     }
 
     /**
-     * Writes a code block enclosed in braces, running the provided code inside.
+     * Writes a code block enclosed in braces, running provided code inside.
      *
-     * @param contentWriter the code to execute inside the block
+     * @param contentWriter code to execute inside block
      * @return this writer for chaining
      */
     public CodeWriter writeBlock(Consumer contentWriter) {
@@ -289,8 +283,8 @@ public class CodeWriter {
     /**
      * Writes an if statement.
      *
-     * @param condition the condition
-     * @param contentWriter the code to execute inside the if block
+     * @param condition condition
+     * @param contentWriter code to execute inside if block
      * @return this writer for chaining
      */
     public CodeWriter writeIf(String condition, Consumer contentWriter) {
@@ -307,9 +301,9 @@ public class CodeWriter {
     /**
      * Writes an if-else statement.
      *
-     * @param condition the condition
-     * @param ifWriter the code for the if block
-     * @param elseWriter the code for the else block
+     * @param condition condition
+     * @param ifWriter code for if block
+     * @param elseWriter code for else block
      * @return this writer for chaining
      */
     public CodeWriter writeIfElse(String condition, Consumer ifWriter,

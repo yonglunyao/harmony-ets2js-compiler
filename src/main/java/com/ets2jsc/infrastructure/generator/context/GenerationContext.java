@@ -1,5 +1,7 @@
 package com.ets2jsc.infrastructure.generator.context;
 
+import lombok.Getter;
+
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.infrastructure.generator.IndentationManager;
 
@@ -17,6 +19,7 @@ import java.util.Set;
  *
  * @since 1.0
  */
+@Getter
 public class GenerationContext {
 
     private final CompilerConfig config;
@@ -52,33 +55,6 @@ public class GenerationContext {
      */
     public static GenerationContext create() {
         return new GenerationContext(null);
-    }
-
-    /**
-     * Gets the compiler configuration.
-     *
-     * @return the compiler configuration
-     */
-    public CompilerConfig getConfig() {
-        return config;
-    }
-
-    /**
-     * Gets the indentation manager.
-     *
-     * @return the indentation manager
-     */
-    public IndentationManager getIndentation() {
-        return indentation;
-    }
-
-    /**
-     * Gets the output string builder.
-     *
-     * @return the output builder
-     */
-    public StringBuilder getOutput() {
-        return output;
     }
 
     /**

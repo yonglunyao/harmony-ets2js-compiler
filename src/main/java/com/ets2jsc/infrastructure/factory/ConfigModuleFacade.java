@@ -7,6 +7,7 @@ import java.nio.file.Files;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Facade for configuration management.
@@ -31,11 +32,7 @@ public class ConfigModuleFacade implements ConfigService, AutoCloseable {
      * @param configuration the initial configuration
      */
     public ConfigModuleFacade(CompilerConfig configuration) {
-        if (configuration == null) {
-            this.configuration = CompilerConfig.createDefault();
-        } else {
-            this.configuration = configuration;
-        }
+        this.configuration = Objects.requireNonNullElseGet(configuration, CompilerConfig::createDefault);
     }
 
     @Override

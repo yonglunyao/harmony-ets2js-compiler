@@ -1,5 +1,7 @@
 package com.ets2jsc.domain.model.config;
 
+import lombok.Getter;
+
 /**
  * Full render compilation mode state.
  * <p>
@@ -9,6 +11,7 @@ package com.ets2jsc.domain.model.config;
  *
  * @since 1.0
  */
+@Getter
 public final class FullRenderMode implements CompilationMode {
 
     private static final FullRenderMode INSTANCE = new FullRenderMode();

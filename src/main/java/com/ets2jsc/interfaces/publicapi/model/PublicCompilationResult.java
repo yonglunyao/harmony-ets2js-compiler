@@ -1,5 +1,7 @@
 package com.ets2jsc.interfaces.publicapi.model;
 
+import lombok.Getter;
+
 import com.ets2jsc.domain.model.compilation.CompilationResult;
 
 import java.nio.file.Path;
@@ -155,6 +157,7 @@ public class PublicCompilationResult {
     /**
      * Represents the result of compiling a single file.
      */
+    @Getter
     public static class FileResult {
         private final CompilationResult.FileResult internalResult;
 
@@ -172,24 +175,6 @@ public class PublicCompilationResult {
         }
 
         /**
-         * Gets the source file path.
-         *
-         * @return the source file path
-         */
-        public Path getSourcePath() {
-            return internalResult.getSourcePath();
-        }
-
-        /**
-         * Gets the output file path.
-         *
-         * @return the output file path, or null if compilation failed
-         */
-        public Path getOutputPath() {
-            return internalResult.getOutputPath();
-        }
-
-        /**
          * Gets the compilation status.
          *
          * @return the status
@@ -200,33 +185,6 @@ public class PublicCompilationResult {
                 case FAILURE -> Status.FAILURE;
                 case SKIPPED -> Status.SKIPPED;
             };
-        }
-
-        /**
-         * Gets the result message.
-         *
-         * @return the message
-         */
-        public String getMessage() {
-            return internalResult.getMessage();
-        }
-
-        /**
-         * Gets the error that caused failure, if any.
-         *
-         * @return the error, or null if compilation succeeded
-         */
-        public Throwable getError() {
-            return internalResult.getError();
-        }
-
-        /**
-         * Gets the duration for this file compilation.
-         *
-         * @return the duration in milliseconds
-         */
-        public long getDurationMs() {
-            return internalResult.getDurationMs();
         }
 
         /**
@@ -254,6 +212,24 @@ public class PublicCompilationResult {
          */
         public boolean isSkipped() {
             return internalResult.getStatus() == CompilationResult.Status.SKIPPED;
+        }
+
+        /**
+         * Gets the source file path.
+         *
+         * @return source file path
+         */
+        public Path getSourcePath() {
+            return internalResult.getSourcePath();
+        }
+
+        /**
+         * Gets the output file path.
+         *
+         * @return output file path
+         */
+        public Path getOutputPath() {
+            return internalResult.getOutputPath();
         }
     }
 

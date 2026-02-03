@@ -81,7 +81,11 @@ src/main/java/com/ets2jsc/
 
 #### 强制要求 (Must Follow)
 
-1. **禁止使用魔鬼数字**
+1. **优先使用 Lombok**
+   - 对于简单的 getter 和 setter 方法，必须使用 Lombok 注解（@Getter, @Setter）替代手写方法
+   - 新增类时，默认使用 Lombok 生成 getter/setter
+
+2. **禁止使用魔鬼数字**
    - 所有常量必须定义在专门的常量类中（如 `Symbols.java`、`RuntimeFunctions.java`）
    - 不允许在代码中直接使用魔法数字或字符串
 

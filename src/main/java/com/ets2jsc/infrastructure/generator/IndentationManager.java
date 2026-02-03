@@ -1,11 +1,14 @@
 package com.ets2jsc.infrastructure.generator;
 
+import lombok.Getter;
+
 import com.ets2jsc.shared.constant.Symbols;
 
 /**
  * Manages indentation level and generates indent strings.
  * Extracted from CodeGenerator for reusability.
  */
+@Getter
 public class IndentationManager {
 
     private final String indent;
@@ -44,14 +47,6 @@ public class IndentationManager {
         if (currentIndent > 0) {
             currentIndent--;
         }
-    }
-
-    /**
-     * Gets current indentation level.
-     * CC: 1
-     */
-    public int getLevel() {
-        return currentIndent;
     }
 
     /**

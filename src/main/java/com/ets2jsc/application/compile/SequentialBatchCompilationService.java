@@ -1,5 +1,7 @@
 package com.ets2jsc.application.compile;
 
+import lombok.Getter;
+
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.shared.exception.CompilationException;
 
@@ -12,6 +14,7 @@ import java.util.List;
  * Sequential batch compilation service implementation.
  * Compiles source files one by one in sequence.
  */
+@Getter
 public class SequentialBatchCompilationService implements BatchCompilationService {
 
     private final CompilationPipeline pipeline;
@@ -66,7 +69,7 @@ public class SequentialBatchCompilationService implements BatchCompilationServic
 
     @Override
     public com.ets2jsc.domain.model.compilation.CompilationResult compileBatchWithStructure(
-            List<Path> sourceFiles, Path baseDir, Path outputDir) throws CompilationException {
+            List<Path> sourceFiles, Path baseDir, Path outputDir) {
         com.ets2jsc.domain.model.compilation.CompilationResult result =
                 new com.ets2jsc.domain.model.compilation.CompilationResult();
 
@@ -146,11 +149,6 @@ public class SequentialBatchCompilationService implements BatchCompilationServic
     }
 
     @Override
-    public CompilerConfig getConfig() {
-        return config;
-    }
-
-    @Override
     public CompilationMode getMode() {
         return CompilationMode.SEQUENTIAL;
     }
@@ -158,14 +156,5 @@ public class SequentialBatchCompilationService implements BatchCompilationServic
     @Override
     public void close() {
         closed = true;
-    }
-
-    /**
-     * Checks if the service has been closed.
-     *
-     * @return true if the service is closed, false otherwise
-     */
-    public boolean isClosed() {
-        return closed;
     }
 }

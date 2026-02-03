@@ -1,6 +1,7 @@
 package com.ets2jsc.domain.model.ast;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,8 +12,10 @@ import java.util.Map;
  */
 @Getter
 public class Decorator implements AstNode {
+    @Setter
     private String name;
     private Map<String, Object> arguments;
+    @Setter
     private String rawExpression;
 
     public Decorator(String name) {
@@ -30,20 +33,12 @@ public class Decorator implements AstNode {
         return visitor.visit(this);
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public void setArgument(String key, Object value) {
         this.arguments.put(key, value);
     }
 
     public Object getArgument(String key) {
         return arguments.get(key);
-    }
-
-    public void setRawExpression(String rawExpression) {
-        this.rawExpression = rawExpression;
     }
 
     /**

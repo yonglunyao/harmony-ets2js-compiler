@@ -7,6 +7,7 @@ import com.ets2jsc.domain.service.GeneratorService;
 import com.ets2jsc.domain.service.ParserService;
 import com.ets2jsc.domain.service.TransformerService;
 import com.ets2jsc.shared.exception.CompilationException;
+import lombok.Getter;
 
 import java.nio.file.Path;
 
@@ -18,10 +19,15 @@ import java.nio.file.Path;
  */
 public class CompilationPipeline implements AutoCloseable {
 
+    @Getter
     private final ParserService parser;
+    @Getter
     private final TransformerService transformer;
+    @Getter
     private final GeneratorService generator;
+    @Getter
     private final CompilerConfig config;
+    @Getter
     private volatile boolean closed;
 
     /**
@@ -95,42 +101,6 @@ public class CompilationPipeline implements AutoCloseable {
     }
 
     /**
-     * Gets the parser service.
-     *
-     * @return the parser service
-     */
-    public ParserService getParser() {
-        return parser;
-    }
-
-    /**
-     * Gets the transformer service.
-     *
-     * @return the transformer service
-     */
-    public TransformerService getTransformer() {
-        return transformer;
-    }
-
-    /**
-     * Gets the generator service.
-     *
-     * @return the generator service
-     */
-    public GeneratorService getGenerator() {
-        return generator;
-    }
-
-    /**
-     * Gets the compiler configuration.
-     *
-     * @return the compiler configuration
-     */
-    public CompilerConfig getConfig() {
-        return config;
-    }
-
-    /**
      * Reconfigures the pipeline with a new configuration.
      *
      * @param newConfig the new configuration
@@ -167,15 +137,6 @@ public class CompilationPipeline implements AutoCloseable {
         }
 
         closed = true;
-    }
-
-    /**
-     * Checks if the pipeline has been closed.
-     *
-     * @return true if the pipeline is closed, false otherwise
-     */
-    public boolean isClosed() {
-        return closed;
     }
 
     /**

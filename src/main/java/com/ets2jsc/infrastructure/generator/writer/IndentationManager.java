@@ -1,11 +1,14 @@
 package com.ets2jsc.infrastructure.generator.writer;
 
+import lombok.Getter;
+
 /**
  * Manages indentation level for code generation.
  * <p>
  * This class tracks the current indentation level and provides
  * methods to increase, decrease, and retrieve indentation strings.
  */
+@Getter
 public class IndentationManager {
 
     private final String indentString;
@@ -26,15 +29,6 @@ public class IndentationManager {
      */
     public IndentationManager() {
         this("  ");
-    }
-
-    /**
-     * Gets the current indentation level.
-     *
-     * @return the current level (0 = no indentation)
-     */
-    public int getCurrentLevel() {
-        return currentLevel;
     }
 
     /**
@@ -61,19 +55,6 @@ public class IndentationManager {
         if (currentLevel > 0) {
             currentLevel--;
         }
-    }
-
-    /**
-     * Gets the current indentation as a string.
-     *
-     * @return the indentation string for the current level
-     */
-    public String getCurrentIndent() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < currentLevel; i++) {
-            sb.append(indentString);
-        }
-        return sb.toString();
     }
 
     /**
@@ -106,6 +87,15 @@ public class IndentationManager {
         IndentationManager copy = new IndentationManager(indentString);
         copy.setCurrentLevel(currentLevel);
         return copy;
+    }
+
+    /**
+     * Gets the current indentation string for the current level.
+     *
+     * @return the indentation string at the current level
+     */
+    public String getCurrentIndent() {
+        return getIndent(currentLevel);
     }
 
     /**

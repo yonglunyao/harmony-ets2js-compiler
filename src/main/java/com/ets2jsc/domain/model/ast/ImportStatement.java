@@ -1,5 +1,7 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +12,7 @@ import java.util.List;
  * - import Module from 'module'
  * - import * as Module from 'module'
  */
+@Getter
 public class ImportStatement implements AstNode {
     private final String module;
     private final List<ImportSpecifier> specifiers;
@@ -21,14 +24,6 @@ public class ImportStatement implements AstNode {
 
     public void addSpecifier(ImportSpecifier specifier) {
         specifiers.add(specifier);
-    }
-
-    public String getModule() {
-        return module;
-    }
-
-    public List<ImportSpecifier> getSpecifiers() {
-        return specifiers;
     }
 
     @Override

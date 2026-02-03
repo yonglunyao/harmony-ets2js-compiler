@@ -1,5 +1,8 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,19 +10,30 @@ import java.util.List;
  * Represents a method declaration in ETS.
  * Used for build() method transformation and other methods.
  */
+@Getter
 public class MethodDeclaration implements AstNode {
     private final List<Parameter> parameters;
     private final List<Decorator> decorators;
+    @Setter
     private String name;
+    @Setter
     private String returnType;
+    @Setter
     private AstNode body;
-    private boolean _isAsync;
-    private boolean _isStatic;
+    @Setter
+    private boolean isAsync;
+    @Setter
+    private boolean isStatic;
 
+    /**
+     * Parameter class for method declarations.
+     */
+    @Getter
+    @Setter
     public static class Parameter {
         private String name;
         private String type;
-        private boolean _hasDefault;
+        private boolean hasDefault;
         private String defaultValue;
 
         public Parameter(String name) {
@@ -30,46 +44,14 @@ public class MethodDeclaration implements AstNode {
             this.name = name;
             this.type = type;
         }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
-        }
-
-        public boolean hasDefault() {
-            return _hasDefault;
-        }
-
-        public void setHasDefault(boolean hasDefault) {
-            _hasDefault = hasDefault;
-        }
-
-        public String getDefaultValue() {
-            return defaultValue;
-        }
-
-        public void setDefaultValue(String defaultValue) {
-            this.defaultValue = defaultValue;
-        }
     }
 
     public MethodDeclaration(String name) {
         this.name = name;
         this.parameters = new ArrayList<>();
         this.decorators = new ArrayList<>();
-        this._isAsync = false;
-        this._isStatic = false;
+        this.isAsync = false;
+        this.isStatic = false;
     }
 
     @Override
@@ -82,60 +64,12 @@ public class MethodDeclaration implements AstNode {
         return visitor.visit(this);
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getReturnType() {
-        return returnType;
-    }
-
-    public void setReturnType(String returnType) {
-        this.returnType = returnType;
-    }
-
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
     public void addParameter(Parameter parameter) {
         this.parameters.add(parameter);
     }
 
-    public List<Decorator> getDecorators() {
-        return decorators;
-    }
-
     public void addDecorator(Decorator decorator) {
         this.decorators.add(decorator);
-    }
-
-    public AstNode getBody() {
-        return body;
-    }
-
-    public void setBody(AstNode body) {
-        this.body = body;
-    }
-
-    public boolean isAsync() {
-        return _isAsync;
-    }
-
-    public void setAsync(boolean async) {
-        _isAsync = async;
-    }
-
-    public boolean isStatic() {
-        return _isStatic;
-    }
-
-    public void setStatic(boolean staticFlag) {
-        _isStatic = staticFlag;
     }
 
     /**

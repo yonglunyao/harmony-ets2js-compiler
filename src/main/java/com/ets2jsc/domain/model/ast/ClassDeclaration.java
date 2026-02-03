@@ -1,5 +1,8 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -8,21 +11,27 @@ import java.util.Objects;
  * Represents a class or struct declaration in ETS.
  * Key node for @Component decorator transformation.
  */
+@Getter
 public class ClassDeclaration implements AstNode {
+    @Setter
     private String name;
     private final List<Decorator> decorators;
     private final List<AstNode> members;
-    private boolean _isStruct;
+    @Setter
+    private boolean isStruct;
+    @Setter
     private String superClass;
+    @Setter
     private String heritageClause;
-    private boolean _isExport; // Track if this class is exported
+    @Setter
+    private boolean isExport;
 
     public ClassDeclaration(String name) {
         this.name = name;
         this.decorators = new ArrayList<>();
         this.members = new ArrayList<>();
-        this._isStruct = false;
-        this._isExport = false;
+        this.isStruct = false;
+        this.isExport = false;
     }
 
     @Override
@@ -33,18 +42,6 @@ public class ClassDeclaration implements AstNode {
     @Override
     public <T> T accept(AstVisitor<T> visitor) {
         return visitor.visit(this);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<Decorator> getDecorators() {
-        return decorators;
     }
 
     public void addDecorator(Decorator decorator) {
@@ -73,44 +70,8 @@ public class ClassDeclaration implements AstNode {
                 .orElse(null);
     }
 
-    public List<AstNode> getMembers() {
-        return members;
-    }
-
     public void addMember(AstNode member) {
         this.members.add(member);
-    }
-
-    public boolean isStruct() {
-        return _isStruct;
-    }
-
-    public void setStruct(boolean struct) {
-        _isStruct = struct;
-    }
-
-    public String getSuperClass() {
-        return superClass;
-    }
-
-    public void setSuperClass(String superClass) {
-        this.superClass = superClass;
-    }
-
-    public String getHeritageClause() {
-        return heritageClause;
-    }
-
-    public void setHeritageClause(String heritageClause) {
-        this.heritageClause = heritageClause;
-    }
-
-    public boolean isExport() {
-        return _isExport;
-    }
-
-    public void setExport(boolean export) {
-        _isExport = export;
     }
 
     /**

@@ -1,5 +1,8 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +10,8 @@ import java.util.List;
  * Represents a source file in the ETS/TypeScript AST.
  * Contains top-level declarations such as classes, functions, and imports.
  */
+@Getter
+@Setter
 public class SourceFile implements AstNode {
     private String fileName;
     private String sourceText;
@@ -34,32 +39,8 @@ public class SourceFile implements AstNode {
         return visitor.visit(this);
     }
 
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public String getSourceText() {
-        return sourceText;
-    }
-
-    public void setSourceText(String sourceText) {
-        this.sourceText = sourceText;
-    }
-
-    public List<AstNode> getStatements() {
-        return statements;
-    }
-
     public void addStatement(AstNode statement) {
         this.statements.add(statement);
-    }
-
-    public List<String> getImports() {
-        return imports;
     }
 
     public void addImport(String importPath) {

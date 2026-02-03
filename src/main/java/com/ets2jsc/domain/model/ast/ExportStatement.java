@@ -1,5 +1,7 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.Getter;
+
 /**
  * Export statement AST node.
  * Represents an export declaration like:
@@ -10,6 +12,7 @@ package com.ets2jsc.domain.model.ast;
  * - export { name } from 'module'
  * - export type { TypeName } from 'module'
  */
+@Getter
 public class ExportStatement implements AstNode {
     private final AstNode declarationNode;
     private final String declarationString;
@@ -25,18 +28,6 @@ public class ExportStatement implements AstNode {
         this.declarationNode = declarationNode;
         this.declarationString = declarationString;
         this._isTypeExport = isTypeExport;
-    }
-
-    public AstNode getDeclarationNode() {
-        return declarationNode;
-    }
-
-    public String getDeclarationString() {
-        return declarationString;
-    }
-
-    public boolean isTypeExport() {
-        return _isTypeExport;
     }
 
     @Override

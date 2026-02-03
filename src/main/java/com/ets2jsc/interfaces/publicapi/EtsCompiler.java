@@ -1,5 +1,7 @@
 package com.ets2jsc.interfaces.publicapi;
 
+import lombok.Getter;
+
 import com.ets2jsc.application.compile.BatchCompilationService;
 import com.ets2jsc.application.compile.BatchCompilationServiceFactory;
 import com.ets2jsc.application.compile.CompilationPipeline;
@@ -50,6 +52,7 @@ import java.util.List;
  * @see EtsCompilerBuilder
  * @see PublicCompilationResult
  */
+@Getter
 public class EtsCompiler implements AutoCloseable {
 
     private final CompilationPipeline pipeline;
@@ -164,42 +167,6 @@ public class EtsCompiler implements AutoCloseable {
         checkNotClosed();
         CompilationResult internalResult = batchService.compileProject(sourceDir, outputDir, copyResources);
         return new PublicCompilationResult(internalResult);
-    }
-
-    /**
-     * Gets the compiler configuration.
-     *
-     * @return a snapshot of the current configuration
-     */
-    public CompilerConfig getConfig() {
-        return config;
-    }
-
-    /**
-     * Gets the compilation mode.
-     *
-     * @return the compilation mode
-     */
-    public CompilationMode getMode() {
-        return mode;
-    }
-
-    /**
-     * Gets the thread count for parallel compilation.
-     *
-     * @return the thread count (1 for sequential mode)
-     */
-    public int getThreadCount() {
-        return threadCount;
-    }
-
-    /**
-     * Checks if the compiler has been closed.
-     *
-     * @return true if the compiler is closed, false otherwise
-     */
-    public boolean isClosed() {
-        return closed;
     }
 
     @Override

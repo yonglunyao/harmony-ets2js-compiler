@@ -1,9 +1,12 @@
 package com.ets2jsc.infrastructure.generator;
 
+import lombok.Getter;
+
 import com.ets2jsc.domain.model.ast.*;
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.infrastructure.transformer.ComponentExpressionTransformer;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,11 +15,13 @@ import java.util.List;
  * Generates JavaScript code from transformed AST.
  * Uses helper classes to manage complexity and maintain low cyclomatic complexity.
  */
+@Getter
 public class CodeGenerator implements AstVisitor<String> {
 
     private final StringBuilder output;
     private final IndentationManager indentation;
     private final CompilerConfig config;
+    @Setter
     private boolean insideComponentClass = false;
     private List<String> currentBuilderMethods = new ArrayList<>();
 
@@ -352,25 +357,8 @@ public class CodeGenerator implements AstVisitor<String> {
     }
 
     /**
-     * Sets whether we are inside a component class.
+     * Gets current indentation.
      */
-    public void setInsideComponentClass(boolean insideComponentClass) {
-        this.insideComponentClass = insideComponentClass;
-    }
-
-    /**
-     * Checks if we are currently inside a component class.
-     */
-    public boolean isInsideComponentClass() {
-        return insideComponentClass;
-    }
-
-    /**
-     * Gets the generated code as a string.
-     */
-    public String getOutput() {
-        return output.toString();
-    }
 
     /**
      * Gets current indentation.

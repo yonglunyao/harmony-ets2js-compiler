@@ -1,5 +1,8 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,32 +11,25 @@ import java.util.List;
  * e.g., Text('Hello'), Column() { ... }
  * Transforms to create/pop pattern.
  */
+@Getter
 public class ComponentExpression implements AstNode {
+    @Setter
     private String componentName;
     private final List<AstNode> arguments;
     private final List<MethodCall> chainedCalls;
     private final List<AstNode> children;
+    @Setter
     private String objectLiteral;
 
+    @Getter
+    @Setter
     public static class MethodCall {
-        private String methodName;
+        private final String methodName;
         private final List<AstNode> arguments;
 
         public MethodCall(String methodName) {
             this.methodName = methodName;
             this.arguments = new ArrayList<>();
-        }
-
-        public String getMethodName() {
-            return methodName;
-        }
-
-        public void setMethodName(String methodName) {
-            this.methodName = methodName;
-        }
-
-        public List<AstNode> getArguments() {
-            return arguments;
         }
 
         public void addArgument(AstNode argument) {
@@ -58,44 +54,16 @@ public class ComponentExpression implements AstNode {
         return visitor.visit(this);
     }
 
-    public String getComponentName() {
-        return componentName;
-    }
-
-    public void setComponentName(String componentName) {
-        this.componentName = componentName;
-    }
-
-    public List<AstNode> getArguments() {
-        return arguments;
-    }
-
     public void addArgument(AstNode argument) {
         this.arguments.add(argument);
-    }
-
-    public List<MethodCall> getChainedCalls() {
-        return chainedCalls;
     }
 
     public void addChainedCall(MethodCall call) {
         this.chainedCalls.add(call);
     }
 
-    public List<AstNode> getChildren() {
-        return children;
-    }
-
     public void addChild(AstNode child) {
         this.children.add(child);
-    }
-
-    public String getObjectLiteral() {
-        return objectLiteral;
-    }
-
-    public void setObjectLiteral(String objectLiteral) {
-        this.objectLiteral = objectLiteral;
     }
 
     /**

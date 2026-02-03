@@ -1,5 +1,8 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -8,13 +11,21 @@ import java.util.Optional;
  * Represents a property declaration in ETS.
  * Used for @State, @Prop, @Link decorator transformations.
  */
+@Getter
 public class PropertyDeclaration implements AstNode {
+    @Setter
     private String name;
-    private String type;
+    @Setter
+    private String propertyType;
+    @Setter
+    private String typeAnnotation;
+    @Setter
     private String initializer;
     private final List<Decorator> decorators;
+    @Setter
     private Visibility visibility;
-    private boolean _isReadOnly;
+    @Setter
+    private boolean isReadOnly;
 
     public enum Visibility {
         PUBLIC, PRIVATE, PROTECTED, INTERNAL
@@ -24,7 +35,7 @@ public class PropertyDeclaration implements AstNode {
         this.name = name;
         this.decorators = new ArrayList<>();
         this.visibility = Visibility.INTERNAL;
-        this._isReadOnly = false;
+        this.isReadOnly = false;
     }
 
     @Override
@@ -35,34 +46,6 @@ public class PropertyDeclaration implements AstNode {
     @Override
     public <T> T accept(AstVisitor<T> visitor) {
         return visitor.visit(this);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getTypeAnnotation() {
-        return type;
-    }
-
-    public void setTypeAnnotation(String type) {
-        this.type = type;
-    }
-
-    public String getInitializer() {
-        return initializer;
-    }
-
-    public void setInitializer(String initializer) {
-        this.initializer = initializer;
-    }
-
-    public List<Decorator> getDecorators() {
-        return decorators;
     }
 
     public void addDecorator(Decorator decorator) {
@@ -84,22 +67,6 @@ public class PropertyDeclaration implements AstNode {
         return decorators.stream()
                 .filter(d -> d.getName().equals(decoratorName))
                 .findFirst();
-    }
-
-    public Visibility getVisibility() {
-        return visibility;
-    }
-
-    public void setVisibility(Visibility visibility) {
-        this.visibility = visibility;
-    }
-
-    public boolean isReadOnly() {
-        return _isReadOnly;
-    }
-
-    public void setReadOnly(boolean readOnly) {
-        _isReadOnly = readOnly;
     }
 
     /**

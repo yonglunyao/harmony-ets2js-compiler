@@ -1,21 +1,28 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Represents a function/method call expression.
  */
+@Getter
 public class CallExpression implements AstNode {
     private final List<AstNode> arguments;
+    @Setter
     private String functionName;
+    @Setter
     private AstNode callee;
-    private boolean _isComponentCall;
+    @Setter
+    private boolean isComponentCall;
 
     public CallExpression(String functionName) {
         this.functionName = functionName;
         this.arguments = new ArrayList<>();
-        this._isComponentCall = false;
+        this.isComponentCall = false;
     }
 
     @Override
@@ -28,36 +35,8 @@ public class CallExpression implements AstNode {
         return visitor.visit(this);
     }
 
-    public String getFunctionName() {
-        return functionName;
-    }
-
-    public void setFunctionName(String functionName) {
-        this.functionName = functionName;
-    }
-
-    public List<AstNode> getArguments() {
-        return arguments;
-    }
-
     public void addArgument(AstNode argument) {
         this.arguments.add(argument);
-    }
-
-    public AstNode getCallee() {
-        return callee;
-    }
-
-    public void setCallee(AstNode callee) {
-        this.callee = callee;
-    }
-
-    public boolean isComponentCall() {
-        return _isComponentCall;
-    }
-
-    public void setComponentCall(boolean componentCall) {
-        _isComponentCall = componentCall;
     }
 
     /**

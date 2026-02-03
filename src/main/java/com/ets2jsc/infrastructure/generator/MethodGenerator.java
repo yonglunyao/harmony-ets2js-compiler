@@ -83,7 +83,7 @@ public class MethodGenerator {
             MethodDeclaration.Parameter param = method.getParameters().get(i);
             sb.append(param.getName());
 
-            if (param.hasDefault() && param.getDefaultValue() != null) {
+            if (param.isHasDefault() && param.getDefaultValue() != null) {
                 sb.append(" = ").append(param.getDefaultValue());
             }
         }
