@@ -9,13 +9,41 @@ import com.ets2jsc.infrastructure.transformer.DecoratorTransformer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Default implementation of TransformerFactory.
  * <p>
- * Creates standard transformer instances in the correct order.
+ * Creates transformer instances in the correct order.
  */
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString
 public class DefaultTransformerFactory implements TransformerFactory {
+
+    private final CompilerConfig config;
+
+    /**
+     * Creates a factory instance.
+     */
+    public DefaultTransformerFactory() {
+        this.config = CompilerConfig.createDefault();
+    }
+
+    /**
+     * Creates a factory with specific configuration.
+     *
+     * @param config compiler configuration
+     */
+    public DefaultTransformerFactory(CompilerConfig config) {
+        this.config = config;
+    }
 
     @Override
     public List<AstTransformer> createTransformers(CompilerConfig config) {

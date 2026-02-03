@@ -6,6 +6,7 @@ import com.ets2jsc.domain.service.GeneratorService;
 import com.ets2jsc.domain.service.ConfigService;
 import com.ets2jsc.domain.service.ModuleFactoryService;
 import com.ets2jsc.domain.model.config.CompilerConfig;
+import lombok.Getter;
 
 /**
  * Service provider for compilation services.
@@ -20,6 +21,13 @@ public final class ModuleServiceProvider {
 
     private final ModuleFactoryService moduleFactory;
     private final ConfigService config;
+    /**
+     * -- GETTER --
+     *  Checks if the provider has been closed.
+     *
+     * @return true if the provider is closed, false otherwise
+     */
+    @Getter
     private volatile boolean closed;
 
     /**
@@ -95,15 +103,6 @@ public final class ModuleServiceProvider {
     public ConfigService getConfig() {
         checkNotClosed();
         return config;
-    }
-
-    /**
-     * Checks if the provider has been closed.
-     *
-     * @return true if the provider is closed, false otherwise
-     */
-    public boolean isClosed() {
-        return closed;
     }
 
     /**

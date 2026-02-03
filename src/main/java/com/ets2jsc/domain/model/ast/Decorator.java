@@ -1,7 +1,9 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +13,8 @@ import java.util.Map;
  * Decorators like @Component, @State, @Prop, @Builder, etc.
  */
 @Getter
+@EqualsAndHashCode(callSuper = false)
+@ToString(callSuper = false)
 public class Decorator implements AstNode {
     @Setter
     private String name;

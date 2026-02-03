@@ -1,7 +1,9 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +13,9 @@ import java.util.List;
  * Used for build() method transformation and other methods.
  */
 @Getter
+@Setter
+@EqualsAndHashCode(callSuper = false)
+@ToString(callSuper = false)
 public class MethodDeclaration implements AstNode {
     private final List<Parameter> parameters;
     private final List<Decorator> decorators;
@@ -30,6 +35,7 @@ public class MethodDeclaration implements AstNode {
      */
     @Getter
     @Setter
+    @EqualsAndHashCode
     public static class Parameter {
         private String name;
         private String type;
@@ -73,7 +79,7 @@ public class MethodDeclaration implements AstNode {
     }
 
     /**
-     * Returns true if this is the build() method that needs transformation.
+     * Returns true if this is build() method that needs transformation.
      */
     public boolean isBuildMethod() {
         return "build".equals(name);

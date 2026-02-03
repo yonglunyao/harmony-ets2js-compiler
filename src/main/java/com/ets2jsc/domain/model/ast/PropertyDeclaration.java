@@ -1,7 +1,9 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.Optional;
  * Used for @State, @Prop, @Link decorator transformations.
  */
 @Getter
+@EqualsAndHashCode(callSuper = false)
+@ToString(callSuper = false)
 public class PropertyDeclaration implements AstNode {
     @Setter
     private String name;

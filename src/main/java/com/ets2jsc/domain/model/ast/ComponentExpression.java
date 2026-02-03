@@ -1,10 +1,14 @@
 package com.ets2jsc.domain.model.ast;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.ets2jsc.infrastructure.constant.BuiltInComponents;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Represents a UI component expression in ETS.
@@ -12,6 +16,9 @@ import java.util.List;
  * Transforms to create/pop pattern.
  */
 @Getter
+@Setter
+@EqualsAndHashCode(callSuper = false)
+@ToString(callSuper = false)
 public class ComponentExpression implements AstNode {
     @Setter
     private String componentName;

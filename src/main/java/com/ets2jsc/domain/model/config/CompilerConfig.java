@@ -1,18 +1,24 @@
 package com.ets2jsc.domain.model.config;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
- * Compiler configuration for the ETS to JS compiler.
+ * Compiler configuration for ETS to JS compiler.
  * Contains all settings needed for the compilation process.
  */
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
+@ToString
 public class CompilerConfig {
     // Path configuration
     private String projectPath;
@@ -33,16 +39,10 @@ public class CompilerConfig {
     private boolean processTs = true;
     private boolean enableLazyImport = false;
     private boolean validateApi = true;
-    private boolean pureJavaScript;  // Generate pure JS without ArkUI runtime dependencies
+    private boolean pureJavaScript; // Generate pure JS without ArkUI runtime dependencies
 
     // Entry points
     private Map<String, String> entryObj = new HashMap<>();
-
-    public enum CompileMode {
-        JSBUNDLE,    // Traditional bundle mode
-        MODULE_JSON, // Stage model - module.json based
-        ES_MODULE    // ES Module mode
-    }
 
     /**
      * Adds an entry point to the configuration.
@@ -66,11 +66,11 @@ public class CompilerConfig {
      * Gets the source root directory as a Path.
      * Returns null if sourcePath is not configured.
      */
-    public java.nio.file.Path getSourceRootDir() {
+    public Path getSourceRootDir() {
         if (sourcePath == null || sourcePath.isEmpty()) {
             return null;
         }
-        return java.nio.file.Path.of(sourcePath);
+        return Path.of(sourcePath);
     }
 
     /**

@@ -1,7 +1,9 @@
 package com.ets2jsc.domain.model.ast;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.Objects;
  * Key node for @Component decorator transformation.
  */
 @Getter
+@EqualsAndHashCode(callSuper = false)
+@ToString(callSuper = false)
 public class ClassDeclaration implements AstNode {
     @Setter
     private String name;

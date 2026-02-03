@@ -1,15 +1,20 @@
 package com.ets2jsc.domain.model.ast;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Represents a function/method call expression.
  */
 @Getter
+@Setter
+@EqualsAndHashCode(callSuper = false)
+@ToString(callSuper = false)
 public class CallExpression implements AstNode {
     private final List<AstNode> arguments;
     @Setter

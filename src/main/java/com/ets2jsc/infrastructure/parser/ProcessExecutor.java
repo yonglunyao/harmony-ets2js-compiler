@@ -1,6 +1,8 @@
 package com.ets2jsc.infrastructure.parser;
 
 import com.ets2jsc.shared.exception.ParserInitializationException;
+import lombok.Getter;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -250,6 +252,7 @@ public class ProcessExecutor {
     /**
      * Result of a process execution.
      */
+    @Getter
     public static class ProcessResult {
         private final int exitCode;
         private final String output;
@@ -259,18 +262,6 @@ public class ProcessExecutor {
             this.exitCode = exitCode;
             this.output = output;
             this.errorOutput = errorOutput;
-        }
-
-        public int getExitCode() {
-            return exitCode;
-        }
-
-        public String getOutput() {
-            return output;
-        }
-
-        public String getErrorOutput() {
-            return errorOutput;
         }
 
         public boolean isSuccess() {
