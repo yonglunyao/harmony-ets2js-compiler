@@ -1,6 +1,6 @@
 package com.ets2jsc.domain.model.ast;
 
-import com.ets2jsc.infrastructure.constant.BuiltInComponents;
+import com.ets2jsc.domain.model.ast.BuiltInComponents;
 
 import java.util.ArrayList;
 import java.util.List;

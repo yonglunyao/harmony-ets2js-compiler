@@ -87,4 +87,14 @@ public class CompilerConfig {
         config.setSourcePath("src/main/ets");
         return config;
     }
+
+    /**
+     * Compilation mode enum.
+     * Determines the output format and structure.
+     */
+    public enum CompileMode {
+        JSBUNDLE,    // Traditional bundle mode
+        MODULE_JSON, // Stage model - module.json based
+        ES_MODULE    // ES Module mode
+    }
 }

@@ -3,10 +3,8 @@ package com.ets2jsc.domain.model.compilation;
 import lombok.Getter;
 
 import com.ets2jsc.domain.model.config.CompilerConfig;
-import com.ets2jsc.shared.exception.CompilationException;
 
 import java.nio.file.Path;
-import java.util.List;
 
 /**
  * Represents a request to compile source code.

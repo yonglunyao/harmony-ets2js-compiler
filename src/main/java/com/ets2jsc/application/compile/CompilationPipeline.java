@@ -9,11 +9,11 @@ import com.ets2jsc.domain.service.TransformerService;
 import com.ets2jsc.shared.exception.CompilationException;
 
 import java.nio.file.Path;
-import java.util.Objects;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

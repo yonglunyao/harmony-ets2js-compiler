@@ -4,12 +4,11 @@ import com.ets2jsc.application.compile.BatchCompilationService;
 import com.ets2jsc.application.compile.BatchCompilationServiceFactory;
 import com.ets2jsc.application.compile.CompilationPipeline;
 import com.ets2jsc.application.compile.CompilationPipelineFactory;
-import com.ets2jsc.application.compile.EtsCompilerBuilder;
 import com.ets2jsc.domain.model.config.CompilerConfig;
 import com.ets2jsc.domain.model.compilation.CompilationResult;
-import com.ets2jsc.domain.service.CompilationMode;
 import com.ets2jsc.interfaces.publicapi.model.CompilationMode;
 import com.ets2jsc.interfaces.publicapi.model.PublicCompilationResult;
+import com.ets2jsc.shared.exception.CompilationException;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -91,15 +90,6 @@ public class EtsCompiler implements AutoCloseable {
             this.batchService = BatchCompilationServiceFactory.createSequentialService(pipeline);
         }
         this.closed = false;
-    }
-
-    /**
-     * Creates a new builder for configuring the compiler.
-     *
-     * @return a new builder instance
-     */
-    public static EtsCompilerBuilder builder() {
-        return new EtsCompilerBuilder();
     }
 
     /**

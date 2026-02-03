@@ -1,15 +1,19 @@
 package com.ets2jsc.application.compile;
 
+import com.ets2jsc.domain.model.compilation.CompilationResult;
 import com.ets2jsc.domain.model.compilation.CompilationResult.FileResult;
 import com.ets2jsc.domain.model.config.CompilerConfig;
-import com.ets2jsc.domain.service.GeneratorService;
+import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.shared.exception.CompilationException;
+import com.ets2jsc.shared.util.ResourceFileCopier;
+import com.ets2jsc.shared.util.SourceFileFinder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -82,34 +86,35 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
     }
 
     @Override
-    public com.ets2jsc.domain.model.compilation.CompilationResult compileBatch(List<Path> sourceFiles, Path outputDir) throws CompilationException {
+    public CompilationResult compileBatch(List<Path> sourceFiles, Path outputDir) throws CompilationException {
         LOGGER.info("Compiling {} files in parallel mode, threads: {}", sourceFiles.size(), threadPoolSize);
-        com.ets2jsc.domain.model.compilation.CompilationResult result =
-                new com.ets2jsc.domain.model.compilation.CompilationResult();
+        CompilationResult result = new CompilationResult();
         try {
             Files.createDirectories(outputDir);
         } catch (IOException e) {
             result.markCompleted();
             for (Path file : sourceFiles) {
-                result.addFileResult(file, null, "Failed to create output directory: " + e.getMessage(), e, 0);
+                result.addFileResult(file, FileResult.failure(file, null,
+                        "Failed to create output directory: " + e.getMessage(), e, 0));
             }
             return result;
         }
         // Submit compilation tasks
-        List<Future<com.ets2jsc.domain.model.compilation.CompilationResult.FileResult>> futures = new ArrayList<>();
+        List<Future<FileResult>> futures = new ArrayList<>();
         for (Path sourceFile : sourceFiles) {
-            Future<com.ets2jsc.domain.model.compilation.CompilationResult.FileResult> future = executorService.submit(
+            Future<FileResult> future = executorService.submit(
                     new CompilationTask(sourceFile, outputDir));
             futures.add(future);
         }
         // Collect results
         for (int i = 0; i < futures.size(); i++) {
             try {
-                com.ets2jsc.domain.model.compilation.CompilationResult.FileResult fileResult = futures.get(i).get();
-                result.addFileResult(file, null, "Failed to create output directory: " + e.getMessage(), e, 0));
+                FileResult fileResult = futures.get(i).get();
+                result.addFileResult(fileResult.getSourcePath(), fileResult);
             } catch (InterruptedException | ExecutionException e) {
                 Path sourceFile = sourceFiles.get(i);
-                result.addFileResult(sourceFile, null, "Task execution error: " + e.getMessage(), e, 0));
+                result.addFileResult(sourceFile, FileResult.failure(sourceFile, null,
+                        "Task execution error: " + e.getMessage(), e, 0));
             }
         }
         result.markCompleted();
@@ -117,9 +122,8 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
     }
 
     @Override
-    public com.ets2jsc.domain.model.compilation.CompilationResult compileBatchWithStructure(List<Path> sourceFiles, Path baseDir, Path outputDir) {
-        com.ets2jsc.domain.model.compilation.CompilationResult result =
-                new com.ets2jsc.domain.model.compilation.CompilationResult();
+    public CompilationResult compileBatchWithStructure(List<Path> sourceFiles, Path baseDir, Path outputDir) {
+        CompilationResult result = new CompilationResult();
         int successCount = 0;
         int failureCount = 0;
         for (Path sourceFile : sourceFiles) {
@@ -140,20 +144,66 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
                 }
                 // Compile file using pipeline
                 pipeline.execute(sourceFile, outputPath);
-                result.addFileResult(sourceFile, com.ets2jsc.domain.model.compilation.CompilationResult.FileResult.success(
-                        sourceFile, outputPath, 0));
+                result.addFileResult(sourceFile, FileResult.success(sourceFile, outputPath, 0));
                 successCount++;
             } catch (Exception e) {
-                result.addFileResult(sourceFile, null, "Compilation failed: " + e.getMessage(), e, 0);
+                result.addFileResult(sourceFile, FileResult.failure(sourceFile, null,
+                        "Compilation failed: " + e.getMessage(), e, 0));
                 failureCount++;
             }
         }
         result.markCompleted();
-        return new com.ets2jsc.domain.model.compilation.CompilationResult(
+        return new CompilationResult(
                 result.getFileResults(),
                 result.getTotalCount(),
                 result.getSuccessCount(),
-                result.getFailureCount());
+                result.getFailureCount(),
+                0);
+    }
+
+    @Override
+    public CompilationResult compileProject(Path sourceDir, Path outputDir, boolean copyResources) throws CompilationException {
+        if (!Files.isDirectory(sourceDir)) {
+            throw new CompilationException("Source path is not a directory: " + sourceDir);
+        }
+
+        try {
+            // Normalize paths
+            sourceDir = sourceDir.normalize();
+            outputDir = outputDir.normalize();
+
+            // Create output directory if it doesn't exist
+            if (!Files.exists(outputDir)) {
+                Files.createDirectories(outputDir);
+            }
+
+            // Find all source files in the project
+            List<Path> sourceFiles = SourceFileFinder.findSourceFiles(sourceDir);
+
+            // Compile source files while preserving directory structure
+            CompilationResult compileResult;
+            if (!sourceFiles.isEmpty()) {
+                compileResult = compileBatchWithStructure(sourceFiles, sourceDir, outputDir);
+            } else {
+                compileResult = new CompilationResult();
+            }
+
+            // Copy resource files if requested
+            int copiedResourceCount = 0;
+            if (copyResources) {
+                copiedResourceCount = ResourceFileCopier.copyResourceFiles(sourceDir, outputDir);
+            }
+
+            return new CompilationResult(
+                    compileResult.getFileResults(),
+                    compileResult.getTotalCount(),
+                    compileResult.getSuccessCount(),
+                    compileResult.getFailureCount(),
+                    copiedResourceCount);
+
+        } catch (IOException e) {
+            throw new CompilationException("Failed to compile project: " + sourceDir, e);
+        }
     }
 
     @Override
@@ -181,7 +231,7 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
     /**
      * Inner class for single file compilation task.
      */
-    private class CompilationTask implements Callable<com.ets2jsc.domain.model.compilation.CompilationResult.FileResult> {
+    private class CompilationTask implements Callable<FileResult> {
 
         private final Path sourceFile;
         private final Path outputDir;
@@ -192,7 +242,7 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
         }
 
         @Override
-        public com.ets2jsc.domain.model.compilation.CompilationResult.FileResult call() {
+        public FileResult call() {
             long startTime = System.currentTimeMillis();
             String fileName = sourceFile.getFileName().toString();
             String outputName = fileName.replace(".ets", ".js").replace(".ts", ".js");
@@ -200,12 +250,11 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
             try {
                 pipeline.execute(sourceFile, outputPath);
                 long duration = System.currentTimeMillis() - startTime;
-                return com.ets2jsc.domain.model.compilation.CompilationResult.FileResult.success(
-                        sourceFile, outputPath, duration);
+                return FileResult.success(sourceFile, outputPath, duration);
             } catch (Exception e) {
                 long duration = System.currentTimeMillis() - startTime;
-                return com.ets2jsc.domain.model.compilation.CompilationResult.FileResult.failure(
-                        sourceFile, outputPath, "Compilation failed: " + e.getMessage(), duration);
+                return FileResult.failure(sourceFile, outputPath,
+                        "Compilation failed: " + e.getMessage(), e, duration);
             }
         }
     }
