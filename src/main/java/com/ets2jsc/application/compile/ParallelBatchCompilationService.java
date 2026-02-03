@@ -145,17 +145,24 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
                     Files.createDirectories(parentDir);
                 }
 
-                // Choose compiler based on file extension
+                // Choose compiler based on file extension and content
                 if (SourceFileFinder.isTsFile(sourceFile) && !SourceFileFinder.isEtsFile(sourceFile)) {
-                    // Pure .ts file - use tsc
-                    if (tscAvailable) {
-                        tsCompiler.compileFile(sourceFile, outputPath);
+                    // .ts file - check if it uses HarmonyOS APIs
+                    if (containsHarmonyOsImports(sourceFile)) {
+                        // .ts file with HarmonyOS APIs - use ETS pipeline
+                        pipeline.execute(sourceFile, outputPath);
                         result.addFileResult(sourceFile, FileResult.success(sourceFile, outputPath, 0));
                     } else {
-                        // tsc not available, skip with warning
-                        LOGGER.warn("tsc not available, skipping TypeScript file: {}", sourceFile);
-                        result.addFileResult(sourceFile,
-                            FileResult.skipped(sourceFile, "tsc compiler not available"));
+                        // Pure TypeScript file - use tsc
+                        if (tscAvailable) {
+                            tsCompiler.compileFile(sourceFile, outputPath);
+                            result.addFileResult(sourceFile, FileResult.success(sourceFile, outputPath, 0));
+                        } else {
+                            // tsc not available, skip with warning
+                            LOGGER.warn("tsc not available, skipping TypeScript file: {}", sourceFile);
+                            result.addFileResult(sourceFile,
+                                FileResult.skipped(sourceFile, "tsc compiler not available"));
+                        }
                     }
                 } else {
                     // .ets file - use ETS pipeline
@@ -241,6 +248,25 @@ public class ParallelBatchCompilationService implements BatchCompilationService 
             Thread.currentThread().interrupt();
         }
         closed = true;
+    }
+
+    /**
+     * Checks if a file contains HarmonyOS-specific imports.
+     * Files with imports from @kit.*, @ohos.*, etc. should use the ETS compiler.
+     *
+     * @param sourceFile the file to check
+     * @return true if the file contains HarmonyOS imports
+     */
+    private boolean containsHarmonyOsImports(Path sourceFile) {
+        try {
+            String content = Files.readString(sourceFile);
+            return content.contains("@kit.") ||
+                   content.contains("@ohos.") ||
+                   content.contains("@package.");
+        } catch (IOException e) {
+            LOGGER.debug("Failed to read file for import check: {}", sourceFile);
+            return false;
+        }
     }
 
     /**

@@ -24,8 +24,72 @@ public class TypeScriptCompilerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TypeScriptCompilerService.class);
 
-    private static final String TSC_COMMAND = "tsc";
     private static final long TSC_TIMEOUT_SECONDS = 60;
+
+    // Command to use - will try npx tsc first, then fallback to tsc
+    private String tscCommand = null;
+
+    /**
+     * Gets the tsc command to use.
+     * Tries to detect the best command for running tsc.
+     *
+     * @return the command to use for tsc
+     */
+    private synchronized String getTscCommand() {
+        if (tscCommand != null) {
+            return tscCommand;
+        }
+
+        // Try different commands in order of preference
+        String[] commandsToTry = {"npx", "npm", "tsc.cmd", "tsc"};
+
+        for (String cmd : commandsToTry) {
+            if (testCommand(cmd)) {
+                if ("npx".equals(cmd) || "npm".equals(cmd)) {
+                    tscCommand = cmd + " tsc";
+                } else {
+                    tscCommand = cmd;
+                }
+                LOGGER.info("Using tsc command: {}", tscCommand);
+                return tscCommand;
+            }
+        }
+
+        // Default to npx tsc (will fail if not available)
+        tscCommand = "npx tsc";
+        LOGGER.warn("Could not detect tsc, defaulting to: {}", tscCommand);
+        return tscCommand;
+    }
+
+    /**
+     * Tests if a command can run tsc --version.
+     *
+     * @param commandPrefix the command prefix to test (e.g., "npx", "npm", "tsc")
+     * @return true if the command works
+     */
+    private boolean testCommand(String commandPrefix) {
+        try {
+            List<String> cmd = new ArrayList<>();
+            if ("npx".equals(commandPrefix) || "npm".equals(commandPrefix)) {
+                cmd.add(commandPrefix);
+                cmd.add("tsc");
+            } else {
+                cmd.add(commandPrefix);
+            }
+            cmd.add("--version");
+
+            ProcessBuilder pb = new ProcessBuilder(cmd);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            boolean finished = process.waitFor(5, TimeUnit.SECONDS);
+            if (finished && process.exitValue() == 0) {
+                return true;
+            }
+        } catch (IOException | InterruptedException e) {
+            // Command not available, try next
+        }
+        return false;
+    }
 
     /**
      * Compiles a single TypeScript file using tsc.
@@ -123,18 +187,15 @@ public class TypeScriptCompilerService {
 
     /**
      * Checks if tsc is available on the system.
+     * This method also initializes the tsc command if not already set.
      *
      * @return true if tsc is available, false otherwise
      */
     public boolean isTscAvailable() {
-        try {
-            ProcessBuilder pb = new ProcessBuilder(TSC_COMMAND, "--version");
-            Process process = pb.start();
-            return process.waitFor(TSC_TIMEOUT_SECONDS, TimeUnit.SECONDS) &&
-                   process.exitValue() == 0;
-        } catch (IOException | InterruptedException e) {
-            return false;
-        }
+        // Try to detect and set the command
+        getTscCommand();
+        // If we successfully set a command (not the default), tsc is available
+        return tscCommand != null && !"npx tsc".equals(tscCommand);
     }
 
     /**
@@ -146,7 +207,11 @@ public class TypeScriptCompilerService {
      */
     private List<String> buildTscCommand(Path sourceFile, Path outputFile) {
         List<String> command = new ArrayList<>();
-        command.add(TSC_COMMAND);
+        String tscCmd = getTscCommand();
+        String[] cmdParts = tscCmd.split("\\s+");
+        for (String part : cmdParts) {
+            command.add(part);
+        }
         command.add(sourceFile.toString());
         command.add("--outFile");
         command.add(outputFile.toString());
