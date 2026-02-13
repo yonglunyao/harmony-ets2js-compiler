@@ -1,5 +1,6 @@
 package com.ets2jsc.infrastructure.parser.converters.expr;
 
+import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.infrastructure.parser.ConversionContext;
 import com.ets2jsc.infrastructure.parser.NodeConverter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,6 +28,6 @@ public class StringLiteralConverter implements NodeConverter {
 
     @Override
     public int getPriority() {
-        return 100;
+        return Symbols.STRING_LITERAL_CONVERTER_PRIORITY;
     }
 }

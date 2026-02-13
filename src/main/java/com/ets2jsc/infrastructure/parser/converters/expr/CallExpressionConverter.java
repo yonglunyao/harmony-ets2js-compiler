@@ -1,6 +1,7 @@
 package com.ets2jsc.infrastructure.parser.converters.expr;
 
 import com.ets2jsc.shared.constant.RuntimeFunctions;
+import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.infrastructure.parser.ConversionContext;
 import com.ets2jsc.infrastructure.parser.NodeConverter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -207,7 +208,7 @@ public class CallExpressionConverter implements NodeConverter {
      */
     private ResourcePath parseResourcePath(String resourcePath) {
         String[] parts = resourcePath.split("\\.");
-        if (parts.length >= 3) {
+        if (parts.length >= Symbols.MIN_RESOURCE_PATH_PARTS) {
             String module = parts[0];
             String type = parts[parts.length - 2];
             String name = parts[parts.length - 1];

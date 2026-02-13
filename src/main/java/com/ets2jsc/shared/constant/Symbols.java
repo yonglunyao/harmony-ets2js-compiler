@@ -114,6 +114,16 @@ public final class Symbols {
 
     // Converter priority constants
     public static final int NUMERIC_LITERAL_CONVERTER_PRIORITY = 100;
+    public static final int STRING_LITERAL_CONVERTER_PRIORITY = 100;
+
+    // SourceMap constants
+    public static final int SOURCEMAP_VERSION = 3;
+
+    // Resource path parsing constants
+    public static final int MIN_RESOURCE_PATH_PARTS = 3;
+
+    // Timeout constants
+    public static final int TSC_COMMAND_TEST_TIMEOUT_SECONDS = 5;
 
     // Processing constants
     public static final int CHILD_BLOCK_SKIP_COUNT = 2;

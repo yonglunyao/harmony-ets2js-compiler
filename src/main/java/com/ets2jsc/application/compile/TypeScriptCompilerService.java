@@ -1,5 +1,6 @@
 package com.ets2jsc.application.compile;
 
+import com.ets2jsc.shared.constant.Symbols;
 import com.ets2jsc.shared.exception.CompilationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +82,7 @@ public class TypeScriptCompilerService {
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.redirectErrorStream(true);
             Process process = pb.start();
-            boolean finished = process.waitFor(5, TimeUnit.SECONDS);
+            boolean finished = process.waitFor(Symbols.TSC_COMMAND_TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             if (finished && process.exitValue() == 0) {
                 return true;
             }

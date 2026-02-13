@@ -9,6 +9,7 @@ import com.ets2jsc.infrastructure.transformer.decorators.impl.StatePropertyTrans
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Registry for property transformers.
@@ -59,15 +60,15 @@ public class PropertyTransformerRegistry {
      * Finds the appropriate transformer for a property.
      *
      * @param prop the property declaration
-     * @return the transformer, or null if none found
+     * @return an Optional containing the transformer, or empty if none found
      */
-    public PropertyTransformer findTransformer(PropertyDeclaration prop) {
+    public Optional<PropertyTransformer> findTransformer(PropertyDeclaration prop) {
         for (PropertyTransformer transformer : transformers) {
             if (transformer.canHandle(prop)) {
-                return transformer;
+                return Optional.of(transformer);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     /**
@@ -77,7 +78,7 @@ public class PropertyTransformerRegistry {
      * @return true if a transformer is available
      */
     public boolean canTransform(PropertyDeclaration prop) {
-        return findTransformer(prop) != null;
+        return findTransformer(prop).isPresent();
     }
 
     /**

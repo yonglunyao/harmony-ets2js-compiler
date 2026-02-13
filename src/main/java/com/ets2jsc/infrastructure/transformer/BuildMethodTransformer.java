@@ -71,7 +71,7 @@ public class BuildMethodTransformer implements AstTransformer {
         }
 
         // Rename method
-        String newName = partialUpdateMode ? "initialRender" : "render";
+        String newName = partialUpdateMode ? RuntimeFunctions.COMPONENT_INITIAL_RENDER : RuntimeFunctions.COMPONENT_RENDER;
         method.setName(newName);
 
         // Transform method body (component expressions)
@@ -90,7 +90,7 @@ public class BuildMethodTransformer implements AstTransformer {
      */
     private void transformBuildMethod(ClassDeclaration classDecl, MethodDeclaration buildMethod) {
         // Rename method
-        String newName = partialUpdateMode ? "initialRender" : "render";
+        String newName = partialUpdateMode ? RuntimeFunctions.COMPONENT_INITIAL_RENDER : RuntimeFunctions.COMPONENT_RENDER;
         buildMethod.setName(newName);
 
         // Process method body to transform component expressions
@@ -189,7 +189,7 @@ public class BuildMethodTransformer implements AstTransformer {
      * Returns the render method name based on compilation mode.
      */
     public String getRenderMethodName() {
-        return partialUpdateMode ? "initialRender" : "render";
+        return partialUpdateMode ? RuntimeFunctions.COMPONENT_INITIAL_RENDER : RuntimeFunctions.COMPONENT_RENDER;
     }
 
     /**
@@ -203,7 +203,7 @@ public class BuildMethodTransformer implements AstTransformer {
             RuntimeFunctions.BUILDER_PARAM
         );
         builderParam.setHasDefault(true);
-        builderParam.setDefaultValue("undefined");
+        builderParam.setDefaultValue(Symbols.UNDEFINED_LITERAL);
         builderMethod.getParameters().add(0, builderParam);
 
         // Transform method body (component expressions)

@@ -1,5 +1,6 @@
 package com.ets2jsc.infrastructure.generator;
 
+import com.ets2jsc.shared.constant.Symbols;
 import lombok.Getter;
 
 import java.util.HashMap;
@@ -60,7 +61,7 @@ public class SourceMapGenerator {
         StringBuilder sb = new StringBuilder();
 
         sb.append("{\n");
-        sb.append("  \"version\": 3,\n");
+        sb.append("  \"version\": ").append(Symbols.SOURCEMAP_VERSION).append(",\n");
         sb.append("  \"mappings\": \"");
 
         // Generate VLQ encoded mappings

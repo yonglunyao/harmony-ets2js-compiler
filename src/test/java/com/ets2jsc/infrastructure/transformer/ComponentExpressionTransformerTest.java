@@ -5,6 +5,8 @@ import com.ets2jsc.domain.model.ast.ComponentStatement;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -14,94 +16,94 @@ import static org.junit.jupiter.api.Assertions.*;
 class ComponentExpressionTransformerTest {
 
     @Test
-    @DisplayName("Test transform returns null for null input")
-    void testTransformReturnsNullForNullInput() {
-        AstNode result = ComponentExpressionTransformer.transform(null);
+    @DisplayName("Test transform returns empty for null input")
+    void testTransformReturnsEmptyForNullInput() {
+        Optional<AstNode> result = ComponentExpressionTransformer.transform(null);
 
-        assertNull(result);
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Test transform returns null for empty string")
-    void testTransformReturnsNullForEmptyString() {
-        AstNode result = ComponentExpressionTransformer.transform("");
+    @DisplayName("Test transform returns empty for empty string")
+    void testTransformReturnsEmptyForEmptyString() {
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("");
 
-        assertNull(result);
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Test transform returns null for whitespace only")
-    void testTransformReturnsNullForWhitespaceOnly() {
-        AstNode result = ComponentExpressionTransformer.transform("   ");
+    @DisplayName("Test transform returns empty for whitespace only")
+    void testTransformReturnsEmptyForWhitespaceOnly() {
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("   ");
 
-        assertNull(result);
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Test transform returns null for lowercase component name")
-    void testTransformReturnsNullForLowercaseComponentName() {
-        AstNode result = ComponentExpressionTransformer.transform("text('Hello')");
+    @DisplayName("Test transform returns empty for lowercase component name")
+    void testTransformReturnsEmptyForLowercaseComponentName() {
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("text('Hello')");
 
-        assertNull(result);
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Test transform returns null for non-component call")
-    void testTransformReturnsNullForNonComponentCall() {
-        AstNode result = ComponentExpressionTransformer.transform("foo.bar()");
+    @DisplayName("Test transform returns empty for non-component call")
+    void testTransformReturnsEmptyForNonComponentCall() {
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("foo.bar()");
 
-        assertNull(result);
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Test transform returns null for custom component")
-    void testTransformReturnsNullForCustomComponent() {
-        AstNode result = ComponentExpressionTransformer.transform("MyCustomComponent('Hello')");
+    @DisplayName("Test transform returns empty for custom component")
+    void testTransformReturnsEmptyForCustomComponent() {
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("MyCustomComponent('Hello')");
 
-        assertNull(result);
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Test transform returns null for this property access")
-    void testTransformReturnsNullForThisPropertyAccess() {
-        AstNode result = ComponentExpressionTransformer.transform("Text(this.message)");
+    @DisplayName("Test transform returns empty for this property access")
+    void testTransformReturnsEmptyForThisPropertyAccess() {
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Text(this.message)");
 
-        assertNull(result);
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Test transform returns null for $r resource reference")
-    void testTransformReturnsNullForResourceReference() {
-        AstNode result = ComponentExpressionTransformer.transform("Text($r('app.string.name'))");
+    @DisplayName("Test transform returns empty for $r resource reference")
+    void testTransformReturnsEmptyForResourceReference() {
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Text($r('app.string.name'))");
 
-        assertNull(result);
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Test transform returns null for $rawfile reference")
-    void testTransformReturnsNullForRawfileReference() {
-        AstNode result = ComponentExpressionTransformer.transform("Text($rawfile('test.png'))");
+    @DisplayName("Test transform returns empty for $rawfile reference")
+    void testTransformReturnsEmptyForRawfileReference() {
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Text($rawfile('test.png'))");
 
-        assertNull(result);
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Test transform returns null for arrow function callback")
-    void testTransformReturnsNullForArrowFunctionCallback() {
-        AstNode result = ComponentExpressionTransformer.transform("Button('Click').onClick(() => {})");
+    @DisplayName("Test transform returns empty for arrow function callback")
+    void testTransformReturnsEmptyForArrowFunctionCallback() {
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Button('Click').onClick(() => {})");
 
-        assertNull(result);
+        assertFalse(result.isPresent());
     }
 
     @Test
     @DisplayName("Test transform for simple Text component")
     void testTransformForSimpleTextComponent() {
-        AstNode result = ComponentExpressionTransformer.transform("Text('Hello')");
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Text('Hello')");
 
-        assertNotNull(result);
-        assertTrue(result instanceof ComponentStatement);
+        assertTrue(result.isPresent());
+        assertTrue(result.get() instanceof ComponentStatement);
 
-        ComponentStatement stmt = (ComponentStatement) result;
+        ComponentStatement stmt = (ComponentStatement) result.get();
         assertEquals("Text", stmt.getComponentName());
         assertEquals(2, stmt.getParts().size()); // CREATE, POP
     }
@@ -109,115 +111,115 @@ class ComponentExpressionTransformerTest {
     @Test
     @DisplayName("Test transform for Text component with no arguments")
     void testTransformForTextComponentWithNoArguments() {
-        AstNode result = ComponentExpressionTransformer.transform("Text()");
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Text()");
 
-        assertNotNull(result);
-        assertTrue(result instanceof ComponentStatement);
+        assertTrue(result.isPresent());
+        assertTrue(result.get() instanceof ComponentStatement);
 
-        ComponentStatement stmt = (ComponentStatement) result;
+        ComponentStatement stmt = (ComponentStatement) result.get();
         assertEquals("Text", stmt.getComponentName());
     }
 
     @Test
     @DisplayName("Test transform for Column component")
     void testTransformForColumnComponent() {
-        AstNode result = ComponentExpressionTransformer.transform("Column()");
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Column()");
 
-        assertNotNull(result);
-        assertTrue(result instanceof ComponentStatement);
+        assertTrue(result.isPresent());
+        assertTrue(result.get() instanceof ComponentStatement);
 
-        ComponentStatement stmt = (ComponentStatement) result;
+        ComponentStatement stmt = (ComponentStatement) result.get();
         assertEquals("Column", stmt.getComponentName());
     }
 
     @Test
     @DisplayName("Test transform for Row component")
     void testTransformForRowComponent() {
-        AstNode result = ComponentExpressionTransformer.transform("Row()");
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Row()");
 
-        assertNotNull(result);
-        assertTrue(result instanceof ComponentStatement);
+        assertTrue(result.isPresent());
+        assertTrue(result.get() instanceof ComponentStatement);
 
-        ComponentStatement stmt = (ComponentStatement) result;
+        ComponentStatement stmt = (ComponentStatement) result.get();
         assertEquals("Row", stmt.getComponentName());
     }
 
     @Test
     @DisplayName("Test transform for Stack component")
     void testTransformForStackComponent() {
-        AstNode result = ComponentExpressionTransformer.transform("Stack()");
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Stack()");
 
-        assertNotNull(result);
-        assertTrue(result instanceof ComponentStatement);
+        assertTrue(result.isPresent());
+        assertTrue(result.get() instanceof ComponentStatement);
 
-        ComponentStatement stmt = (ComponentStatement) result;
+        ComponentStatement stmt = (ComponentStatement) result.get();
         assertEquals("Stack", stmt.getComponentName());
     }
 
     @Test
     @DisplayName("Test transform for Button component")
     void testTransformForButtonComponent() {
-        AstNode result = ComponentExpressionTransformer.transform("Button('Click me')");
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Button('Click me')");
 
-        assertNotNull(result);
-        assertTrue(result instanceof ComponentStatement);
+        assertTrue(result.isPresent());
+        assertTrue(result.get() instanceof ComponentStatement);
 
-        ComponentStatement stmt = (ComponentStatement) result;
+        ComponentStatement stmt = (ComponentStatement) result.get();
         assertEquals("Button", stmt.getComponentName());
     }
 
     @Test
     @DisplayName("Test transform preserves component name")
     void testTransformPreservesComponentName() {
-        AstNode result = ComponentExpressionTransformer.transform("Image('test.png')");
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Image('test.png')");
 
-        assertNotNull(result);
-        ComponentStatement stmt = (ComponentStatement) result;
+        assertTrue(result.isPresent());
+        ComponentStatement stmt = (ComponentStatement) result.get();
         assertEquals("Image", stmt.getComponentName());
     }
 
     @Test
     @DisplayName("Test transform handles whitespace in expression")
     void testTransformHandlesWhitespaceInExpression() {
-        AstNode result = ComponentExpressionTransformer.transform("  Text  (  'Hello'  )  ");
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("  Text  (  'Hello'  )  ");
 
-        assertNotNull(result);
-        assertTrue(result instanceof ComponentStatement);
+        assertTrue(result.isPresent());
+        assertTrue(result.get() instanceof ComponentStatement);
     }
 
     @Test
     @DisplayName("Test transform for component with literal argument")
     void testTransformForComponentWithLiteralArgument() {
-        AstNode result = ComponentExpressionTransformer.transform("Text(123)");
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Text(123)");
 
-        assertNotNull(result);
-        assertTrue(result instanceof ComponentStatement);
+        assertTrue(result.isPresent());
+        assertTrue(result.get() instanceof ComponentStatement);
 
-        ComponentStatement stmt = (ComponentStatement) result;
+        ComponentStatement stmt = (ComponentStatement) result.get();
         assertEquals("Text", stmt.getComponentName());
     }
 
     @Test
     @DisplayName("Test transform for Image component")
     void testTransformForImageComponent() {
-        AstNode result = ComponentExpressionTransformer.transform("Image('logo.png')");
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("Image('logo.png')");
 
-        assertNotNull(result);
-        assertTrue(result instanceof ComponentStatement);
+        assertTrue(result.isPresent());
+        assertTrue(result.get() instanceof ComponentStatement);
 
-        ComponentStatement stmt = (ComponentStatement) result;
+        ComponentStatement stmt = (ComponentStatement) result.get();
         assertEquals("Image", stmt.getComponentName());
     }
 
     @Test
     @DisplayName("Test transform for TextInput component")
     void testTransformForTextInputComponent() {
-        AstNode result = ComponentExpressionTransformer.transform("TextInput({ placeholder: 'Enter text' })");
+        Optional<AstNode> result = ComponentExpressionTransformer.transform("TextInput({ placeholder: 'Enter text' })");
 
-        assertNotNull(result);
-        assertTrue(result instanceof ComponentStatement);
+        assertTrue(result.isPresent());
+        assertTrue(result.get() instanceof ComponentStatement);
 
-        ComponentStatement stmt = (ComponentStatement) result;
+        ComponentStatement stmt = (ComponentStatement) result.get();
         assertEquals("TextInput", stmt.getComponentName());
     }
 }

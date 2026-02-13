@@ -276,13 +276,10 @@ public class CodeGenerator implements AstVisitor<String> {
         }
 
         // Try to transform to component statement
-        AstNode transformedNode = ComponentExpressionTransformer.transform(expr);
-        if (transformedNode instanceof ComponentStatement) {
-            return transformedNode.accept(this);
-        }
-
-        // Format expression statement
-        return formatExpressionStatement(expr);
+        return ComponentExpressionTransformer.transform(expr)
+                .filter(transformedNode -> transformedNode instanceof ComponentStatement)
+                .map(transformedNode -> transformedNode.accept(this))
+                .orElseGet(() -> formatExpressionStatement(expr));
     }
 
     /**

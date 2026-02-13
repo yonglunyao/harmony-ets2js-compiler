@@ -12,6 +12,8 @@ import com.ets2jsc.infrastructure.transformer.ComponentExpressionTransformer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
+import java.util.Optional;
+
 /**
  * Converter for block statements.
  * Handles: { statements... }
@@ -145,9 +147,10 @@ public class BlockConverter implements NodeConverter {
         }
 
         if (componentStmtNode instanceof ExpressionStatement) {
-            ComponentStatement compStmt = transformToComponentStatement(
+            Optional<ComponentStatement> compStmtOpt = transformToComponentStatement(
                     (ExpressionStatement) componentStmtNode);
-            if (compStmt != null) {
+            if (compStmtOpt.isPresent()) {
+                ComponentStatement compStmt = compStmtOpt.get();
                 compStmt.setChildren(childrenBlock);
                 block.addStatement(compStmt);
                 return;
@@ -160,9 +163,13 @@ public class BlockConverter implements NodeConverter {
     /**
      * Transforms an ExpressionStatement to ComponentStatement.
      * CC: 1
+     *
+     * @return an Optional containing ComponentStatement if transform succeeds, empty otherwise
      */
-    private ComponentStatement transformToComponentStatement(ExpressionStatement exprStmt) {
-        return (ComponentStatement) ComponentExpressionTransformer.transform(exprStmt.getExpression());
+    private Optional<ComponentStatement> transformToComponentStatement(ExpressionStatement exprStmt) {
+        return ComponentExpressionTransformer.transform(exprStmt.getExpression())
+                .filter(node -> node instanceof ComponentStatement)
+                .map(node -> (ComponentStatement) node);
     }
 
     /**

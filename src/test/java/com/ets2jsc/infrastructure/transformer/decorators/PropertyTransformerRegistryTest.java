@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.ets2jsc.domain.model.ast.MethodDeclaration;
 
@@ -29,10 +30,10 @@ public class PropertyTransformerRegistryTest {
         PropertyTransformerRegistry registry = new PropertyTransformerRegistry();
 
         PropertyDeclaration prop = createProperty(Decorators.STATE, "count", "number");
-        PropertyTransformer transformer = registry.findTransformer(prop);
+        Optional<PropertyTransformer> transformer = registry.findTransformer(prop);
 
-        assertNotNull(transformer);
-        assertTrue(transformer instanceof StatePropertyTransformer);
+        assertTrue(transformer.isPresent());
+        assertTrue(transformer.get() instanceof StatePropertyTransformer);
     }
 
     @Test
@@ -40,10 +41,10 @@ public class PropertyTransformerRegistryTest {
         PropertyTransformerRegistry registry = new PropertyTransformerRegistry();
 
         PropertyDeclaration prop = createProperty(Decorators.PROP, "title", "string");
-        PropertyTransformer transformer = registry.findTransformer(prop);
+        Optional<PropertyTransformer> transformer = registry.findTransformer(prop);
 
-        assertNotNull(transformer);
-        assertInstanceOf(PropPropertyTransformer.class, transformer);
+        assertTrue(transformer.isPresent());
+        assertInstanceOf(PropPropertyTransformer.class, transformer.get());
     }
 
     @Test
@@ -51,10 +52,10 @@ public class PropertyTransformerRegistryTest {
         PropertyTransformerRegistry registry = new PropertyTransformerRegistry();
 
         PropertyDeclaration prop = createProperty(Decorators.LINK, "value", "number");
-        PropertyTransformer transformer = registry.findTransformer(prop);
+        Optional<PropertyTransformer> transformer = registry.findTransformer(prop);
 
-        assertNotNull(transformer);
-        assertInstanceOf(LinkPropertyTransformer.class, transformer);
+        assertTrue(transformer.isPresent());
+        assertInstanceOf(LinkPropertyTransformer.class, transformer.get());
     }
 
     @Test
@@ -62,10 +63,10 @@ public class PropertyTransformerRegistryTest {
         PropertyTransformerRegistry registry = new PropertyTransformerRegistry();
 
         PropertyDeclaration prop = createProperty(Decorators.PROVIDE, "data", "Object");
-        PropertyTransformer transformer = registry.findTransformer(prop);
+        Optional<PropertyTransformer> transformer = registry.findTransformer(prop);
 
-        assertNotNull(transformer);
-        assertInstanceOf(ProvidePropertyTransformer.class, transformer);
+        assertTrue(transformer.isPresent());
+        assertInstanceOf(ProvidePropertyTransformer.class, transformer.get());
     }
 
     @Test
@@ -73,10 +74,10 @@ public class PropertyTransformerRegistryTest {
         PropertyTransformerRegistry registry = new PropertyTransformerRegistry();
 
         PropertyDeclaration prop = createProperty(Decorators.CONSUME, "theme", "string");
-        PropertyTransformer transformer = registry.findTransformer(prop);
+        Optional<PropertyTransformer> transformer = registry.findTransformer(prop);
 
-        assertNotNull(transformer);
-        assertInstanceOf(ConsumePropertyTransformer.class, transformer);
+        assertTrue(transformer.isPresent());
+        assertInstanceOf(ConsumePropertyTransformer.class, transformer.get());
     }
 
     @Test
@@ -84,9 +85,9 @@ public class PropertyTransformerRegistryTest {
         PropertyTransformerRegistry registry = new PropertyTransformerRegistry();
 
         PropertyDeclaration prop = createProperty("UnknownDecorator", "value", "any");
-        PropertyTransformer transformer = registry.findTransformer(prop);
+        Optional<PropertyTransformer> transformer = registry.findTransformer(prop);
 
-        assertNull(transformer);
+        assertFalse(transformer.isPresent());
     }
 
     @Test

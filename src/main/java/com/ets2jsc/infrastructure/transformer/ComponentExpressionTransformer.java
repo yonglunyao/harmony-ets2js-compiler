@@ -5,6 +5,7 @@ import com.ets2jsc.domain.model.ast.ComponentStatement.ComponentPart;
 import com.ets2jsc.domain.model.ast.ComponentStatement.PartKind;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,23 +23,23 @@ public class ComponentExpressionTransformer {
      * Only transforms simple cases with literal arguments.
      *
      * @param expression the expression string (e.g., "Text('Hello').fontSize(16)")
-     * @return ComponentStatement if the expression is a component call, null otherwise
+     * @return an Optional containing ComponentStatement if the expression is a component call, empty otherwise
      */
-    public static AstNode transform(String expression) {
+    public static Optional<AstNode> transform(String expression) {
         if (expression == null || expression.trim().isEmpty()) {
-            return null;
+            return Optional.empty();
         }
 
         String trimmed = expression.trim();
 
         // Check if this is a component call (starts with capital letter component name)
         if (!isComponentCall(trimmed)) {
-            return null;
+            return Optional.empty();
         }
 
         // Only transform simple cases - check for complex expressions
         if (hasComplexExpressions(trimmed)) {
-            return null; // Skip complex expressions like this.message
+            return Optional.empty(); // Skip complex expressions like this.message
         }
 
         // Parse the component call
@@ -79,11 +80,11 @@ public class ComponentExpressionTransformer {
      * - Text('Hello').fontSize(16) -> component with one chained call
      * - Text('Hello').fontSize(16).fontColor('red') -> component with multiple chained calls
      */
-    private static AstNode parseComponentCall(String expression) {
+    private static Optional<AstNode> parseComponentCall(String expression) {
         // Find the component name and its arguments
         Matcher componentMatcher = COMPONENT_CALL_PATTERN.matcher(expression);
         if (!componentMatcher.find()) {
-            return null;
+            return Optional.empty();
         }
 
         String componentName = componentMatcher.group(1);
@@ -92,7 +93,7 @@ public class ComponentExpressionTransformer {
 
         // Check if this is a built-in component
         if (!ComponentRegistry.isBuiltinComponent(componentName)) {
-            return null;
+            return Optional.empty();
         }
 
         ComponentStatement statement = new ComponentStatement(componentName);
@@ -119,6 +120,6 @@ public class ComponentExpressionTransformer {
         // Add pop part
         statement.addPart(new ComponentPart(PartKind.POP, ""));
 
-        return statement;
+        return Optional.of(statement);
     }
 }

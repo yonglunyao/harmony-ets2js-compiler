@@ -8,6 +8,7 @@ import lombok.ToString;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Represents a class or struct declaration in ETS.
@@ -63,15 +64,20 @@ public class ClassDeclaration implements AstNode {
                 .anyMatch(decoratorName::equals);
     }
 
-    public Decorator getDecorator(String decoratorName) {
+    /**
+     * Gets a decorator by name.
+     *
+     * @param decoratorName the decorator name to find
+     * @return an Optional containing the decorator, or empty if not found
+     */
+    public Optional<Decorator> getDecorator(String decoratorName) {
         if (decoratorName == null) {
-            return null;
+            return Optional.empty();
         }
         return decorators.stream()
                 .filter(Objects::nonNull)
                 .filter(d -> decoratorName.equals(d.getName()))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public void addMember(AstNode member) {
